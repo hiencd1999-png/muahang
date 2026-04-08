@@ -23,6 +23,8 @@ interface Order {
   status: string;
   user: { username: string; fullName?: string | null };
   createdAt: Date;
+  variant: string | null;
+  address: string;
 }
 
 interface AssignableAdmin {
@@ -153,6 +155,13 @@ export function AdminOrdersView({
     router.push(`/admin/orders?${params.toString()}`);
   };
 
+  const getShortAddress = (fullAddress: string) => {
+    if (!fullAddress) return "-";
+    const cleanAddress = fullAddress.replace(/\n/g, " ").trim();
+    if (cleanAddress.length <= 50) return cleanAddress;
+    return cleanAddress.substring(0, 50) + "...";
+  };
+
   return (
     <section className="min-w-0 space-y-6">
       <div className="mb-6 grid gap-4 lg:grid-cols-[1.5fr_0.9fr] lg:items-end">
@@ -246,8 +255,8 @@ export function AdminOrdersView({
 
       {/* Tables */}
       <div className="mt-5 min-w-0">
-        <div className="hidden lg:block overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-          <table className="min-w-full text-left text-sm">
+        <div className="hidden lg:block overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-white shadow-sm w-full">
+          <table className="min-w-[1400px] text-center text-sm border-collapse">
             <thead className="bg-slate-100 text-slate-500">
               <tr>
                 <th className="px-4 py-3 w-10">
@@ -258,16 +267,15 @@ export function AdminOrdersView({
                     className="rounded"
                   />
                 </th>
-                <th className="px-4 py-3">ID</th>
-                <th className="px-4 py-3">User</th>
-                <th className="px-4 py-3">Sản phẩm</th>
-                <th className="px-4 py-3">Shop ID</th>
-                <th className="px-4 py-3">SL</th>
-                <th className="px-4 py-3">Tổng</th>
-                <th className="px-4 py-3">Trạng thái</th>
-                <th className="px-4 py-3">Phụ trách</th>
-                <th className="px-4 py-3">Ngày</th>
-                <th className="px-4 py-3 w-[300px] whitespace-nowrap">Hành động</th>
+                <th className="px-4 py-3 whitespace-nowrap">ID</th>
+                <th className="px-4 py-3 whitespace-nowrap">User</th>
+                <th className="px-4 py-3 whitespace-nowrap min-w-[300px]">Địa chỉ</th>
+                <th className="px-4 py-3 whitespace-nowrap min-w-[150px]">Phân loại</th>
+                <th className="px-4 py-3 whitespace-nowrap">Tổng</th>
+                <th className="px-4 py-3 whitespace-nowrap">Trạng thái</th>
+                <th className="px-4 py-3 whitespace-nowrap">Phụ trách</th>
+                <th className="px-4 py-3 whitespace-nowrap">Ngày</th>
+                <th className="px-4 py-3 whitespace-nowrap w-[250px]">Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -283,15 +291,24 @@ export function AdminOrdersView({
                   </td>
                   <td className="px-4 py-4 font-semibold text-slate-900 whitespace-nowrap">#{order.id}</td>
                   <td className="px-4 py-4 text-slate-700 text-sm whitespace-nowrap">{order.user.fullName || order.user.username}</td>
-                  <td className="px-4 py-4 text-sm text-slate-700 max-w-[260px]">
-                    <p className="truncate">{order.productName || order.productLink}</p>
-                    <p className="mt-1 text-xs text-amber-700">{order.voucherLabel || "Chưa có voucher"}</p>
+                  <td className="px-4 py-4 text-sm text-slate-700">
+                    <div className="flex flex-col items-center">
+                      <p className="font-medium text-slate-900 whitespace-nowrap truncate max-w-[280px]">{getShortAddress(order.address)}</p>
+                      {!order.productName?.includes("Đơn gộp") && (
+                        <p className="mt-1 truncate text-xs text-slate-500 max-w-[250px]">{order.productName || order.productLink}</p>
+                      )}
+                    </div>
                   </td>
-                  <td className="px-4 py-4 text-slate-700 whitespace-nowrap">{order.shopId || "-"}</td>
-                  <td className="px-4 py-4 text-slate-700">{order.quantity}</td>
+                  <td className="px-4 py-4 text-slate-600 font-medium text-xs whitespace-nowrap truncate max-w-[150px]">
+                    {order.variant || "-"}
+                  </td>
                   <td className="px-4 py-4 text-slate-900 font-semibold">{formatCurrency(order.total)}</td>
-                  <td className="px-4 py-4"><StatusPill status={order.status} /></td>
-                  <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                  <td className="px-4 py-4">
+                    <div className="flex justify-center">
+                      <StatusPill status={order.status} />
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap text-center">
                     {order.approvedByAdminName
                       ? order.approvedByAdminId === currentAdminId
                         ? "Bạn"
@@ -300,15 +317,17 @@ export function AdminOrdersView({
                   </td>
                   <td className="px-4 py-4 text-slate-500 text-xs whitespace-nowrap">{formatDate(order.createdAt)}</td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <OrderActions
-                      orderId={order.id}
-                      status={order.status}
-                      currentAdminId={currentAdminId}
-                      canManageAllOrders={canManageAllOrders}
-                      approvedByAdminId={order.approvedByAdminId}
-                      approvedByAdminName={order.approvedByAdminName}
-                      assignableAdmins={assignableAdmins}
-                    />
+                    <div className="flex justify-center">
+                      <OrderActions
+                        orderId={order.id}
+                        status={order.status}
+                        currentAdminId={currentAdminId}
+                        canManageAllOrders={canManageAllOrders}
+                        approvedByAdminId={order.approvedByAdminId}
+                        approvedByAdminName={order.approvedByAdminName}
+                        assignableAdmins={assignableAdmins}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -328,24 +347,20 @@ export function AdminOrdersView({
                   <StatusPill status={order.status} />
                 </div>
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-500">Sản phẩm</p>
-                  <p className="mt-2 font-medium text-slate-900 truncate">{order.productName || order.productLink}</p>
-                  <p className="mt-1 text-xs font-medium text-amber-700">{order.voucherLabel || "Chưa có voucher"}</p>
+                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Địa chỉ</p>
+                  <p className="mt-2 font-semibold text-slate-900 whitespace-nowrap truncate">{getShortAddress(order.address)}</p>
+                  {!order.productName?.includes("Đơn gộp") && (
+                    <p className="mt-1 text-xs text-slate-500 truncate">{order.productName || order.productLink}</p>
+                  )}
+                </div>
+                <div className="rounded-2xl bg-amber-50/50 border border-amber-100 p-3">
+                  <p className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Phân loại</p>
+                  <p className="mt-1 text-sm font-medium text-slate-800 whitespace-nowrap truncate">{order.variant || "-"}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
                   <div className="rounded-2xl bg-slate-50 p-3">
                     <p className="text-xs text-slate-500">Khách hàng</p>
                     <p className="mt-1 font-medium text-slate-900">{order.user.fullName || order.user.username}</p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-3">
-                    <p className="text-xs text-slate-500">Shop ID</p>
-                    <p className="mt-1 font-medium text-slate-900">{order.shopId || "-"}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
-                  <div className="rounded-2xl bg-slate-50 p-3">
-                    <p className="text-xs text-slate-500">Số lượng</p>
-                    <p className="mt-1 font-medium text-slate-900">{order.quantity}</p>
                   </div>
                   <div className="rounded-2xl bg-slate-50 p-3">
                     <p className="text-xs text-slate-500">Tổng tiền</p>

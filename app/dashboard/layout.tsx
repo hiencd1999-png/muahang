@@ -56,7 +56,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             { href: "/dashboard/profile", label: "Profile" },
           ]} />
         </aside>
-        <section className="space-y-6">{children}</section>
+        <section className="space-y-6 min-w-0">{children}</section>
       </div>
     </main>
   );

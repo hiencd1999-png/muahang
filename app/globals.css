@@ -139,6 +139,23 @@ textarea {
 
 @media (max-width: 640px) {
   .shell {
-    width: min(100vw - 20px, 1180px);
+    width: min(100vw - 24px, 1180px);
+  }
+}
+
+/* Base styles for better touch targets and readability on mobile */
+@media (max-width: 768px) {
+  input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  
+  .btn-mobile-full {
+    width: 100%;
+  }
+
+  .text-break {
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 }

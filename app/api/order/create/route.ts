@@ -183,7 +183,7 @@ export async function POST(request: Request) {
         data: {
           userId: result.user.id,
           productLink: primaryItem.canonicalProductLink,
-          productName: preparedItems.length === 1 ? primaryItem.productName : `Đơn gộp ${preparedItems.length} link Shopee`,
+          productName: primaryItem.productName,
           shopId: preparedItems.length === 1 ? primaryItem.shopId : null,
           variant: mergedVariant,
           quantity: totalQuantity,
@@ -220,9 +220,7 @@ export async function POST(request: Request) {
       result.user.id,
       "ORDER_CREATED",
       `Đơn hàng #${newOrder.id} được tạo`,
-      preparedItems.length === 1
-        ? `Bạn vừa tạo đơn ${selectedVoucher.label} với số tiền ${(total / 1000).toFixed(0)}k`
-        : `Bạn vừa tạo đơn gộp ${preparedItems.length} link với số tiền ${(total / 1000).toFixed(0)}k`,
+      `Bạn vừa tạo đơn hàng với số tiền ${(total / 1000).toFixed(0)}k`,
       "/dashboard/orders"
     );
 

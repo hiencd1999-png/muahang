@@ -56,6 +56,13 @@ export async function PATCH(
     return NextResponse.json({ error: "User không tồn tại." }, { status: 404 });
   }
 
+  if (isSpAdminRole(result.user.role) && isSpAdminRole(targetUser.role) && result.user.id !== targetUser.id) {
+    return NextResponse.json(
+      { error: "SPADMIN không thể tác động lên SPADMIN khác." },
+      { status: 403 }
+    );
+  }
+
   if (!isSpAdminRole(result.user.role) && targetUser.role !== "USER") {
     return NextResponse.json(
       { error: "ADMIN chỉ được chỉnh sửa thông tin của tài khoản role USER." },

@@ -131,9 +131,15 @@ export function UserManagementControls({
           onClick={() => setIsModalOpen(true)}
           disabled={!canEditUser}
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-amber-300 hover:bg-amber-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-          title={!canEditUser ? "ADMIN chỉ được chỉnh sửa tài khoản có role USER." : "Quản lý user"}
+          title={
+            !canEditUser
+              ? currentRole === "SPADMIN"
+                ? "SPADMIN không thể tác động lên SPADMIN khác."
+                : "ADMIN chỉ được chỉnh sửa tài khoản có role USER."
+              : "Quản lý user"
+          }
         >
-          {canEditUser ? "Quản lý user" : "Chỉ SPADMIN"}
+          {canEditUser ? "Quản lý user" : currentRole === "SPADMIN" ? "Bị hạn chế" : "Chỉ SPADMIN"}
         </button>
       </div>
 

@@ -572,9 +572,9 @@ export function CreateOrderForm({
         <button
           type="submit"
           disabled={loading || !selectedVoucher || activeVoucherCount === 0}
-          className="mt-6 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-6 w-full lg:w-auto rounded-2xl bg-slate-950 px-8 py-4 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 shadow-lg"
         >
-          {loading ? "Đang đặt đơn..." : "Đặt đơn"}
+          {loading ? "Đang đặt đơn..." : "Đặt đơn ngay"}
         </button>
       </form>
 

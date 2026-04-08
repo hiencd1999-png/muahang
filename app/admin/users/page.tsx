@@ -69,41 +69,53 @@ export default async function AdminUsersPage({
 
       <div className="mt-5">
         {/* Desktop Table */}
-        <div className="hidden lg:block overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="text-slate-500">
+        <div className="hidden lg:block overflow-x-auto w-full">
+          <table className="min-w-[1000px] w-full text-left text-sm border-collapse">
+            <thead className="bg-slate-100 text-slate-500">
               <tr>
-                <th className="pb-3">ID</th>
-                <th className="pb-3">Người dùng</th>
-                <th className="pb-3">Role</th>
-                <th className="pb-3">Balance</th>
-                <th className="pb-3">Action</th>
+                <th className="px-4 py-3 font-semibold">ID</th>
+                <th className="px-4 py-3 font-semibold">Người dùng</th>
+                <th className="px-4 py-3 font-semibold text-center">Role</th>
+                <th className="px-4 py-3 font-semibold">Số dư</th>
+                <th className="px-4 py-3 font-semibold text-center">Hành động</th>
               </tr>
             </thead>
             <tbody>
               {users.map((user) => (
-                <tr key={user.id} className="border-t border-slate-200/70 align-top">
-                  <td className="py-4 font-medium text-slate-900">{user.id}</td>
-                  <td className="py-4 text-slate-700">
+                <tr key={user.id} className="border-t border-slate-200 transition hover:bg-slate-50">
+                  <td className="px-4 py-4 font-medium text-slate-900">#{user.id}</td>
+                  <td className="px-4 py-4 text-slate-700">
                     <div className="space-y-1">
-                      <p className="font-medium text-slate-900">{user.fullName || user.username}</p>
-                      <p className="text-xs text-slate-500">@{user.username}</p>
+                      <p className="font-semibold text-slate-900">{user.fullName || user.username}</p>
+                      <p className="text-xs text-slate-500 font-mono">@{user.username}</p>
                     </div>
                   </td>
-                  <td className="py-4 text-slate-600">{user.role}</td>
-                  <td className="py-4 text-slate-700">{formatCurrency(user.balance)}</td>
-                  <td className="py-4 w-[180px]">
-                    <UserManagementControls
-                      userId={user.id}
-                      username={user.username}
-                      currentRole={user.role}
-                      currentBalance={user.balance}
-                      displayName={user.fullName || user.username}
-                      email={user.email}
-                      phone={user.phone}
-                      canManageRoles={canManageRoles}
-                      canEditUser={canManageRoles || user.role === "USER"}
-                    />
+                  <td className="px-4 py-4">
+                    <div className="flex justify-center">
+                      <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+                        user.role === 'SPADMIN' ? 'bg-amber-100 text-amber-800' : 
+                        user.role === 'ADMIN' ? 'bg-blue-100 text-blue-800' : 
+                        'bg-slate-100 text-slate-600'
+                      }`}>
+                        {user.role}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-slate-950 font-bold">{formatCurrency(user.balance)}</td>
+                  <td className="px-4 py-4">
+                    <div className="flex justify-center">
+                      <UserManagementControls
+                        userId={user.id}
+                        username={user.username}
+                        currentRole={user.role}
+                        currentBalance={user.balance}
+                        displayName={user.fullName || user.username}
+                        email={user.email}
+                        phone={user.phone}
+                        canManageRoles={canManageRoles && (user.role !== "SPADMIN" || user.id === currentAdmin.id)}
+                        canEditUser={canManageRoles ? (user.role !== "SPADMIN" || user.id === currentAdmin.id) : user.role === "USER"}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -134,8 +146,8 @@ export default async function AdminUsersPage({
                     displayName={user.fullName || user.username}
                     email={user.email}
                     phone={user.phone}
-                    canManageRoles={canManageRoles}
-                    canEditUser={canManageRoles || user.role === "USER"}
+                    canManageRoles={canManageRoles && (user.role !== "SPADMIN" || user.id === currentAdmin.id)}
+                    canEditUser={canManageRoles ? (user.role !== "SPADMIN" || user.id === currentAdmin.id) : user.role === "USER"}
                   />
                 </div>
               </div>
