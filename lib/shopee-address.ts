@@ -79,7 +79,6 @@ export interface ShopeeAddressAnalyzeInput {
   address: string;
   phone?: string;
   note?: string;
-  spcCookie?: string;
 }
 
 export interface ShopeeAddressAnalyzeResult {
@@ -99,9 +98,9 @@ export async function analyzeShopeeAddress(input: ShopeeAddressAnalyzeInput): Pr
     throw new Error("Thiếu địa chỉ để phân tích.");
   }
 
-  const spcCookie = normalizeSpcSt(input.spcCookie || process.env.COOKIE || "");
+  const spcCookie = normalizeSpcSt(process.env.COOKIE || "");
   if (!spcCookie) {
-    throw new Error("Thiếu SPC_ST để gọi Shopee autofill.");
+    throw new Error("Thiếu SPC_ST trong cấu hình server để gọi Shopee autofill.");
   }
 
   const phone = normalizePhone(input.phone || "");

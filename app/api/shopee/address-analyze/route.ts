@@ -7,7 +7,6 @@ const schema = z.object({
   address: z.string().trim().min(8),
   phone: z.string().trim().optional(),
   note: z.string().trim().optional(),
-  spcCookie: z.string().trim().optional(),
 });
 
 export async function POST(request: Request) {
