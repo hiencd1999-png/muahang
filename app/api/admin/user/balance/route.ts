@@ -7,7 +7,7 @@ import { requireApiUser } from "@/lib/session";
 const schema = z.object({
   userId: z.number().int().positive(),
   amount: z.number().int().min(1000),
-  mode: z.enum(["add", "subtract"]),
+  mode: z.enum(["add", "subtract"]), 
 });
 
 export async function PUT(request: Request) {
@@ -32,42 +32,74 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "User không tồn tại." }, { status: 404 });
   }
 
-  const signedAmount = parsed.data.mode === "add" ? parsed.data.amount : -parsed.data.amount;
-  const nextBalance = targetUser.balance + signedAmount;
-
-  if (nextBalance < 0) {
-    return NextResponse.json({ error: "Không thể trừ vượt quá số dư hiện tại." }, { status: 400 });
+  const isSpAdmin = result.user.role === "SPADMIN";
+  const amountChange = parsed.data.mode === "add" ? parsed.data.amount : -parsed.data.amount;
+  
+  if (!isSpAdmin) {
+    if (parsed.data.mode !== "add") {
+      return NextResponse.json({ error: "ADMIN chỉ có thể chuyển cộng thêm tiền, không được trừ." }, { status: 400 });
+    }
+    if (result.user.balance < amountChange) {
+      return NextResponse.json({ error: "Số dư Admin không đủ để chuyển cho người dùng." }, { status: 400 });
+    }
   }
 
-  await prisma.$transaction([
-    prisma.user.update({
+  console.log(`[QuickAdjustment] Operator: ${result.user.username} (${result.user.role}), Target: ${targetUser.username}, Change: ${amountChange}`);
+
+  await prisma.$transaction(async (tx) => {
+    // 1. Deduct from Admin ONLY if not SPADMIN
+    if (!isSpAdmin && amountChange > 0) {
+      await tx.user.update({
+        where: { id: result.user.id },
+        data: { balance: { decrement: amountChange } },
+      });
+
+      // Transaction for Admin
+      await tx.transaction.create({
+        data: {
+          userId: result.user.id,
+          amount: -amountChange,
+          type: "ADMIN_ADJUSTMENT",
+          note: `Chuyển tiền cho User ${targetUser.username}: -${amountChange} VND`,
+        },
+      });
+    }
+
+    // 2. Add to User
+    await tx.user.update({
       where: { id: targetUser.id },
-      data: { balance: { increment: signedAmount } },
-    }),
-    prisma.transaction.create({
+      data: { balance: { increment: amountChange } },
+    });
+
+    // 3. Transaction for User
+    await tx.transaction.create({
       data: {
         userId: targetUser.id,
-        amount: signedAmount,
+        amount: amountChange,
         type: "ADMIN_ADJUSTMENT",
-        note: `Điều chỉnh số dư bởi ${result.user.username}: ${signedAmount > 0 ? "+" : ""}${signedAmount} VND`,
+        note: isSpAdmin
+          ? `Điều chỉnh số dư bởi SPADMIN ${result.user.username}: ${amountChange > 0 ? "+" : ""}${amountChange} VND`
+          : `Nhận tiền từ Admin ${result.user.username}: +${amountChange} VND`,
       },
-    }),
-    prisma.auditLog.create({
+    });
+
+    // 4. Audit Log
+    await tx.auditLog.create({
       data: {
         adminId: result.user.id,
-        action: "ADMIN_ADJUST_USER_BALANCE",
+        action: isSpAdmin ? "SPADMIN_ADJUST_BALANCE" : "ADMIN_TRANSFER_BALANCE",
         targetType: "USER",
         targetId: targetUser.id,
         details: JSON.stringify({
           username: targetUser.username,
-          mode: parsed.data.mode,
-          amountChange: signedAmount,
-          previousBalance: targetUser.balance,
-          nextBalance,
+          amountTransfer: amountChange,
+          adminPreviousBalance: result.user.balance,
+          userPreviousBalance: targetUser.balance,
+          isSpAdmin,
         }),
       },
-    }),
-  ]);
+    });
+  });
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/transactions");

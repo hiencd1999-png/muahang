@@ -11,53 +11,92 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "userIds is required" }, { status: 400 });
   }
 
+  const isSpAdmin = admin.role === "SPADMIN";
+
   if (typeof amountChange !== "number" || amountChange === 0) {
-    return NextResponse.json({ error: "amountChange must be non-zero number" }, { status: 400 });
+    return NextResponse.json({ error: "Số tiền thay đổi không hợp lệ." }, { status: 400 });
   }
 
+  if (!isSpAdmin) {
+    if (amountChange <= 0) {
+      return NextResponse.json({ error: "ADMIN chỉ có thể chuyển cộng thêm số dư, không được trừ." }, { status: 400 });
+    }
+    const totalTransfer = amountChange * userIds.length;
+    if (admin.balance < totalTransfer) {
+      return NextResponse.json({ error: `Số dư Admin không đủ. Cần ${totalTransfer.toLocaleString()} VND but only have ${admin.balance.toLocaleString()} VND.` }, { status: 400 });
+    }
+  }
+
+  const totalTransfer = amountChange * userIds.length;
+  console.log(`[BatchAdjustment] Operator: ${admin.username} (${admin.role}), TargetCount: ${userIds.length}, AmountPerUser: ${amountChange}`);
+
   try {
-    const results = await Promise.all(
-      userIds.map(async (userId: number) => {
-        const user = await prisma.user.update({
+    const results = await prisma.$transaction(async (tx) => {
+      // 1. Deduct from Admin ONLY if not SPADMIN
+      if (!isSpAdmin && amountChange > 0) {
+        await tx.user.update({
+          where: { id: admin.id },
+          data: { balance: { decrement: totalTransfer } },
+        });
+
+        // Add Transaction for Admin
+        await tx.transaction.create({
+          data: {
+            userId: admin.id,
+            amount: -totalTransfer,
+            type: "ADMIN_ADJUSTMENT",
+            note: `Chuyển tiền hàng loạt cho ${userIds.length} người dùng: -${totalTransfer} VND`,
+          },
+        });
+      }
+
+      // 3. Update all users and add their transactions
+      const updatedUsers = [];
+      for (const userId of userIds) {
+        const u = await tx.user.update({
           where: { id: userId },
           data: { balance: { increment: amountChange } },
         });
-
-        // Create transaction record
-        await prisma.transaction.create({
+        
+        await tx.transaction.create({
           data: {
             userId,
             amount: amountChange,
             type: "ADMIN_ADJUSTMENT",
-            note: `Admin điều chỉnh số dư: ${amountChange > 0 ? "+" : ""}${amountChange}`,
+            note: isSpAdmin 
+               ? `Điều chỉnh số dư hàng loạt bởi SPADMIN ${admin.username}: ${amountChange > 0 ? "+" : ""}${amountChange} VND`
+               : `Nhận tiền hàng loạt từ Admin ${admin.username}: +${amountChange} VND`,
           },
         });
+        updatedUsers.push(u);
+      }
 
-        return user;
-      })
-    );
+      // 4. Create Audit Log
+      await tx.auditLog.create({
+        data: {
+          adminId: admin.id,
+          action: isSpAdmin ? "SPADMIN_TRANSFER_BALANCE" : "BULK_TRANSFER_BALANCE",
+          targetType: "USER",
+          targetId: 0,
+          details: JSON.stringify({
+            userIds,
+            amountPerUser: amountChange,
+            totalTransfer,
+            count: updatedUsers.length,
+          }),
+        },
+      });
 
-    // Log the action
-    await prisma.auditLog.create({
-      data: {
-        adminId: admin.id,
-        action: "BULK_ADJUST_BALANCE",
-        targetType: "USER",
-        targetId: 0,
-        details: JSON.stringify({
-          userIds,
-          amountChange,
-          count: results.length,
-        }),
-      },
+      return updatedUsers;
     });
 
     return NextResponse.json({
-      message: `Updated balance for ${results.length} users`,
+      message: `Đã chuyển tiền cho ${results.length} người dùng thành công.`,
       updated: results.length,
+      totalTransferred: totalTransfer,
     });
   } catch (error) {
     console.error("Batch balance update error:", error);
-    return NextResponse.json({ error: "Failed to update balances" }, { status: 500 });
+    return NextResponse.json({ error: "Thanh toán hàng loạt thất bại." }, { status: 500 });
   }
 }

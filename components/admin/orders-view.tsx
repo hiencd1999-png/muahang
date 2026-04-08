@@ -167,8 +167,8 @@ export function AdminOrdersView({
       <div className="mb-6 grid gap-4 lg:grid-cols-[1.5fr_0.9fr] lg:items-end">
         <div className="space-y-3">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-950">Quản lý đơn hàng</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <h2 className="text-2xl font-black text-slate-950 dark:text-white tracking-tight">Quản lý đơn hàng</h2>
+            <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-200">
               Xem và xử lý đơn hàng Shopee, lọc theo trạng thái và tìm nhanh theo username hoặc link.
             </p>
           </div>

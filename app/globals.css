@@ -16,16 +16,16 @@
 
 html.dark {
   --background: #020617; /* Slate 950 base */
-  --foreground: #f8fafc;
+  --foreground: #f1f5f9; /* Slate 100 */
   --muted: #94a3b8;
   --card: #0f172a; /* Slate 900 for surface */
   --card-strong: #1e293b; /* Slate 800 for nested items */
-  --line: rgba(51, 65, 85, 0.5);
+  --line: rgba(51, 65, 85, 0.7);
   --primary: #fbbf24;
   --primary-deep: #f59e0b;
   --accent: #2dd4bf;
   --danger: #fb7185;
-  --shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {

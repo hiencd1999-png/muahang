@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/shared/toast";
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Pencil, RefreshCw } from "lucide-react";
 import { Modal } from "@/components/shared/modal";
 import { OrderDetailModalContent } from "@/components/shared/order-detail-modal-content";
 
@@ -50,6 +50,7 @@ export function UserOrderActions({ orderId, status, buttonClassName }: { orderId
   });
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   async function readApiResponse(response: Response) {
     const contentType = response.headers.get("content-type") || "";
@@ -204,6 +205,33 @@ export function UserOrderActions({ orderId, status, buttonClassName }: { orderId
     }
   }
 
+  async function handleResetOrder() {
+    const confirmed = window.confirm("Xác nhận đặt lại đơn hàng này? Số dư sẽ bị trừ lại tương ứng.");
+    if (!confirmed) return;
+
+    setIsResetting(true);
+    try {
+      const response = await fetch("/api/order/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      });
+      const data = await readApiResponse(response);
+
+      if (!response.ok) {
+        addToast("error", data.error || "Không thể đặt lại đơn hàng.");
+        return;
+      }
+
+      addToast("success", "Đặt lại đơn hàng thành công! Đang chờ duyệt.");
+      router.refresh();
+    } catch {
+      addToast("error", "Có lỗi khi đặt lại đơn hàng.");
+    } finally {
+      setIsResetting(false);
+    }
+  }
+
   return (
     <>
       <div className="flex flex-row gap-2 flex-nowrap items-center">
@@ -242,6 +270,19 @@ export function UserOrderActions({ orderId, status, buttonClassName }: { orderId
             title="Hủy đơn"
           >
             {isCanceling ? "..." : "Hủy đơn"}
+          </button>
+        ) : null}
+        {status === "CANCELED" ? (
+          <button
+            type="button"
+            onClick={handleResetOrder}
+            disabled={isResetting || isLoadingDetails}
+            className={
+              `rounded-xl bg-emerald-600 hover:bg-emerald-700 font-semibold text-white disabled:opacity-60 transition-colors inline-flex items-center gap-1.5 ${buttonClassName ?? 'px-3 py-2 text-xs'}`
+            }
+            title="Đặt lại đơn hàng"
+          >
+            {isResetting ? "..." : <><RefreshCw size={13} /> Đặt lại</>}
           </button>
         ) : null}
       </div>

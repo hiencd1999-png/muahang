@@ -30,6 +30,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <h1 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white sm:text-3xl">Điều phối user, đơn và giao dịch</h1>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <div className="mr-3 hidden items-center rounded-2xl bg-slate-100 dark:bg-gray-800 px-4 py-2 sm:flex">
+             <span className="text-xs font-semibold text-slate-500 dark:text-gray-400 mr-2 uppercase">Số dư:</span>
+             <span className="text-sm font-bold text-slate-900 dark:text-white">
+               {new Intl.NumberFormat("vi-VN").format(currentAdmin.balance)} VND
+             </span>
+          </div>
           <ThemeToggle />
           <Link href="/dashboard" className="rounded-full border border-slate-300 bg-white dark:bg-gray-800 dark:border-gray-700 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-gray-300 sm:px-4">
             Về dashboard

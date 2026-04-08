@@ -16,13 +16,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <header className="panel relative z-40 mb-6 rounded-[2rem] p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 mb-1">User dashboard</p>
-            <h1 className="text-2xl font-bold text-slate-950 dark:text-white sm:text-3xl truncate">Xin chào, {user.fullName || user.username}</h1>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 dark:text-slate-100 mb-1 opacity-80">User dashboard</p>
+            <h1 className="text-2xl font-black text-slate-950 dark:text-white sm:text-3xl truncate tracking-tight">Xin chào, {user.fullName || user.username}</h1>
             
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="inline-flex flex-col rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200/60 dark:border-amber-800/40 px-5 py-3 shadow-sm">
-                <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Số dư hiện tại</p>
-                <p className="text-xl font-black text-amber-900 dark:text-amber-50 mt-1">{formatCurrency(user.balance)}</p>
+              <div className="inline-flex flex-col rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950 border border-amber-200/60 dark:border-amber-900/40 px-5 py-3 shadow-md">
+                <p className="text-[10px] text-amber-700 dark:text-white font-black uppercase tracking-widest opacity-90">Số dư hiện tại</p>
+                <p className="text-xl font-black text-amber-950 dark:text-white mt-1">{formatCurrency(user.balance)}</p>
               </div>
 
               <div className="flex items-center gap-2">

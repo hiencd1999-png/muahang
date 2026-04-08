@@ -10,19 +10,22 @@ export function BatchActionsToolbar({
   onSelectAll,
   onClearAll,
   actionType = "orders",
+  isSpAdmin = false,
+  selectedIds = [],
 }: {
   selectedCount: number;
   totalCount: number;
   onSelectAll: () => void;
   onClearAll: () => void;
   actionType?: "orders" | "users" | "transactions";
+  isSpAdmin?: boolean;
+  selectedIds?: number[];
 }) {
   const router = useRouter();
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [action, setAction] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const handleBatchAction = async () => {
     if (!action || selectedCount === 0) return;
@@ -40,6 +43,11 @@ export function BatchActionsToolbar({
       } else if (actionType === "users" && action.startsWith("balance_")) {
         endpoint = "/api/admin/users/batch-balance";
         const amountChange = parseInt(action.split("_")[1]);
+        if (!isSpAdmin && amountChange <= 0) {
+          addToast("error", "ADMIN chỉ có thể cấp thêm số dư.");
+          setLoading(false);
+          return;
+        }
         body = { userIds: selectedIds, amountChange };
       }
 
@@ -113,10 +121,16 @@ export function BatchActionsToolbar({
           )}
           {actionType === "users" && (
             <>
-              <option value="balance_100000">Cộng 100k</option>
-              <option value="balance_250000">Cộng 250k</option>
-              <option value="balance_-100000">Trừ 100k</option>
-              <option value="balance_-250000">Trừ 250k</option>
+              <option value="balance_100000">{isSpAdmin ? "Cộng 100k" : "Chuyển cộng 100k"}</option>
+              <option value="balance_250000">{isSpAdmin ? "Cộng 250k" : "Chuyển cộng 250k"}</option>
+              <option value="balance_500000">{isSpAdmin ? "Cộng 500k" : "Chuyển cộng 500k"}</option>
+              {isSpAdmin && (
+                <>
+                  <option value="balance_-100000">Trừ 100k</option>
+                  <option value="balance_-250000">Trừ 250k</option>
+                  <option value="balance_-500000">Trừ 500k</option>
+                </>
+              )}
             </>
           )}
         </select>
@@ -128,7 +142,9 @@ export function BatchActionsToolbar({
           <div className="rounded-lg bg-white p-6 max-w-sm">
             <h3 className="text-lg font-semibold text-slate-900">Xác nhận thao tác</h3>
             <p className="mt-2 text-sm text-slate-600">
-              Bạn sắp thực hiện thao tác trên {selectedCount} mục. Hành động này không thể hoàn tác.
+              Bạn sắp thực hiện {action.startsWith("balance_") ? (isSpAdmin ? "điều chỉnh số dư" : "chuyển tiền") : "thao tác"} trên {selectedCount} mục. 
+              {action.startsWith("balance_") && !isSpAdmin && " Số tiền tương ứng sẽ bị trừ vào số dư của bạn."}
+              Hành động này không thể hoàn tác.
             </p>
             <div className="mt-6 flex gap-3">
               <button
@@ -143,7 +159,9 @@ export function BatchActionsToolbar({
               <button
                 onClick={handleBatchAction}
                 disabled={loading}
-                className="flex-1 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60"
+                className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-60 ${
+                  action.startsWith("balance_") ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"
+                }`}
               >
                 {loading ? "Đang xử lý..." : "Xác nhận"}
               </button>

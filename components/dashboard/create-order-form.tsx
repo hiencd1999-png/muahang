@@ -341,9 +341,6 @@ export function CreateOrderForm({
       <form onSubmit={handleSubmit} className="panel rounded-[1.75rem] p-6">
         <div className="space-y-2">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Tạo đơn Shopee</h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Nhiều link vẫn tính là một đơn: chọn voucher và số lượng một lần, rồi nhập phân loại riêng cho từng link.
-          </p>
         </div>
 
         <div className="mt-6 grid gap-5">
@@ -351,7 +348,6 @@ export function CreateOrderForm({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Thiết lập đơn chung</p>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Voucher chọn một lần cho toàn bộ link. Số lượng nhập riêng ở từng sản phẩm.</p>
               </div>
               <span className="rounded-full bg-white dark:bg-slate-950 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 border dark:border-slate-800">
                 Đang mở: {activeVoucherCount}/{voucherConfigs.length}
@@ -565,7 +561,7 @@ export function CreateOrderForm({
         <button
           type="submit"
           disabled={loading || !selectedVoucher || activeVoucherCount === 0}
-          className="mt-6 w-full lg:w-auto rounded-2xl bg-slate-950 px-8 py-4 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 shadow-lg"
+          className="mt-6 w-full lg:w-auto rounded-2xl bg-amber-600 px-8 py-4 text-sm font-semibold text-white transition hover:bg-amber-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 shadow-lg shadow-amber-200 dark:shadow-none"
         >
           {loading ? "Đang đặt đơn..." : "Đặt đơn ngay"}
         </button>

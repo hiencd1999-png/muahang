@@ -113,36 +113,71 @@ export async function PATCH(
     return NextResponse.json({ error: "Không có thay đổi nào để cập nhật." }, { status: 400 });
   }
 
-  details.changedFields = changedFields;
-  const onlyBalanceChange = changedFields.length === 1 && changedFields[0] === "balance";
+  const isSpAdmin = result.user.role === "SPADMIN";
+  const amountChange = typeof updates.balance === "number" ? updates.balance - targetUser.balance : 0;
+  
+  if (!isSpAdmin) {
+    if (amountChange < 0) {
+      return NextResponse.json({ error: "ADMIN chỉ có thể cộng thêm số dư, không được trừ." }, { status: 400 });
+    }
 
-  await prisma.$transaction([
-    prisma.user.update({
+    if (amountChange > 0 && result.user.balance < amountChange) {
+      return NextResponse.json({ error: "Số dư Admin không đủ để cấp cho người dùng." }, { status: 400 });
+    }
+  }
+
+  console.log(`[BalanceAdjustment] Operater: ${result.user.username} (${result.user.role}), Target: ${targetUser.username}, Change: ${amountChange}`);
+
+  await prisma.$transaction(async (tx) => {
+    // 1. Update user info
+    await tx.user.update({
       where: { id: userId },
       data: updates,
-    }),
-    ...(typeof updates.balance === "number"
-      ? [
-          prisma.transaction.create({
-            data: {
-              userId,
-              amount: updates.balance - targetUser.balance,
-              type: "ADMIN_ADJUSTMENT",
-              note: `Điều chỉnh số dư bởi ${result.user.username}: ${targetUser.balance} -> ${updates.balance} VND`,
-            },
-          }),
-        ]
-      : []),
-    prisma.auditLog.create({
+    });
+
+    if (amountChange !== 0) {
+      // 2. Only deduct from operator if they are NOT SPADMIN
+      if (!isSpAdmin && amountChange > 0) {
+        await tx.user.update({
+          where: { id: result.user.id },
+          data: { balance: { decrement: amountChange } },
+        });
+
+        // Admin sender transaction
+        await tx.transaction.create({
+          data: {
+            userId: result.user.id,
+            amount: -amountChange,
+            type: "ADMIN_ADJUSTMENT",
+            note: `Chuyển tiền cho User ${targetUser.username}: -${amountChange} VND`,
+          },
+        });
+      }
+
+      // 3. User receiver/adjustment transaction
+      await tx.transaction.create({
+        data: {
+          userId,
+          amount: amountChange,
+          type: "ADMIN_ADJUSTMENT",
+          note: isSpAdmin 
+            ? `Điều chỉnh số dư bởi SPADMIN ${result.user.username}: ${amountChange > 0 ? "+" : ""}${amountChange} VND`
+            : `Nhận tiền từ Admin ${result.user.username}: +${amountChange} VND`,
+        },
+      });
+    }
+
+    // 4. Audit Log
+    await tx.auditLog.create({
       data: {
         adminId: result.user.id,
-        action: onlyBalanceChange ? "ADMIN_ADJUST_USER_BALANCE" : "ADMIN_UPDATE_USER",
+        action: isSpAdmin ? "SPADMIN_ADJUST_BALANCE" : "ADMIN_TRANSFER_BALANCE",
         targetType: "USER",
         targetId: userId,
         details: JSON.stringify(details),
       },
-    }),
-  ]);
+    });
+  });
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/transactions");

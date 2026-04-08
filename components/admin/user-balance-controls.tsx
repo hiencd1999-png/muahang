@@ -16,6 +16,7 @@ export function UserManagementControls({
   phone,
   canManageRoles,
   canEditUser,
+  operatorIsSpAdmin = false,
 }: {
   userId: number;
   username: string;
@@ -26,6 +27,7 @@ export function UserManagementControls({
   phone: string;
   canManageRoles: boolean;
   canEditUser: boolean;
+  operatorIsSpAdmin?: boolean;
 }) {
   const router = useRouter();
   const { addToast } = useToast();
@@ -35,12 +37,18 @@ export function UserManagementControls({
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [nextRole, setNextRole] = useState<UserRole>(currentRole);
   const [isSaving, setIsSaving] = useState(false);
-  const suggestedBalances = [
+  const suggestedBalances = (operatorIsSpAdmin ? [
     currentBalance,
     currentBalance + 100_000,
     currentBalance + 500_000,
     Math.max(0, currentBalance - 100_000),
-  ].filter((value, index, values) => values.indexOf(value) === index);
+    Math.max(0, currentBalance - 500_000),
+  ] : [
+    currentBalance,
+    currentBalance + 100_000,
+    currentBalance + 500_000,
+    currentBalance + 1_000_000,
+  ]).filter((value, index, values) => values.indexOf(value) === index);
 
   useEffect(() => {
     setNextRole(currentRole);
@@ -69,6 +77,10 @@ export function UserManagementControls({
   }
 
   async function handleSaveBalance() {
+    if (!operatorIsSpAdmin && targetBalance < currentBalance) {
+      addToast("error", "ADMIN chỉ có thể cấp thêm số dư, không được trừ.");
+      return;
+    }
     setIsSavingBalance(true);
 
     const response = await fetch(`/api/admin/user/${userId}`, {
@@ -204,9 +216,13 @@ export function UserManagementControls({
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                   Balance
                 </p>
-                <h4 className="mt-2 text-lg font-semibold text-slate-950">Điều chỉnh số dư</h4>
+                <h4 className="mt-2 text-lg font-semibold text-slate-950">
+                  {operatorIsSpAdmin ? "Điều chỉnh số dư (SPADMIN)" : "Chuyển tiền cho User"}
+                </h4>
                 <p className="mt-1 text-sm text-slate-500">
-                  Nhập số dư mới. Hệ thống sẽ tự so sánh với số dư cũ để biết cần cộng hay trừ bao nhiêu tiền.
+                  {operatorIsSpAdmin 
+                    ? "Là SPADMIN, bạn có thể điều chỉnh số dư tùy ý mà không bị trừ tiền cá nhân."
+                    : "Nhập số dư mới (cao hơn hiện tại). Số tiền chênh lệch sẽ được trừ trực tiếp vào số dư của Admin."}
                 </p>
               </div>
 
@@ -228,10 +244,14 @@ export function UserManagementControls({
               </div>
 
               <label className="mt-4 block space-y-2 text-sm font-medium text-slate-700">
-                <span>Số dư mới</span>
+                <span>
+                  Số dư mới {operatorIsSpAdmin 
+                    ? "(Toàn quyền điều chỉnh)" 
+                    : `(Tối thiểu ${new Intl.NumberFormat("vi-VN").format(currentBalance)} VND)`}
+                </span>
                 <input
                   type="number"
-                  min={0}
+                  min={operatorIsSpAdmin ? 0 : currentBalance}
                   step={1000}
                   value={targetBalance}
                   onChange={(event) => setTargetBalance(Number(event.target.value) || 0)}
@@ -251,7 +271,9 @@ export function UserManagementControls({
                     <p className="mt-1 font-semibold">{new Intl.NumberFormat("vi-VN").format(targetBalance)} VND</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Chênh lệch</p>
+                    <p className="text-xs text-slate-500">
+                      {operatorIsSpAdmin ? "Chênh lệch" : "Chênh lệch (Admin bị trừ)"}
+                    </p>
                     <p className={`mt-1 font-semibold ${targetBalance - currentBalance >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                       {targetBalance - currentBalance >= 0 ? "+" : ""}
                       {new Intl.NumberFormat("vi-VN").format(targetBalance - currentBalance)} VND
@@ -265,9 +287,11 @@ export function UserManagementControls({
                   type="button"
                   onClick={handleSaveBalance}
                   disabled={isSavingBalance || targetBalance === currentBalance}
-                  className="w-full rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+                  className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white transition disabled:opacity-60 ${
+                    operatorIsSpAdmin ? "bg-slate-900 hover:bg-slate-800" : "bg-emerald-600 hover:bg-emerald-700"
+                  }`}
                 >
-                  {isSavingBalance ? "Đang cập nhật..." : "Lưu số dư mới"}
+                  {isSavingBalance ? "Đang cập nhật..." : operatorIsSpAdmin ? "Lưu số dư mới" : "Xác nhận chuyển tiền"}
                 </button>
               </div>
             </section>
