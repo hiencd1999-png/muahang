@@ -15,7 +15,9 @@ enum Role {
 enum OrderStatus {
   PENDING
   PROCESSING
-  COMPLETED
+  ORDER_PLACED
+  TRACKING_GENERATED
+  DELIVERED
   CANCELED
 }
 
@@ -52,20 +54,22 @@ model User {
 }
 
 model Order {
-  id          Int         @id @default(autoincrement())
-  userId      Int
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productLink String
-  productName String @default("")
-  shopId      String?
-  variant     String?
-  quantity    Int
-  phone       String
-  address     String
-  total       Int
-  status      OrderStatus @default(PENDING)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productLink   String
+  productName   String      @default("")
+  shopId        String?
+  variant       String?
+  quantity      Int
+  phone         String
+  address       String
+  total         Int
+  status        OrderStatus @default(PENDING)
+  spcCookie     String?     @default("")
+  trackingNo    String?     @default("")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 model Transaction {

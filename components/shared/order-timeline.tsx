@@ -2,6 +2,7 @@ import { formatDate } from "@/lib/format";
 
 interface TimelineEvent {
   status: string;
+  label: string;
   timestamp?: Date;
 }
 
@@ -12,20 +13,33 @@ interface OrderTimelineProps {
 }
 
 export function OrderTimeline({ currentStatus, createdAt, updatedAt }: OrderTimelineProps) {
-  const statuses = ["PENDING", "PROCESSING", "COMPLETED", "CANCELED"];
+  const statuses = ["PENDING", "PROCESSING", "ORDER_PLACED", "TRACKING_GENERATED", "DELIVERED", "CANCELED"];
   const currentIndex = statuses.indexOf(currentStatus);
 
+  const statusLabels: Record<string, string> = {
+    PENDING: "Chờ duyệt",
+    PROCESSING: "Đang xử lý",
+    ORDER_PLACED: "Đã đặt đơn",
+    TRACKING_GENERATED: "Đã lên mã VĐ",
+    DELIVERED: "Đã giao hàng",
+    CANCELED: "Đã hủy",
+  };
+
   const events: TimelineEvent[] = [
-    { status: "PENDING", timestamp: createdAt },
-    { status: "PROCESSING", timestamp: currentIndex >= 1 ? updatedAt : undefined },
-    { status: "COMPLETED", timestamp: currentIndex === 2 ? updatedAt : undefined },
-    { status: "CANCELED", timestamp: currentStatus === "CANCELED" ? updatedAt : undefined },
+    { status: "PENDING", label: statusLabels.PENDING, timestamp: createdAt },
+    { status: "PROCESSING", label: statusLabels.PROCESSING, timestamp: currentIndex >= 1 ? updatedAt : undefined },
+    { status: "ORDER_PLACED", label: statusLabels.ORDER_PLACED, timestamp: currentIndex >= 2 ? updatedAt : undefined },
+    { status: "TRACKING_GENERATED", label: statusLabels.TRACKING_GENERATED, timestamp: currentIndex >= 3 ? updatedAt : undefined },
+    { status: "DELIVERED", label: statusLabels.DELIVERED, timestamp: currentIndex === 4 ? updatedAt : undefined },
+    { status: "CANCELED", label: statusLabels.CANCELED, timestamp: currentStatus === "CANCELED" ? updatedAt : undefined },
   ];
 
   const statusColors: Record<string, { bg: string; border: string; text: string }> = {
-    PENDING: { bg: "bg-sky-100", border: "border-sky-300", text: "text-sky-700" },
-    PROCESSING: { bg: "bg-amber-100", border: "border-amber-300", text: "text-amber-700" },
-    COMPLETED: { bg: "bg-emerald-100", border: "border-emerald-300", text: "text-emerald-700" },
+    PENDING: { bg: "bg-yellow-100", border: "border-yellow-300", text: "text-yellow-700" },
+    PROCESSING: { bg: "bg-sky-100", border: "border-sky-300", text: "text-sky-700" },
+    ORDER_PLACED: { bg: "bg-blue-100", border: "border-blue-300", text: "text-blue-700" },
+    TRACKING_GENERATED: { bg: "bg-indigo-100", border: "border-indigo-300", text: "text-indigo-700" },
+    DELIVERED: { bg: "bg-emerald-100", border: "border-emerald-300", text: "text-emerald-700" },
     CANCELED: { bg: "bg-rose-100", border: "border-rose-300", text: "text-rose-700" },
   };
 
@@ -57,7 +71,7 @@ export function OrderTimeline({ currentStatus, createdAt, updatedAt }: OrderTime
               {/* Content */}
               <div className="flex-1 pb-4">
                 <div className={`rounded-lg border-2 ${colors.border} ${colors.bg} px-3 py-2`}>
-                  <p className={`text-sm font-semibold ${colors.text}`}>{event.status}</p>
+                  <p className={`text-sm font-semibold ${colors.text}`}>{event.label}</p>
                   {event.timestamp && (
                     <p className={`text-xs ${colors.text} opacity-75`}>{formatDate(event.timestamp)}</p>
                   )}

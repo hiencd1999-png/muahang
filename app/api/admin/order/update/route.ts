@@ -8,13 +8,16 @@ import { requireApiUser } from "@/lib/session";
 
 const schema = z.object({
   orderId: z.number().int().positive(),
-  status: z.enum(["PROCESSING", "COMPLETED", "CANCELED"]),
+  status: z.enum(["PROCESSING", "ORDER_PLACED", "TRACKING_GENERATED", "DELIVERED", "CANCELED"]),
+  spcCookie: z.string().optional(),
 });
 
 const allowedTransitions: Record<string, string[]> = {
   PENDING: ["PROCESSING", "CANCELED"],
-  PROCESSING: ["COMPLETED", "CANCELED"],
-  COMPLETED: [],
+  PROCESSING: ["ORDER_PLACED", "CANCELED"],
+  ORDER_PLACED: ["TRACKING_GENERATED", "CANCELED"],
+  TRACKING_GENERATED: ["DELIVERED", "CANCELED"],
+  DELIVERED: [],
   CANCELED: [],
 };
 
@@ -44,12 +47,35 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Chuyển trạng thái không hợp lệ." }, { status: 400 });
   }
 
+  // Validate cookie when transitioning to ORDER_PLACED
+  if (parsed.data.status === "ORDER_PLACED") {
+    if (!parsed.data.spcCookie || !parsed.data.spcCookie.trim()) {
+      return NextResponse.json({ 
+        error: "Vui lòng cung cấp cookie SPC_ST để chuyển sang 'Đã đặt đơn'." 
+      }, { status: 400 });
+    }
+    if (!parsed.data.spcCookie.includes("SPC_ST")) {
+      return NextResponse.json({ 
+        error: "Cookie không hợp lệ. Vui lòng cung cấp cookie SPC_ST đầy đủ." 
+      }, { status: 400 });
+    }
+  }
+
   const shouldRefund = parsed.data.status === "CANCELED" && (order.status === "PENDING" || order.status === "PROCESSING");
+
+  const updateData: Record<string, any> = { 
+    status: parsed.data.status,
+  };
+
+  // Store cookie when transitioning to ORDER_PLACED
+  if (parsed.data.status === "ORDER_PLACED") {
+    updateData.spcCookie = parsed.data.spcCookie;
+  }
 
   await prisma.$transaction([
     prisma.order.update({
       where: { id: order.id },
-      data: { status: parsed.data.status },
+      data: updateData,
     }),
     ...(shouldRefund ? [
       prisma.user.update({

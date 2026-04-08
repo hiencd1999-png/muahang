@@ -16,11 +16,15 @@ export function formatDate(date: Date | string) {
 export function statusLabel(status: string) {
   switch (status) {
     case "PENDING":
-      return "Chờ xử lý";
+      return "Chờ duyệt";
     case "PROCESSING":
-      return "Đang mua";
-    case "COMPLETED":
-      return "Hoàn tất";
+      return "Đang xử lý";
+    case "ORDER_PLACED":
+      return "Đã đặt đơn";
+    case "TRACKING_GENERATED":
+      return "Đã lên VĐ";
+    case "DELIVERED":
+      return "Đã giao";
     case "CANCELED":
       return "Đã hủy";
     default:

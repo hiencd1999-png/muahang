@@ -17,7 +17,9 @@ interface Order {
   address: string;
   variant?: string;
   note?: string;
-  status: "PENDING" | "PROCESSING" | "COMPLETED" | "CANCELED";
+  status: "PENDING" | "PROCESSING" | "ORDER_PLACED" | "TRACKING_GENERATED" | "DELIVERED" | "CANCELED";
+  spcCookie?: string;
+  trackingNo?: string;
   createdAt: Date;
   updatedAt: Date;
   userId: number;
@@ -94,21 +96,31 @@ export function OrderDetailModalContent({
             <p className="text-lg font-bold">
               {order.status === "PENDING" && (
                 <span className="text-yellow-600 dark:text-yellow-400">
-                  Chờ xử lý
+                  Chờ duyệt
                 </span>
               )}
               {order.status === "PROCESSING" && (
-                <span className="text-blue-600 dark:text-blue-400">
+                <span className="text-sky-600 dark:text-sky-400">
                   Đang xử lý
                 </span>
               )}
-              {order.status === "COMPLETED" && (
+              {order.status === "ORDER_PLACED" && (
+                <span className="text-blue-600 dark:text-blue-400">
+                  Đã đặt đơn
+                </span>
+              )}
+              {order.status === "TRACKING_GENERATED" && (
+                <span className="text-indigo-600 dark:text-indigo-400">
+                  Đã lên mã VĐ
+                </span>
+              )}
+              {order.status === "DELIVERED" && (
                 <span className="text-green-600 dark:text-green-400">
-                  Hoàn thành
+                  Đã giao hàng
                 </span>
               )}
               {order.status === "CANCELED" && (
-                <span className="text-red-600 dark:text-red-400">Bị hủy</span>
+                <span className="text-red-600 dark:text-red-400">Đã hủy</span>
               )}
             </p>
           </div>

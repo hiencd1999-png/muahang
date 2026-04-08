@@ -17,7 +17,9 @@ interface OrderData {
   address: string;
   variant?: string;
   note?: string;
-  status: "PENDING" | "PROCESSING" | "COMPLETED" | "CANCELED";
+  status: "PENDING" | "PROCESSING" | "ORDER_PLACED" | "TRACKING_GENERATED" | "DELIVERED" | "CANCELED";
+  spcCookie?: string;
+  trackingNo?: string;
   createdAt: Date;
   updatedAt: Date;
   userId: number;
@@ -50,6 +52,8 @@ export function UserOrderActions({ orderId, status }: { orderId: number; status:
             variant: order.variant,
             note: order.note,
             status: order.status,
+            spcCookie: order.spcCookie,
+            trackingNo: order.trackingNo,
             createdAt: new Date(order.createdAt),
             updatedAt: new Date(order.updatedAt),
             userId: order.userId,
