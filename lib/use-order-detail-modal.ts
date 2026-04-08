@@ -5,7 +5,7 @@ interface Order {
   link: string;
   totalAmount: number;
   fee: number | null;
-  status: "PENDING" | "PROCESSING" | "COMPLETED" | "CANCELED";
+  status: "PENDING" | "PROCESSING" | "ORDER_PLACED" | "TRACKING_GENERATED" | "DELIVERED" | "CANCELED";
   createdAt: Date;
   updatedAt: Date;
   userId: string;

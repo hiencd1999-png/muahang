@@ -11,13 +11,14 @@ const ITEMS_PER_PAGE = 20;
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: { q?: string; status?: string; page?: string };
+  searchParams: Promise<{ q?: string; status?: string; page?: string }>;
 }) {
   await requireUser("ADMIN");
 
-  const query = searchParams.q || "";
-  const statusFilter = searchParams.status || "";
-  const page = Math.max(1, parseInt(searchParams.page || "1"));
+  const params = await searchParams;
+  const query = params.q || "";
+  const statusFilter = params.status || "";
+  const page = Math.max(1, parseInt(params.page || "1"));
 
   const [orders, totalCount] = await Promise.all([
     prisma.order.findMany({

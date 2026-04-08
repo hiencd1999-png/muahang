@@ -8,10 +8,11 @@ const ITEMS_PER_PAGE = 20;
 export default async function AdminTransactionsPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
   await requireUser("ADMIN");
-  const page = Math.max(1, parseInt(searchParams.page || "1"));
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page || "1"));
 
   const [transactions, totalCount] = await Promise.all([
     prisma.transaction.findMany({

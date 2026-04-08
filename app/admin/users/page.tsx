@@ -9,12 +9,13 @@ const ITEMS_PER_PAGE = 20;
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: { q?: string; page?: string };
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
   await requireUser("ADMIN");
 
-  const query = searchParams.q || "";
-  const page = Math.max(1, parseInt(searchParams.page || "1"));
+  const params = await searchParams;
+  const query = params.q || "";
+  const page = Math.max(1, parseInt(params.page || "1"));
 
   const [users, totalCount] = await Promise.all([
     prisma.user.findMany({

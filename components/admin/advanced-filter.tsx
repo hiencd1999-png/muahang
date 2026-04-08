@@ -127,7 +127,9 @@ export function AdvancedFilterPanel({
                 <option value="">Tất cả trạng thái</option>
                 <option value="PENDING">Chờ xử lý</option>
                 <option value="PROCESSING">Đang xử lý</option>
-                <option value="COMPLETED">Hoàn thành</option>
+                <option value="DELIVERED">Đã giao hàng</option>
+                <option value="TRACKING_GENERATED">Đã lên mã VĐ</option>
+                <option value="ORDER_PLACED">Đã đặt đơn</option>
                 <option value="CANCELED">Đã hủy</option>
               </select>
             </label>

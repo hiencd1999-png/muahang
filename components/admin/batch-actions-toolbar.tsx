@@ -105,7 +105,9 @@ export function BatchActionsToolbar({
             <>
               <option value="status_pending">Đặt lại Chờ xử lý</option>
               <option value="status_processing">Đổi thành Đang xử lý</option>
-              <option value="status_completed">Đánh dấu Hoàn thành</option>
+              <option value="status_delivered">Đánh dấu Đã giao hàng</option>
+              <option value="status_tracking">Đánh dấu Đã lên mã VĐ</option>
+              <option value="status_placed">Đánh dấu Đã đặt đơn</option>
               <option value="status_canceled">Hủy đơn</option>
             </>
           )}

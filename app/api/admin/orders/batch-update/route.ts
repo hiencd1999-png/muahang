@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "orderIds is required" }, { status: 400 });
   }
 
-  if (!status || !["PENDING", "PROCESSING", "COMPLETED", "CANCELED"].includes(status)) {
+  if (!status || !["PENDING", "PROCESSING", "ORDER_PLACED", "TRACKING_GENERATED", "DELIVERED", "CANCELED"].includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 

@@ -5,37 +5,38 @@ import { prisma } from "@/lib/prisma";
 export default async function AdminLogsPage({
   searchParams,
 }: {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     adminId?: string;
     action?: string;
     startDate?: string;
     endDate?: string;
-  };
+  }>;
 }) {
   await requireUser("ADMIN");
 
-  const page = Math.max(1, parseInt(searchParams.page || "1"));
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page || "1"));
   const limit = 20;
 
   // Build where clause for filtering
   const where: any = {};
 
-  if (searchParams.adminId) {
-    where.adminId = parseInt(searchParams.adminId);
+  if (params.adminId) {
+    where.adminId = parseInt(params.adminId);
   }
 
-  if (searchParams.action) {
-    where.action = searchParams.action;
+  if (params.action) {
+    where.action = params.action;
   }
 
-  if (searchParams.startDate || searchParams.endDate) {
+  if (params.startDate || params.endDate) {
     where.createdAt = {};
-    if (searchParams.startDate) {
-      where.createdAt.gte = new Date(searchParams.startDate);
+    if (params.startDate) {
+      where.createdAt.gte = new Date(params.startDate);
     }
-    if (searchParams.endDate) {
-      const end = new Date(searchParams.endDate);
+    if (params.endDate) {
+      const end = new Date(params.endDate);
       end.setHours(23, 59, 59, 999);
       where.createdAt.lte = end;
     }
