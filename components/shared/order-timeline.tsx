@@ -25,14 +25,24 @@ export function OrderTimeline({ currentStatus, createdAt, updatedAt }: OrderTime
     CANCELED: "Đã hủy",
   };
 
-  const events: TimelineEvent[] = [
-    { status: "PENDING", label: statusLabels.PENDING, timestamp: createdAt },
-    { status: "PROCESSING", label: statusLabels.PROCESSING, timestamp: currentIndex >= 1 ? updatedAt : undefined },
-    { status: "ORDER_PLACED", label: statusLabels.ORDER_PLACED, timestamp: currentIndex >= 2 ? updatedAt : undefined },
-    { status: "TRACKING_GENERATED", label: statusLabels.TRACKING_GENERATED, timestamp: currentIndex >= 3 ? updatedAt : undefined },
-    { status: "DELIVERED", label: statusLabels.DELIVERED, timestamp: currentIndex === 4 ? updatedAt : undefined },
-    { status: "CANCELED", label: statusLabels.CANCELED, timestamp: currentStatus === "CANCELED" ? updatedAt : undefined },
-  ];
+  // Build events array based on current status
+  let events: TimelineEvent[] = [];
+
+  if (currentStatus === "CANCELED") {
+    // If canceled, show only PENDING and CANCELED
+    events = [
+      { status: "PENDING", label: statusLabels.PENDING, timestamp: createdAt },
+      { status: "CANCELED", label: statusLabels.CANCELED, timestamp: updatedAt },
+    ];
+  } else {
+    // Show events up to current status, excluding CANCELED
+    const relevantStatuses = statuses.slice(0, currentIndex + 1);
+    events = relevantStatuses.map((status, index) => ({
+      status,
+      label: statusLabels[status],
+      timestamp: index === 0 ? createdAt : (index === currentIndex ? updatedAt : undefined),
+    }));
+  }
 
   const statusColors: Record<string, { bg: string; border: string; text: string }> = {
     PENDING: { bg: "bg-yellow-100", border: "border-yellow-300", text: "text-yellow-700" },
