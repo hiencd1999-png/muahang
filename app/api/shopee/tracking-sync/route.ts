@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { OrderStatus } from "@prisma/client";
 import { requireApiUser } from "@/lib/session";
 import { ShopeeTrackingChecker } from "@/lib/shopee-tracking";
 
@@ -59,16 +60,20 @@ export async function GET(request: NextRequest) {
     const checker = new ShopeeTrackingChecker(order.spcCookie, proxyConf);
     const results = await checker.run(15, 0); // Limit 15 to get enough history if many orders placed
 
-    let newStatus = order.status;
+    let newStatus: OrderStatus = order.status;
     let newTrackingNo = order.trackingNo || "";
 
     if (results.length > 0) {
       const allDelivered = results.every((r: any) => r.description === "Đã giao hàng" || r.description === "Hoàn thành");
       const allCanceled = results.every((r: any) => r.description === "Đã hủy" || r.description === "Hủy bởi hệ thống");
 
-      const firstTracking = results.find((r: any) => r.tracking_number);
-      if (firstTracking && !newTrackingNo) {
-        newTrackingNo = firstTracking.tracking_number;
+      const allTrackingNumbers = results
+        .map((r: any) => (r.tracking_number || "").trim())
+        .filter(Boolean);
+      const uniqueTrackings = Array.from(new Set(allTrackingNumbers));
+
+      if (uniqueTrackings.length > 0) {
+        newTrackingNo = uniqueTrackings.join("\n");
       }
 
       if (allDelivered) {

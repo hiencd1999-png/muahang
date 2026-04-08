@@ -286,7 +286,7 @@ export function OrderDetailModalContent({
             {order.trackingNo ? (
               <div>
                 <p className="font-medium text-gray-600 dark:text-gray-400">Mã vận đơn</p>
-                <p className="mt-1 break-all">{order.trackingNo}</p>
+                <p className="mt-1 break-all whitespace-pre-wrap">{order.trackingNo}</p>
               </div>
             ) : null}
             <div>
@@ -519,12 +519,12 @@ export function OrderDetailModalContent({
               </label>
               <label className="block min-w-0 max-w-full space-y-1 text-sm text-slate-700 dark:text-slate-200">
                 <span>Mã vận đơn</span>
-                <input
-                  type="text"
+                <textarea
                   value={adminForm.trackingNo}
                   onChange={(e) => setAdminForm((prev) => ({ ...prev, trackingNo: e.target.value }))}
                   disabled={Boolean(isLockedForAnotherAdmin) || isDeliveredOrder}
-                  className="block w-full min-w-0 max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                  rows={2}
+                  className="block w-full min-w-0 max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2 whitespace-pre-wrap dark:border-gray-700 dark:bg-gray-800"
                 />
               </label>
               <label className="block min-w-0 max-w-full space-y-1 text-sm text-slate-700 dark:text-slate-200">
