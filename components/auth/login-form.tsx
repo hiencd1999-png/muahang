@@ -51,28 +51,28 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="panel animate-rise w-full rounded-[2rem] p-8 sm:p-10">
       <div className="mb-8 space-y-3">
-        <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-amber-800">
+        <span className="inline-flex rounded-full bg-amber-100 dark:bg-amber-900/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-amber-800 dark:text-amber-300">
           Dang nhap
         </span>
-        <h1 className="text-3xl font-semibold text-slate-900">Truy cập hệ thống đặt đơn.</h1>
-        <p className="text-sm leading-7 text-slate-600">
+        <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Truy cập hệ thống đặt đơn.</h1>
+        <p className="text-sm leading-7 text-slate-600 dark:text-slate-400">
           Nhập tài khoản để quản lý số dư, tạo đơn Shopee và theo dõi trạng thái xử lý.
         </p>
       </div>
 
       <div className="space-y-5">
-        <label className="block space-y-2 text-sm font-medium text-slate-700">
+        <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           <span>Tài khoản đăng nhập</span>
           <input
             name="identifier"
             required
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+            className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
             placeholder="Nhập username, email hoặc số điện thoại"
           />
-          <p className="text-xs text-slate-500">Bạn có thể dùng username, email hoặc số điện thoại để đăng nhập</p>
+          <p className="text-xs text-slate-500 dark:text-slate-500">Bạn có thể dùng username, email hoặc số điện thoại để đăng nhập</p>
         </label>
 
-        <label className="block space-y-2 text-sm font-medium text-slate-700">
+        <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           <span>Password</span>
           <div className="relative">
             <input

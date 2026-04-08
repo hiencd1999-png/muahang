@@ -221,31 +221,31 @@ export function OrderDetailModalContent({
 
       {/* Order Details */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <div className="min-w-0 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-          <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+        <div className="min-w-0 rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/40 dark:bg-amber-900/10 shadow-sm shadow-amber-900/5">
+          <p className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-500 tracking-wider">
             Tổng tiền
           </p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+          <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">
             {formatCurrency(order.total)}
           </p>
         </div>
-        <div className="min-w-0 rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
-          <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+        <div className="min-w-0 rounded-2xl bg-slate-50 p-5 border border-slate-100 dark:bg-slate-800/40 dark:border-slate-800 shadow-sm">
+          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">
             Số lượng
           </p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+          <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">
             {order.quantity}
           </p>
         </div>
-        <div className="min-w-0 rounded-xl bg-gray-50 p-4 dark:bg-gray-800 sm:col-span-2 xl:col-span-1">
-          <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+        <div className="min-w-0 rounded-2xl bg-slate-50 p-5 border border-slate-100 dark:bg-slate-800/40 dark:border-slate-800 shadow-sm sm:col-span-2 xl:col-span-1">
+          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">
             Voucher
           </p>
-          <p className="mt-1 break-words text-lg font-bold text-gray-900 dark:text-white">
+          <p className="mt-1 break-words text-lg font-black text-slate-900 dark:text-white">
             {voucherLabel}
           </p>
           {typeof order.unitPrice === "number" ? (
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-500">
               {formatCurrency(order.unitPrice)} / sản phẩm
             </p>
           ) : null}
@@ -267,26 +267,29 @@ export function OrderDetailModalContent({
       {/* Product & Delivery Information */}
       <div className="flex flex-col gap-6 text-sm">
         <div className="min-w-0">
-          <h3 className="mb-3 text-sm font-bold text-gray-900 dark:text-white">Thông tin sản phẩm</h3>
-          <div className="min-w-0 space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
+          <h3 className="mb-4 text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            Thông tin sản phẩm
+          </h3>
+          <div className="min-w-0 space-y-5 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-800/80 dark:bg-slate-950/40 p-6 shadow-inner">
             <div>
-              <p className="font-medium text-gray-600 dark:text-gray-400">Tên sản phẩm</p>
-              <p className="mt-1 break-words font-semibold">{order.productName}</p>
+              <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">Tên sản phẩm</p>
+              <p className="mt-2 text-base break-words font-black text-slate-900 dark:text-white">{order.productName}</p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <p className="font-medium text-gray-600 dark:text-gray-400">Loại voucher</p>
-                <p className="mt-1 break-words">{voucherLabel}</p>
+                <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">Loại voucher</p>
+                <p className="mt-1.5 font-bold text-slate-800 dark:text-slate-200">{voucherLabel}</p>
               </div>
               <div>
-                <p className="font-medium text-gray-600 dark:text-gray-400">Giá áp dụng</p>
-                <p className="mt-1">{typeof order.unitPrice === "number" ? formatCurrency(order.unitPrice) : "-"}</p>
+                <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">Giá áp dụng</p>
+                <p className="mt-1.5 font-black text-amber-700 dark:text-amber-500 text-lg">{typeof order.unitPrice === "number" ? formatCurrency(order.unitPrice) : "-"}</p>
               </div>
             </div>
             {order.trackingNo ? (
-              <div>
-                <p className="font-medium text-gray-600 dark:text-gray-400">Mã vận đơn</p>
-                <p className="mt-1 break-all whitespace-pre-wrap">{order.trackingNo}</p>
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50/30 p-4 dark:border-indigo-900/40 dark:bg-indigo-950/20">
+                <p className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider mb-1">Mã vận đơn</p>
+                <p className="font-black text-indigo-900 dark:text-indigo-300 font-mono text-lg break-all">{order.trackingNo}</p>
               </div>
             ) : null}
             <div>
@@ -348,17 +351,20 @@ export function OrderDetailModalContent({
         </div>
 
         <div className="min-w-0">
-          <h3 className="mb-3 text-sm font-bold text-gray-900 dark:text-white">Thông tin giao hàng</h3>
-          <div className="min-w-0 space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
+          <h3 className="mb-4 text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            Thông tin giao hàng
+          </h3>
+          <div className="min-w-0 space-y-5 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-800/80 dark:bg-slate-950/40 p-6 shadow-inner">
             <div>
-              <p className="font-medium text-gray-600 dark:text-gray-400">Số điện thoại</p>
-              <a href={`tel:${order.phone}`} className="mt-1 block break-words text-amber-600 hover:underline dark:text-amber-400">
+              <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">Số điện thoại</p>
+              <a href={`tel:${order.phone}`} className="mt-2 block font-black text-lg text-amber-700 hover:underline dark:text-amber-400 transition-colors">
                 {order.phone}
               </a>
             </div>
             <div>
-              <p className="font-medium text-gray-600 dark:text-gray-400">Địa chỉ</p>
-              <p className="mt-1 whitespace-pre-wrap break-words">{order.address}</p>
+              <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">Địa chỉ chi tiết</p>
+              <p className="mt-2 font-bold text-slate-800 dark:text-slate-100 leading-relaxed max-w-lg">{order.address}</p>
             </div>
             {/* Ẩn ghi chú khỏi dashboard user, chỉ admin xem được */}
             {order.status === "CANCELED" && cancelReason ? (

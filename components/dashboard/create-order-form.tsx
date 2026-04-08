@@ -340,35 +340,35 @@ export function CreateOrderForm({
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <form onSubmit={handleSubmit} className="panel rounded-[1.75rem] p-6">
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold text-slate-900">Tạo đơn Shopee</h2>
-          <p className="text-sm text-slate-600">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Tạo đơn Shopee</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Nhiều link vẫn tính là một đơn: chọn voucher và số lượng một lần, rồi nhập phân loại riêng cho từng link.
           </p>
         </div>
 
         <div className="mt-6 grid gap-5">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-slate-900">Thiết lập đơn chung</p>
-                <p className="mt-1 text-xs text-slate-500">Voucher chọn một lần cho toàn bộ link. Số lượng nhập riêng ở từng sản phẩm.</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Thiết lập đơn chung</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Voucher chọn một lần cho toàn bộ link. Số lượng nhập riêng ở từng sản phẩm.</p>
               </div>
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+              <span className="rounded-full bg-white dark:bg-slate-950 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 border dark:border-slate-800">
                 Đang mở: {activeVoucherCount}/{voucherConfigs.length}
               </span>
             </div>
             <div className="mt-4 grid gap-4">
-              <label className="space-y-2 text-sm font-medium text-slate-700">
+              <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
                 <span>Loại voucher</span>
                 <select
                   value={selectedVoucherCode}
                   onChange={(event) => setSelectedVoucherCode(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
                   required
                 >
-                  <option value="">Chọn loại voucher</option>
+                  <option value="" className="dark:bg-slate-900">Chọn loại voucher</option>
                   {activeVoucherConfigs.map((voucher) => (
-                    <option key={voucher.code} value={voucher.code}>
+                    <option key={voucher.code} value={voucher.code} className="dark:bg-slate-900">
                       {voucher.label} - {formatCurrency(voucher.unitPrice)} / sản phẩm
                     </option>
                   ))}
@@ -379,22 +379,22 @@ export function CreateOrderForm({
 
           <div className="space-y-4">
             {orderItems.map((item, index) => (
-              <section key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <section key={item.id} className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 p-5 shadow-sm">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Sản phẩm {index + 1}</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Sản phẩm {index + 1}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => removeOrderItem(item.id)}
-                    className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                    className="rounded-2xl border border-rose-200 dark:border-rose-900/30 bg-rose-50 dark:bg-rose-900/20 px-4 py-2 text-sm font-semibold text-rose-700 dark:text-rose-400 transition hover:bg-rose-100 dark:hover:bg-rose-900/30"
                   >
                     Xóa dòng
                   </button>
                 </div>
 
                 <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                  <label className="space-y-2 text-sm font-medium text-slate-700 lg:col-span-2">
+                  <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300 lg:col-span-2">
                     <span>Link sản phẩm</span>
                     <textarea
                       value={item.productLink}
@@ -405,21 +405,21 @@ export function CreateOrderForm({
                         analysisMessage: "",
                       }))}
                       rows={2}
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
                       placeholder="https://shopee.vn/..."
                     />
                     <button
                       type="button"
                       onClick={() => handleAnalyzeLink(item.id)}
                       disabled={item.isAnalyzing}
-                      className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-2xl bg-slate-950 dark:bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {item.isAnalyzing ? "Đang phân tích..." : "Phân tích link"}
                     </button>
-                    {item.analysisError ? <p className="text-sm text-rose-600">{item.analysisError}</p> : null}
+                    {item.analysisError ? <p className="text-sm text-rose-600 dark:text-rose-400">{item.analysisError}</p> : null}
                   </label>
 
-                  <label className="space-y-2 text-sm font-medium text-slate-700 lg:col-span-2">
+                  <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300 lg:col-span-2">
                     <span>Số lượng sản phẩm này</span>
                     <input
                       type="number"
@@ -429,50 +429,50 @@ export function CreateOrderForm({
                         ...current,
                         quantity: Math.max(1, Number(event.target.value) || 1),
                       }))}
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
                     />
                   </label>
 
                   {item.productName ? (
-                    <div className="lg:col-span-2 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                      <p className="text-sm font-medium text-amber-900">Sản phẩm</p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">{item.productName}</p>
-                      <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
-                        <p className="text-xs font-medium text-slate-500">Shop ID</p>
-                        <p className="mt-1 text-sm text-slate-700">{item.shopId || "-"}</p>
+                    <div className="lg:col-span-2 rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/10 p-4">
+                      <p className="text-sm font-medium text-amber-900 dark:text-amber-400">Sản phẩm</p>
+                      <p className="mt-1 text-base font-semibold text-slate-900 dark:text-slate-100">{item.productName}</p>
+                      <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-500">Shop ID</p>
+                        <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{item.shopId || "-"}</p>
                       </div>
 
                       {item.resolvedLink ? (
-                        <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
-                          <p className="text-xs font-medium text-slate-500">Link sau phân tích</p>
+                        <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Link sau phân tích</p>
                           <a
                             href={item.resolvedLink}
                             target="_blank"
                             rel="noreferrer noopener"
-                            className="mt-1 block break-words text-sm text-amber-700 hover:underline"
+                            className="mt-1 block break-words text-sm text-amber-700 dark:text-amber-400 hover:underline"
                           >
                             {item.resolvedLink}
                           </a>
                         </div>
                       ) : null}
 
-                      {item.analysisMessage ? <p className="mt-3 text-sm text-emerald-700">{item.analysisMessage}</p> : null}
+                      {item.analysisMessage ? <p className="mt-3 text-sm text-emerald-700 dark:text-emerald-400">{item.analysisMessage}</p> : null}
 
                       <div className="mt-4">
-                        <p className="text-sm text-slate-600">Phân loại sản phẩm cho link này</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-300">Phân loại sản phẩm cho link này</p>
                         <input
                           value={item.selectedVariant}
                           onChange={(event) => updateOrderItem(item.id, (current) => ({
                             ...current,
                             selectedVariant: event.target.value,
                           }))}
-                          className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+                          className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
                           placeholder="Ví dụ: Đỏ, Size M, Mặc định"
                           required
                         />
                         {item.variantOptions.length > 0 ? (
                           <div className="mt-3">
-                            <p className="text-xs text-slate-500">Gợi ý phân loại (bấm để điền nhanh)</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Gợi ý phân loại (bấm để điền nhanh)</p>
                             <div className="mt-2 flex flex-wrap gap-2">
                               {item.variantOptions.map((variant) => (
                                 <button
@@ -482,7 +482,7 @@ export function CreateOrderForm({
                                     ...current,
                                     selectedVariant: variant,
                                   }))}
-                                  className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                                  className="rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                                 >
                                   {variant}
                                 </button>
@@ -501,7 +501,7 @@ export function CreateOrderForm({
           <button
             type="button"
             onClick={addOrderItem}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 py-4 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:border-amber-300 dark:hover:border-amber-800 hover:text-amber-700 dark:hover:text-amber-500"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -509,41 +509,41 @@ export function CreateOrderForm({
             Thêm link sản phẩm
           </button>
 
-          <label className="space-y-2 text-sm font-medium text-slate-700">
+          <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
             <span>Ghi chú SĐT</span>
             <input
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
               placeholder="Ví dụ: 098xxxxxxx - gọi giờ hành chính"
             />
-            <p className="text-xs text-slate-500">Ghi chú SĐT sẽ được thêm trực tiếp vào phần địa chỉ giao hàng.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Ghi chú SĐT sẽ được thêm trực tiếp vào phần địa chỉ giao hàng.</p>
           </label>
 
-          <label className="space-y-2 text-sm font-medium text-slate-700">
+          <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
             <span>Địa chỉ</span>
             <textarea
               value={address}
               onChange={(event) => setAddress(event.target.value)}
               required
               rows={4}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
               placeholder="Hà Nội ..."
             />
             <button
               type="button"
               onClick={handleAnalyzeAddress}
               disabled={isAnalyzingAddress}
-              className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-2xl bg-slate-950 dark:bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isAnalyzingAddress ? "Đang phân tích..." : "Phân tích địa chỉ"}
             </button>
           </label>
 
           {showAddressSuggestions && addressSuggestions.length > 0 ? (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="mb-3 text-sm font-semibold text-slate-900">Đề xuất địa chỉ</p>
-              <p className="mb-3 text-xs text-slate-500">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4">
+              <p className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Đề xuất địa chỉ</p>
+              <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
                 Dữ liệu được phân tích trực tiếp từ Shopee API (autofill) để tăng khả năng add địa chỉ thành công.
               </p>
               <div className="space-y-2">
@@ -552,7 +552,7 @@ export function CreateOrderForm({
                     key={option}
                     type="button"
                     onClick={() => handleUseSuggestion(option)}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-100"
+                    className="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                   >
                     {option}
                   </button>
@@ -572,24 +572,24 @@ export function CreateOrderForm({
       </form>
 
       <aside className="panel rounded-[1.75rem] p-6 xl:sticky xl:top-6 xl:self-start">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Bảng tính nhanh</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Bảng tính nhanh</p>
         <div className="mt-5 space-y-4">
-          <div className="rounded-2xl bg-white/80 p-4">
-            <p className="text-sm text-slate-500">Số link đang nhập</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{nonEmptyItems.length}</p>
+          <div className="rounded-2xl bg-white/80 dark:bg-slate-800/80 p-4 border dark:border-slate-700">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Số link đang nhập</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{nonEmptyItems.length}</p>
           </div>
-          <div className="rounded-2xl bg-white/80 p-4">
-            <p className="text-sm text-slate-500">Tổng số lượng sản phẩm</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{totalQuantity}</p>
+          <div className="rounded-2xl bg-white/80 dark:bg-slate-800/80 p-4 border dark:border-slate-700">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Tổng số lượng sản phẩm</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{totalQuantity}</p>
           </div>
-          <div className="rounded-2xl bg-amber-50 p-4">
-            <p className="text-sm text-amber-700">Tổng tiền đơn</p>
-            <p className="mt-1 text-3xl font-semibold text-amber-900">{formatCurrency(total)}</p>
+          <div className="rounded-2xl bg-amber-50 dark:bg-amber-900/10 p-5 border border-amber-200 dark:border-amber-900/40">
+            <p className="text-[10px] text-amber-700 dark:text-amber-500 font-bold uppercase tracking-wider">Tổng tiền đơn</p>
+            <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-200">{formatCurrency(total)}</p>
           </div>
-          <div className="rounded-2xl border border-dashed border-slate-300 p-4">
-            <p className="text-sm text-slate-500">Số dư hiện tại</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{formatCurrency(balance)}</p>
-            <p className="mt-3 text-sm text-slate-600">
+          <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-4">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Số dư hiện tại</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(balance)}</p>
+            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
               {balance >= total ? "Số dư đủ để tạo đơn." : "Số dư chưa đủ, vui lòng nạp thêm tiền trước khi đặt đơn."}
             </p>
           </div>

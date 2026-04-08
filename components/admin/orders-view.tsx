@@ -315,7 +315,7 @@ export function AdminOrdersView({
                         : order.approvedByAdminName
                       : "Chưa phụ trách"}
                   </td>
-                  <td className="px-4 py-4 text-slate-500 text-xs whitespace-nowrap">{formatDate(order.createdAt)}</td>
+                  <td className="px-4 py-4 text-slate-500 text-xs whitespace-nowrap" suppressHydrationWarning>{formatDate(order.createdAt)}</td>
                   <td className="px-4 py-4 whitespace-nowrap">
                     <div className="flex justify-center">
                       <OrderActions
@@ -342,7 +342,7 @@ export function AdminOrdersView({
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">#{order.id}</p>
-                    <p className="text-xs text-slate-500">{formatDate(order.createdAt)}</p>
+                    <p className="text-xs text-slate-500" suppressHydrationWarning>{formatDate(order.createdAt)}</p>
                   </div>
                   <StatusPill status={order.status} />
                 </div>

@@ -79,27 +79,27 @@ export default async function TransactionsPage({
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="panel rounded-2xl p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-gray-400">
+        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">
             Tổng nạp tiền
           </p>
-          <p className="mt-1 text-xl font-bold text-emerald-600 dark:text-emerald-400">
+          <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
             +{formatCurrency(totalDeposit)}
           </p>
         </div>
-        <div className="panel rounded-2xl p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-gray-400">
+        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">
             Tổng đã chi
           </p>
-          <p className="mt-1 text-xl font-bold text-rose-600 dark:text-rose-400">
+          <p className="mt-2 text-2xl font-black text-rose-600 dark:text-rose-400">
             -{formatCurrency(totalSpent)}
           </p>
         </div>
-        <div className="panel rounded-2xl p-4 col-span-2 sm:col-span-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-gray-400">
+        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm col-span-2 sm:col-span-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">
             Tổng hoàn tiền
           </p>
-          <p className="mt-1 text-xl font-bold text-amber-600 dark:text-amber-400">
+          <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400">
             +{formatCurrency(totalRefund)}
           </p>
         </div>
@@ -107,16 +107,16 @@ export default async function TransactionsPage({
 
       {/* Transaction list */}
       <section className="panel rounded-[1.75rem] p-4 sm:p-6">
-        <div className="mb-5 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-gray-400">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">
               Lịch sử giao dịch
             </p>
-            <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">
+            <p className="mt-1 text-sm font-bold text-slate-600 dark:text-slate-400">
               {totalCount} giao dịch
             </p>
           </div>
-          <span className="rounded-xl bg-slate-100 dark:bg-gray-800 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:text-gray-300">
+          <span className="rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 px-4 py-2 text-xs font-black text-slate-900 dark:text-white shadow-sm">
             Số dư: {formatCurrency(user.balance)}
           </span>
         </div>
@@ -164,7 +164,7 @@ export default async function TransactionsPage({
                         {tx.amount >= 0 ? "+" : ""}
                         {formatCurrency(tx.amount)}
                       </td>
-                      <td className="py-3 text-right text-slate-500 dark:text-gray-400 whitespace-nowrap">
+                      <td className="py-3 text-right text-slate-500 dark:text-gray-400 whitespace-nowrap" suppressHydrationWarning>
                         {formatDate(tx.createdAt)}
                       </td>
                     </tr>
@@ -174,11 +174,11 @@ export default async function TransactionsPage({
             </div>
 
             {/* Mobile cards */}
-            <div className="space-y-3 sm:hidden">
+            <div className="space-y-4 sm:hidden">
               {transactions.map((tx) => (
                 <div
                   key={tx.id}
-                  className="flex items-start gap-3 rounded-2xl bg-white/80 dark:bg-gray-800/60 p-4"
+                  className="flex items-start gap-4 rounded-3xl bg-slate-50/50 dark:bg-slate-950/40 p-5 border border-slate-100 dark:border-slate-800 shadow-sm"
                 >
                   <TypeIcon type={tx.type} amount={tx.amount} />
                   <div className="flex-1 min-w-0">
@@ -198,7 +198,7 @@ export default async function TransactionsPage({
                     <p className="mt-1 text-sm text-slate-700 dark:text-gray-300 truncate">
                       {tx.note}
                     </p>
-                    <p className="mt-0.5 text-xs text-slate-400 dark:text-gray-500">
+                    <p className="mt-0.5 text-xs text-slate-400 dark:text-gray-500" suppressHydrationWarning>
                       {formatDate(tx.createdAt)}
                     </p>
                   </div>

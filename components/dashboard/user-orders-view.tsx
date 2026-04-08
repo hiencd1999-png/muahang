@@ -148,19 +148,19 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-[2rem] border border-slate-200 bg-slate-50 p-6 shadow-sm">
+      <div className="rounded-[2rem] border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-6 shadow-sm">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-950">Lịch sử đơn</h2>
-          <p className="mt-2 text-sm text-slate-600">Toàn bộ đơn của tài khoản hiện tại.</p>
+          <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">Lịch sử đơn</h2>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Toàn bộ đơn của tài khoản hiện tại.</p>
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-[1.5rem] bg-white p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Tổng đơn</p>
-            <p className="mt-3 text-3xl font-semibold text-slate-950">{orders.length}</p>
+          <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-800 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">Tổng đơn</p>
+            <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{orders.length}</p>
           </div>
-          <div className="rounded-[1.5rem] bg-white p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Đơn gần nhất</p>
-            <p className="mt-3 text-2xl font-semibold text-slate-950">
+          <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-800 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">Đơn gần nhất</p>
+            <p className="mt-4 text-2xl font-black text-slate-950 dark:text-white">
               {orders[0] ? `#${orders[0].id}` : "Chưa có"}
             </p>
           </div>
@@ -168,14 +168,14 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
       </div>
 
       {selectedIds.length > 0 ? (
-        <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 shadow-sm">
+        <div className="rounded-[1.5rem] border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm font-semibold text-amber-900">Đã chọn {selectedIds.length} đơn hàng</p>
+            <p className="text-sm font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wider">Đã chọn {selectedIds.length} đơn hàng</p>
             <div className="flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
                 onClick={toggleSelectAll}
-                className="rounded-2xl border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-700"
+                className="rounded-2xl border border-amber-200 dark:border-amber-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-amber-700 dark:text-amber-400 transition hover:bg-amber-50 dark:hover:bg-amber-800"
               >
                 {selectedIds.length === orders.length ? "Bỏ chọn tất cả" : "Chọn tất cả"}
               </button>
@@ -201,9 +201,9 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
       ) : null}
 
       <div className="mt-5 space-y-4 min-w-0">
-        <div className="hidden lg:block rounded-[1.5rem] border border-slate-200 bg-white shadow-sm overflow-x-auto w-full">
+        <div className="hidden lg:block rounded-[1.5rem] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-x-auto w-full">
           <table className="min-w-[1200px] text-center text-sm border-collapse">
-            <thead className="bg-slate-100 text-slate-500">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="px-4 py-3 w-10">
                   <input
@@ -227,8 +227,8 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                 <tr
                   key={order.id}
                   data-order-id={order.id}
-                  className={`border-t border-slate-200 transition hover:bg-slate-50 ${
-                    focusedOrderId === order.id ? "bg-amber-100/70" : ""
+                  className={`border-t border-slate-100 dark:border-slate-800 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
+                    focusedOrderId === order.id ? "bg-amber-100/40 dark:bg-amber-900/20" : ""
                   }`}
                 >
                   <td className="px-4 py-4">
@@ -239,7 +239,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                       className="rounded"
                     />
                   </td>
-                  <td className="px-4 py-4 font-semibold text-slate-900 whitespace-nowrap">#{order.id}</td>
+                  <td className="px-4 py-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">#{order.id}</td>
                   <td className="px-4 py-4 text-sm text-slate-600">
                     <div className="flex flex-col items-center">
                       <p className="font-medium text-slate-900 whitespace-nowrap truncate max-w-[280px]">{getShortAddress(order.address)}</p>
@@ -251,13 +251,13 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                   <td className="px-4 py-4 text-slate-600 font-medium text-xs whitespace-nowrap truncate max-w-[150px]">
                     {order.variant || "-"}
                   </td>
-                  <td className="px-4 py-4 text-slate-700 font-semibold">{formatCurrency(order.total)}</td>
+                  <td className="px-4 py-4 text-slate-800 dark:text-slate-200 font-bold leading-tight">{formatCurrency(order.total)}</td>
                   <td className="px-4 py-4">
                     <div className="flex justify-center">
                       <StatusPill status={order.status} />
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-xs text-slate-600 whitespace-nowrap">{formatDate(order.createdAt)}</td>
+                  <td className="px-4 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-500 whitespace-nowrap uppercase tracking-wider" suppressHydrationWarning>{formatDate(order.createdAt)}</td>
                   <td className="px-4 py-4">
                     <div className="flex justify-center">
                       <UserOrderActions orderId={order.id} status={order.status} buttonClassName="min-w-[90px] h-10 px-3 py-2 text-xs" />
@@ -274,18 +274,18 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
             <div
               key={order.id}
               data-order-id={order.id}
-              className={`rounded-2xl border p-4 transition ${
+              className={`rounded-[2rem] border p-5 transition-all shadow-sm ${
                 focusedOrderId === order.id
-                  ? "border-amber-300 bg-amber-50/80"
-                  : "border-slate-200/70 bg-white/70"
+                  ? "border-amber-300 dark:border-amber-800 bg-amber-50/80 dark:bg-amber-900/20"
+                  : "border-slate-200/70 dark:border-slate-800 bg-white/50 dark:bg-slate-900/60"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-900">#{order.id}</span>
+                  <span className="font-black text-slate-900 dark:text-white">#{order.id}</span>
                   <StatusPill status={order.status} />
                 </div>
-                <label className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700">
+                <label className="inline-flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-800 p-2 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest cursor-pointer">
                   <input
                     type="checkbox"
                     checked={selectedIds.includes(order.id)}
@@ -296,27 +296,22 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                 </label>
               </div>
 
-              <div className="mt-3 rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Địa chỉ</p>
-                <p className="mt-2 font-semibold text-slate-900 whitespace-nowrap truncate">{getShortAddress(order.address)}</p>
+              <div className="mt-4 rounded-3xl bg-slate-50/50 dark:bg-slate-800/40 p-5 border border-slate-100 dark:border-slate-800">
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Địa chỉ giao hàng</p>
+                <p className="mt-2 font-bold text-slate-900 dark:text-slate-100 text-sm leading-snug">{getShortAddress(order.address)}</p>
                 {!order.productName?.includes("Đơn gộp") && (
-                  <p className="mt-1 text-xs text-slate-500 truncate">{order.productName || order.productLink}</p>
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-500 line-clamp-1 italic">{order.productName || order.productLink}</p>
                 )}
               </div>
 
-              <div className="mt-3 rounded-xl bg-amber-50/50 border border-amber-100 p-3">
-                <p className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Phân loại</p>
-                <p className="mt-1 text-sm font-medium text-slate-800 whitespace-nowrap truncate">{order.variant || "-"}</p>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-slate-700">
-                <div className="rounded-2xl bg-slate-50 p-3">
-                  <p className="text-xs text-slate-500">Tổng tiền</p>
-                  <p className="mt-1 text-slate-900 font-semibold">{formatCurrency(order.total)}</p>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-2xl bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 p-4">
+                  <p className="text-[10px] text-amber-700 dark:text-amber-500 font-bold uppercase tracking-wider">Tổng tiền</p>
+                  <p className="mt-1 text-amber-900 dark:text-amber-200 font-black text-lg">{formatCurrency(order.total)}</p>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-3">
-                  <p className="text-xs text-slate-500">Ngày tạo</p>
-                  <p className="mt-1">{formatDate(order.createdAt)}</p>
+                <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-4 border border-slate-100 dark:border-slate-800">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-wider">Ngày tạo</p>
+                  <p className="mt-1 font-bold text-slate-700 dark:text-slate-300 text-xs" suppressHydrationWarning>{formatDate(order.createdAt)}</p>
                 </div>
               </div>
 

@@ -155,7 +155,7 @@ export function AdminLogsView({
   };
 
   return (
-    <section className="panel rounded-[1.75rem] border bg-white p-4 sm:p-6 dark:border-gray-800 dark:bg-gray-900">
+    <section className="panel rounded-[1.75rem] p-4 sm:p-6 shadow-sm">
       <div className="mb-6 space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -173,19 +173,19 @@ export function AdminLogsView({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[420px]">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-gray-700 dark:bg-gray-800/70">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
                 Tổng log
               </p>
               <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{initialTotal}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-gray-700 dark:bg-gray-800/70">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
                 Trang hiện tại
               </p>
               <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{initialPage}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-gray-700 dark:bg-gray-800/70">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-gray-400">
                 Chế độ xem
               </p>
@@ -197,10 +197,10 @@ export function AdminLogsView({
           </div>
         </div>
 
-        <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4 dark:border-gray-700 dark:bg-gray-800/70">
+        <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/40 shadow-inner">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
-              <div className="rounded-xl bg-white p-2 text-slate-700 dark:bg-gray-900 dark:text-gray-200">
+              <div className="rounded-xl bg-white p-2 text-slate-700 dark:bg-slate-900 dark:text-gray-200 border dark:border-slate-800 shadow-sm">
                 <ListFilter size={18} />
               </div>
               <div>
@@ -213,7 +213,7 @@ export function AdminLogsView({
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:bg-amber-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-amber-300 hover:bg-amber-50 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800 shadow-sm"
             >
               <Filter size={16} />
               {showFilters ? "Ẩn bộ lọc" : "Mở bộ lọc"}
@@ -223,7 +223,7 @@ export function AdminLogsView({
           {showFilters ? (
             <form
               onSubmit={handleFilterChange}
-              className="mt-4 space-y-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
+              className="mt-4 space-y-4 rounded-3xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
             >
               <div className={`grid grid-cols-1 gap-3 ${canViewAllLogs ? "sm:grid-cols-2 xl:grid-cols-5" : "sm:grid-cols-2 xl:grid-cols-4"}`}>
                 {canViewAllLogs ? (
@@ -356,18 +356,18 @@ export function AdminLogsView({
 
       <div className="mt-5 space-y-3">
         {initialLogs.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800">
-            <p className="text-sm text-slate-600 dark:text-gray-400">
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-10 text-center dark:border-slate-800 dark:bg-slate-950/40">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-500">
               Không có nhật ký nào phù hợp với bộ lọc hiện tại.
             </p>
           </div>
         ) : (
           <>
-            <div className="hidden overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-white shadow-sm lg:block dark:border-gray-700 dark:bg-gray-900">
+            <div className="hidden overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm lg:block dark:border-slate-800 dark:bg-slate-900">
               <table className="min-w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500 dark:bg-gray-800/80 dark:text-gray-400">
+                <thead className="bg-slate-50 text-slate-500 dark:bg-slate-950/80 dark:text-slate-500">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">Thời gian</th>
+                    <th className="px-5 py-4 font-black uppercase tracking-widest text-[10px]">Thời gian</th>
                     <th className="px-4 py-3 font-semibold">Người thực hiện</th>
                     <th className="px-4 py-3 font-semibold">Thao tác</th>
                     <th className="px-4 py-3 font-semibold">Đối tượng</th>
@@ -386,7 +386,7 @@ export function AdminLogsView({
 
                     return (
                       <tr key={log.id} className="transition hover:bg-amber-50/30 dark:hover:bg-gray-800/50">
-                        <td className="px-4 py-4 text-slate-600 dark:text-gray-300">
+                        <td className="px-4 py-4 text-slate-600 dark:text-slate-400 font-medium" suppressHydrationWarning>
                           {formatDate(log.createdAt)}
                         </td>
                         <td className="px-4 py-4 font-medium text-slate-900 dark:text-white">
@@ -430,7 +430,7 @@ export function AdminLogsView({
                         <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-300">
                           {formatActionLabel(log.action)}
                         </span>
-                        <span className="text-xs text-slate-500 dark:text-gray-400">
+                        <span className="text-xs font-bold text-slate-400 dark:text-slate-600 tracking-tight" suppressHydrationWarning>
                           {formatDate(log.createdAt)}
                         </span>
                       </div>
