@@ -205,10 +205,10 @@ export function AdminOrdersView({
                       className="rounded"
                     />
                   </td>
-                  <td className="py-4 font-medium text-slate-900">#{order.id}</td>
-                  <td className="py-4 text-slate-700">{order.user.username}</td>
-                  <td className="py-4 text-slate-600 max-w-xs truncate text-xs">{order.productName || order.productLink}</td>
-                  <td className="py-4 text-slate-600">{order.shopId || "-"}</td>
+                  <td className="py-4 font-medium text-slate-900 whitespace-nowrap">#{order.id}</td>
+                  <td className="py-4 text-slate-700 max-w-[140px] truncate text-sm">{order.user.username}</td>
+                  <td className="py-4 text-slate-600 max-w-[300px] min-w-[200px] truncate text-xs">{order.productName || order.productLink}</td>
+                  <td className="py-4 text-slate-600 whitespace-nowrap">{order.shopId || "-"}</td>
                   <td className="py-4 text-slate-700">{order.quantity}</td>
                   <td className="py-4 text-slate-700 font-semibold">{formatCurrency(order.total)}</td>
                   <td className="py-4">

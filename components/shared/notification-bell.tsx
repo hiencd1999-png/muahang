@@ -77,7 +77,7 @@ export function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 max-h-96 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden flex flex-col">
+        <div className="absolute right-0 mt-2 w-80 max-h-96 bg-white border border-slate-200 rounded-lg shadow-xl z-[9999] overflow-hidden flex flex-col">
           <div className="bg-slate-50 border-b border-slate-200 p-4">
             <h3 className="font-semibold text-slate-900">Thông báo</h3>
           </div>

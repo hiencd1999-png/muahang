@@ -8,14 +8,20 @@ import { Modal } from "@/components/shared/modal";
 import { OrderDetailModalContent } from "@/components/shared/order-detail-modal-content";
 
 interface OrderData {
-  id: string;
-  link: string;
-  totalAmount: number;
-  fee: number | null;
+  id: number;
+  productLink: string;
+  productName: string;
+  shopId: string | null;
+  quantity: number;
+  total: number;
+  phone: string;
+  address: string;
+  variant?: string;
+  note?: string;
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "CANCELED";
   createdAt: Date;
   updatedAt: Date;
-  userId: string;
+  userId: number;
   user?: {
     username: string;
     email: string;
@@ -60,14 +66,20 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
       if (response.ok && data.order) {
         const order = data.order;
         setOrderData({
-          id: order.id.toString(),
-          link: order.productLink,
-          totalAmount: order.total,
-          fee: order.fee ?? null,
+          id: order.id,
+          productLink: order.productLink,
+          productName: order.productName,
+          shopId: order.shopId,
+          quantity: order.quantity,
+          total: order.total,
+          phone: order.phone,
+          address: order.address,
+          variant: order.variant,
+          note: order.note,
           status: order.status,
           createdAt: new Date(order.createdAt),
           updatedAt: new Date(order.updatedAt),
-          userId: order.userId.toString(),
+          userId: order.userId,
           user: order.user,
         });
         setIsModalOpen(true);

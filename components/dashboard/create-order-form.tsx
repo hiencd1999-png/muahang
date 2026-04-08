@@ -62,7 +62,7 @@ export function CreateOrderForm({ balance }: { balance: number }) {
         return;
       }
 
-      const variants = []; // No variants from API, user inputs manually
+      const variants: string[] = []; // No variants from API, user inputs manually
       const selected = ""; // User will input manually
 
       setProductName(data.productName || parsed.productName);
@@ -156,7 +156,7 @@ export function CreateOrderForm({ balance }: { balance: number }) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.2fr_0.9fr]">
+    <div className="grid gap-6">
       <form onSubmit={handleSubmit} className="panel rounded-[1.75rem] p-6">
         <div className="space-y-2">
           <h2 className="text-xl font-semibold text-slate-900">Tạo đơn Shopee</h2>

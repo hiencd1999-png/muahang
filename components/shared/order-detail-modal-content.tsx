@@ -7,14 +7,20 @@ import { useToast } from "./toast";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 
 interface Order {
-  id: string;
-  link: string;
-  totalAmount: number;
-  fee: number | null;
+  id: number;
+  productLink: string;
+  productName: string;
+  shopId: string | null;
+  quantity: number;
+  total: number;
+  phone: string;
+  address: string;
+  variant?: string;
+  note?: string;
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "CANCELED";
   createdAt: Date;
   updatedAt: Date;
-  userId: string;
+  userId: number;
 }
 
 interface UserInfo {
@@ -71,18 +77,18 @@ export function OrderDetailModalContent({
   return (
     <div className="space-y-6">
       {/* Order Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+            <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
               Mã đơn hàng
             </p>
             <p className="text-xl font-bold text-gray-900 dark:text-white font-mono">
-              {order.id}
+              #{order.id}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+            <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
               Trạng thái
             </p>
             <p className="text-lg font-bold">
@@ -109,26 +115,24 @@ export function OrderDetailModalContent({
         </div>
       </div>
 
-      {/* Order Amount */}
+      {/* Order Details */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-          <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+          <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
             Tổng tiền
           </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-            {formatCurrency(order.totalAmount)}
+            {formatCurrency(order.total)}
           </p>
         </div>
-        {order.fee !== null && (
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-            <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-              Phí sử dụng
-            </p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-              {formatCurrency(order.fee)}
-            </p>
-          </div>
-        )}
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+          <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+            Số lượng
+          </p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+            {order.quantity}
+          </p>
+        </div>
       </div>
 
       {/* Timeline */}
@@ -143,31 +147,67 @@ export function OrderDetailModalContent({
         />
       </div>
 
-      {/* Order Information */}
+      {/* Product Information */}
       <div>
         <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">
-          Thông tin đơn hàng
+          Thông tin sản phẩm
+        </h3>
+        <div className="space-y-3 text-sm">
+          <div>
+            <p className="text-gray-600 dark:text-gray-400 font-medium">Tên sản phẩm</p>
+            <p className="text-gray-900 dark:text-white mt-1">{order.productName}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-gray-600 dark:text-gray-400 font-medium">Shop ID</p>
+              <p className="text-gray-900 dark:text-white mt-1">{order.shopId || "-"}</p>
+            </div>
+            <div>
+              <p className="text-gray-600 dark:text-gray-400 font-medium">Phân loại</p>
+              <p className="text-gray-900 dark:text-white mt-1">{order.variant || "Mặc định"}</p>
+            </div>
+          </div>
+          <div>
+            <p className="text-gray-600 dark:text-gray-400 font-medium">Link Shopee</p>
+            <a
+              href={order.productLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-amber-600 dark:text-amber-400 hover:underline break-all text-xs mt-1"
+            >
+              {order.productLink}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Delivery Information */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">
+          Thông tin giao hàng
         </h3>
         <div className="space-y-2 text-sm">
+          <div>
+            <p className="text-gray-600 dark:text-gray-400 font-medium">Số điện thoại</p>
+            <a href={`tel:${order.phone}`} className="text-amber-600 dark:text-amber-400 hover:underline mt-1">
+              {order.phone}
+            </a>
+          </div>
+          <div>
+            <p className="text-gray-600 dark:text-gray-400 font-medium">Địa chỉ</p>
+            <p className="text-gray-900 dark:text-white mt-1 whitespace-pre-wrap">{order.address}</p>
+          </div>
+          {order.note && (
+            <div>
+              <p className="text-gray-600 dark:text-gray-400 font-medium">Ghi chú</p>
+              <p className="text-gray-900 dark:text-white mt-1">{order.note}</p>
+            </div>
+          )}
           <div className="flex items-start gap-2">
             <Clock size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-gray-600 dark:text-gray-400">Ngày tạo</p>
               <p className="text-gray-900 dark:text-white">{formattedDate}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <MapPin size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-gray-600 dark:text-gray-400">Link Shopee</p>
-              <a
-                href={order.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline break-all"
-              >
-                {order.link}
-              </a>
             </div>
           </div>
         </div>
