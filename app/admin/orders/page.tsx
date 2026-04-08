@@ -6,6 +6,7 @@ import { OrderActions } from "@/components/admin/order-actions";
 import { Pagination } from "@/components/shared/pagination";
 import { AdminOrdersView } from "@/components/admin/orders-view";
 import { isSpAdminRole } from "@/lib/roles";
+import { releaseExpiredProcessingOrders } from "@/lib/order-assignment";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -16,6 +17,8 @@ export default async function AdminOrdersPage({
 }) {
   const currentAdmin = await requireUser("ADMIN");
   const canManageAllOrders = isSpAdminRole(currentAdmin.role);
+
+  await releaseExpiredProcessingOrders();
 
   const params = await searchParams;
   const query = params.q || "";
@@ -88,6 +91,24 @@ export default async function AdminOrdersPage({
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
+  const assignableAdminsRaw = await prisma.user.findMany({
+    where: {
+      role: { in: ["ADMIN", "SPADMIN"] },
+    },
+    select: {
+      id: true,
+      username: true,
+      fullName: true,
+      role: true,
+    },
+    orderBy: { username: "asc" },
+  });
+
+  const assignableAdmins = assignableAdminsRaw.map((admin) => ({
+    ...admin,
+    role: admin.role as "ADMIN" | "SPADMIN",
+  }));
+
   return (
     <AdminOrdersView
       orders={enrichedOrders}
@@ -96,6 +117,7 @@ export default async function AdminOrdersPage({
       page={page}
       currentAdminId={currentAdmin.id}
       canManageAllOrders={canManageAllOrders}
+      assignableAdmins={assignableAdmins}
     />
   );
 }

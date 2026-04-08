@@ -38,6 +38,14 @@ enum NotificationType {
   ADMIN_MESSAGE
 }
 
+enum VoucherType {
+  DISCOUNT_80K
+  DISCOUNT_100K
+  DISCOUNT_50_PERCENT_MAX_100K
+  DISCOUNT_50_PERCENT_MAX_200K
+  DISCOUNT_60K
+}
+
 model User {
   id           Int           @id @default(autoincrement())
   fullName     String        @default("")
@@ -60,6 +68,7 @@ model Order {
   userId        Int
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   approvedByAdminId Int?
+  processingStartedAt DateTime?
   productLink   String
   productName   String      @default("")
   shopId        String?
@@ -68,11 +77,23 @@ model Order {
   phone         String
   address       String
   note          String?
+  voucherType   VoucherType?
+  voucherLabel  String?
+  unitPrice     Int?
   total         Int
   status        OrderStatus @default(PENDING)
   cancelReason  String?
   spcCookie     String?     @default("")
   trackingNo    String?     @default("")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model VoucherPricing {
+  id            Int         @id @default(autoincrement())
+  voucherType   VoucherType @unique
+  unitPrice     Int
+  isMaintenance Boolean     @default(false)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }

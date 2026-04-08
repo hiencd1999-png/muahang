@@ -14,6 +14,7 @@ interface Order {
   shopId: string | null;
   quantity: number;
   total: number;
+  voucherLabel?: string | null;
   status: string;
   createdAt: Date;
 }
@@ -232,7 +233,10 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                     />
                   </td>
                   <td className="py-4 pl-0 font-medium text-slate-900 whitespace-nowrap">#{order.id}</td>
-                  <td className="py-4 text-slate-600 max-w-[250px] truncate text-sm">{order.productName || order.productLink}</td>
+                  <td className="py-4 text-sm text-slate-600 max-w-[250px]">
+                    <p className="truncate">{order.productName || order.productLink}</p>
+                    <p className="mt-1 text-xs text-amber-700">{order.voucherLabel || "Chưa có voucher"}</p>
+                  </td>
                   <td className="py-4 text-slate-600 whitespace-nowrap">{order.shopId || "-"}</td>
                   <td className="py-4 text-slate-700">{order.quantity}</td>
                   <td className="py-4 text-slate-700 font-semibold">{formatCurrency(order.total)}</td>
@@ -266,6 +270,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                     <StatusPill status={order.status} />
                   </div>
                   <p className="text-sm text-slate-600 truncate mb-2">{order.productName || order.productLink}</p>
+                  <p className="mb-2 text-xs font-medium text-amber-700">{order.voucherLabel || "Chưa có voucher"}</p>
                   <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 mb-3">
                     <div>Shop ID: {order.shopId || "-"}</div>
                     <div>SL: {order.quantity}</div>

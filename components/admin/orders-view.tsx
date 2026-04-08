@@ -19,9 +19,17 @@ interface Order {
   shopId: string | null;
   quantity: number;
   total: number;
+  voucherLabel?: string | null;
   status: string;
   user: { username: string; fullName?: string | null };
   createdAt: Date;
+}
+
+interface AssignableAdmin {
+  id: number;
+  username: string;
+  fullName: string | null;
+  role: "ADMIN" | "SPADMIN";
 }
 
 export function AdminOrdersView({
@@ -31,6 +39,7 @@ export function AdminOrdersView({
   page,
   currentAdminId,
   canManageAllOrders,
+  assignableAdmins,
 }: {
   orders: Order[];
   totalCount: number;
@@ -38,11 +47,13 @@ export function AdminOrdersView({
   page: number;
   currentAdminId: number;
   canManageAllOrders: boolean;
+  assignableAdmins: AssignableAdmin[];
 }) {
   const { addToast } = useToast();
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) =>
@@ -91,6 +102,36 @@ export function AdminOrdersView({
       console.error(error);
     } finally {
       setIsExporting(false);
+    }
+  }
+
+  async function handleDeleteOrders() {
+    if (!canManageAllOrders || selectedIds.length === 0) return;
+
+    const confirmed = window.confirm(`Xác nhận xóa ${selectedIds.length} đơn đã chọn? Hành động này không thể hoàn tác.`);
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch("/api/admin/orders/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds: selectedIds }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        addToast("error", result.error || "Không thể xóa đơn hàng.");
+        return;
+      }
+
+      addToast("success", `Đã xóa ${result.deleted ?? selectedIds.length} đơn hàng.`);
+      setSelectedIds([]);
+      router.refresh();
+    } catch {
+      addToast("error", "Có lỗi khi xóa đơn hàng.");
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -188,6 +229,16 @@ export function AdminOrdersView({
               >
                 {isExporting ? "Đang xuất..." : "Xuất Excel"}
               </button>
+              {canManageAllOrders ? (
+                <button
+                  type="button"
+                  onClick={handleDeleteOrders}
+                  disabled={isDeleting}
+                  className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {isDeleting ? "Đang xóa..." : "Xóa đơn"}
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -232,7 +283,10 @@ export function AdminOrdersView({
                   </td>
                   <td className="px-4 py-4 font-semibold text-slate-900 whitespace-nowrap">#{order.id}</td>
                   <td className="px-4 py-4 text-slate-700 text-sm whitespace-nowrap">{order.user.fullName || order.user.username}</td>
-                  <td className="px-4 py-4 text-slate-700 max-w-[260px] truncate text-sm">{order.productName || order.productLink}</td>
+                  <td className="px-4 py-4 text-sm text-slate-700 max-w-[260px]">
+                    <p className="truncate">{order.productName || order.productLink}</p>
+                    <p className="mt-1 text-xs text-amber-700">{order.voucherLabel || "Chưa có voucher"}</p>
+                  </td>
                   <td className="px-4 py-4 text-slate-700 whitespace-nowrap">{order.shopId || "-"}</td>
                   <td className="px-4 py-4 text-slate-700">{order.quantity}</td>
                   <td className="px-4 py-4 text-slate-900 font-semibold">{formatCurrency(order.total)}</td>
@@ -253,6 +307,7 @@ export function AdminOrdersView({
                       canManageAllOrders={canManageAllOrders}
                       approvedByAdminId={order.approvedByAdminId}
                       approvedByAdminName={order.approvedByAdminName}
+                      assignableAdmins={assignableAdmins}
                     />
                   </td>
                 </tr>
@@ -275,6 +330,7 @@ export function AdminOrdersView({
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <p className="text-xs text-slate-500">Sản phẩm</p>
                   <p className="mt-2 font-medium text-slate-900 truncate">{order.productName || order.productLink}</p>
+                  <p className="mt-1 text-xs font-medium text-amber-700">{order.voucherLabel || "Chưa có voucher"}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
                   <div className="rounded-2xl bg-slate-50 p-3">
@@ -324,6 +380,7 @@ export function AdminOrdersView({
                       canManageAllOrders={canManageAllOrders}
                       approvedByAdminId={order.approvedByAdminId}
                       approvedByAdminName={order.approvedByAdminName}
+                      assignableAdmins={assignableAdmins}
                     />
                   </div>
                 </div>

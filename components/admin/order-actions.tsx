@@ -15,6 +15,9 @@ interface OrderData {
   shopId: string | null;
   quantity: number;
   total: number;
+  voucherType?: string | null;
+  voucherLabel?: string | null;
+  unitPrice?: number | null;
   phone: string;
   address: string;
   variant?: string;
@@ -34,7 +37,15 @@ interface OrderData {
   approvedByAdmin?: {
     id: number;
     username: string;
+    fullName?: string;
   } | null;
+}
+
+interface AssignableAdmin {
+  id: number;
+  username: string;
+  fullName: string | null;
+  role: "ADMIN" | "SPADMIN";
 }
 
 const statusLabels: Record<string, string> = {
@@ -62,6 +73,7 @@ export function OrderActions({
   canManageAllOrders,
   approvedByAdminId,
   approvedByAdminName,
+  assignableAdmins,
 }: {
   orderId: number;
   status: string;
@@ -69,6 +81,7 @@ export function OrderActions({
   canManageAllOrders: boolean;
   approvedByAdminId: number | null;
   approvedByAdminName: string | null;
+  assignableAdmins: AssignableAdmin[];
 }) {
   const router = useRouter();
   const { addToast } = useToast();
@@ -82,6 +95,9 @@ export function OrderActions({
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelLoading, setIsCancelLoading] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedAdminId, setSelectedAdminId] = useState<number | "">(approvedByAdminId ?? "");
+  const [isAssignLoading, setIsAssignLoading] = useState(false);
   const isOwnedByAnotherAdmin =
     !canManageAllOrders && approvedByAdminId !== null && approvedByAdminId !== currentAdminId;
   const ownershipMessage = approvedByAdminName
@@ -146,6 +162,9 @@ export function OrderActions({
           shopId: order.shopId,
           quantity: order.quantity,
           total: order.total,
+          voucherType: order.voucherType,
+          voucherLabel: order.voucherLabel,
+          unitPrice: order.unitPrice,
           phone: order.phone,
           address: order.address,
           variant: order.variant,
@@ -198,6 +217,43 @@ export function OrderActions({
     setIsCancelLoading(true);
     await updateStatus("CANCELED", undefined, cancelReason.trim());
     setIsCancelLoading(false);
+  };
+
+  const handleOpenAssignModal = () => {
+    setSelectedAdminId(approvedByAdminId ?? assignableAdmins[0]?.id ?? "");
+    setShowAssignModal(true);
+  };
+
+  const handleAssignSubmit = async () => {
+    if (!selectedAdminId) {
+      addToast("error", "Vui lòng chọn admin phụ trách.");
+      return;
+    }
+
+    setIsAssignLoading(true);
+
+    try {
+      const response = await fetch("/api/admin/order/reassign", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, adminId: selectedAdminId }),
+      });
+
+      const data = await readApiResponse(response);
+
+      if (!response.ok) {
+        addToast("error", data.error ?? "Không thể đổi admin phụ trách.");
+        return;
+      }
+
+      addToast("success", "Đã cập nhật admin phụ trách.");
+      setShowAssignModal(false);
+      router.refresh();
+    } catch {
+      addToast("error", "Có lỗi khi đổi admin phụ trách.");
+    } finally {
+      setIsAssignLoading(false);
+    }
   };
 
   return (
@@ -265,6 +321,17 @@ export function OrderActions({
             title={isOwnedByAnotherAdmin ? ownershipMessage : "Hủy đơn"}
           >
             {loading === "CANCELED" ? "..." : "Hủy"}
+          </button>
+        ) : null}
+        {canManageAllOrders ? (
+          <button
+            type="button"
+            onClick={handleOpenAssignModal}
+            disabled={isAssignLoading || assignableAdmins.length === 0}
+            className="shrink-0 rounded-xl bg-violet-600 hover:bg-violet-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            title="Đổi admin phụ trách"
+          >
+            Đổi phụ trách
           </button>
         ) : null}
       </div>
@@ -384,6 +451,57 @@ export function OrderActions({
                 disabled={isCancelLoading || !cancelReason.trim()}
               >
                 {isCancelLoading ? "Đang xử lý..." : "Xác nhận hủy"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {showAssignModal && (
+        <Modal
+          isOpen={showAssignModal}
+          onClose={() => setShowAssignModal(false)}
+          title="Đổi admin phụ trách"
+          size="medium"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600">
+              SPADMIN có thể chuyển đơn này cho admin khác. Nếu đơn đang chờ duyệt, hệ thống sẽ tự chuyển sang "Đang xử lý".
+            </p>
+
+            <label className="space-y-2 text-sm font-medium text-slate-700 block">
+              <span>Admin phụ trách mới</span>
+              <select
+                value={selectedAdminId}
+                onChange={(event) => setSelectedAdminId(event.target.value ? Number(event.target.value) : "")}
+                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
+              >
+                <option value="">Chọn admin</option>
+                {assignableAdmins.map((admin) => (
+                  <option key={admin.id} value={admin.id}>
+                    {admin.username + (admin.role === "SPADMIN" ? " (SPADMIN)" : "")}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-500">Danh sách hiển thị theo username admin.</p>
+            </label>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowAssignModal(false)}
+                className="rounded-xl bg-slate-200 hover:bg-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+                disabled={isAssignLoading}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleAssignSubmit}
+                className="rounded-xl bg-violet-600 hover:bg-violet-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                disabled={isAssignLoading || !selectedAdminId}
+              >
+                {isAssignLoading ? "Đang cập nhật..." : "Xác nhận"}
               </button>
             </div>
           </div>

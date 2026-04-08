@@ -33,7 +33,10 @@ export async function POST(request: NextRequest) {
           // Create refund transaction
           const updatedOrder = await prisma.order.update({
             where: { id: order.id },
-            data: { status },
+            data: {
+              status,
+              processingStartedAt: null,
+            },
           });
 
           await prisma.transaction.create({
@@ -57,7 +60,11 @@ export async function POST(request: NextRequest) {
         // Regular status update (no refund)
         return await prisma.order.update({
           where: { id: order.id },
-          data: { status },
+          data: {
+            status,
+            approvedByAdminId: status === "PROCESSING" ? user.id : status === "PENDING" ? null : order.approvedByAdminId,
+            processingStartedAt: status === "PROCESSING" ? new Date() : null,
+          },
         });
       })
     );

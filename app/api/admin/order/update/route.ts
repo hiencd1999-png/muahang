@@ -2,12 +2,12 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { TransactionType } from "@prisma/client";
-import { calculateOrderTotal } from "@/lib/order";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 import { createNotification } from "@/lib/notifications";
 import { createAuditLog } from "@/lib/audit";
 import { isSpAdminRole } from "@/lib/roles";
+import { releaseExpiredProcessingOrders } from "@/lib/order-assignment";
 
 const schema = z.object({
   orderId: z.number().int().positive(),
@@ -34,6 +34,8 @@ export async function PUT(request: Request) {
 
   const body = await request.json();
   const parsed = schema.safeParse(body);
+
+  await releaseExpiredProcessingOrders();
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Payload cập nhật đơn không hợp lệ." }, { status: 400 });
@@ -89,8 +91,13 @@ export async function PUT(request: Request) {
 
   if (order.status === "PENDING" && parsed.data.status === "PROCESSING") {
     updateData.approvedByAdminId = result.user.id;
+    updateData.processingStartedAt = new Date();
   } else if (!order.approvedByAdminId && order.status !== "PENDING") {
     updateData.approvedByAdminId = result.user.id;
+  }
+
+  if (parsed.data.status !== "PROCESSING") {
+    updateData.processingStartedAt = null;
   }
 
   // Store cookie when transitioning to ORDER_PLACED
@@ -112,12 +119,12 @@ export async function PUT(request: Request) {
     ...(shouldRefund ? [
       prisma.user.update({
         where: { id: order.userId },
-        data: { balance: { increment: calculateOrderTotal(order.quantity) } },
+        data: { balance: { increment: order.total } },
       }),
       prisma.transaction.create({
         data: {
           userId: order.userId,
-          amount: calculateOrderTotal(order.quantity),
+          amount: order.total,
           type: TransactionType.ORDER_REFUND,
           note: `Hoàn tiền đơn hàng #${order.id}`,
         },

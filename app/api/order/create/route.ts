@@ -1,16 +1,20 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { buildCanonicalShopeeLink, calculateOrderTotal, isValidShopeeLink, parseShopeeProductLink } from "@/lib/order";
+import { VoucherType } from "@prisma/client";
+import { buildCanonicalShopeeLink, isValidShopeeLink, parseShopeeProductLink } from "@/lib/order";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 import { createNotification } from "@/lib/notifications";
+import { ensureVoucherPricingConfigs } from "@/lib/voucher-store";
+import { calculateVoucherOrderTotal } from "@/lib/voucher";
 
 const schema = z.object({
   productLink: z.string().trim().min(1),
   resolvedLink: z.string().trim().optional(),
   productName: z.string().trim().min(1),
   shopId: z.string().trim().min(1),
+  voucherType: z.nativeEnum(VoucherType),
   quantity: z.number().int().min(1).max(100),
   phone: z.string().trim().min(1).optional(),
   address: z.string().trim().min(8),
@@ -42,13 +46,24 @@ export async function POST(request: Request) {
     ? buildCanonicalShopeeLink(parsedLink.shopId, parsedLink.itemId)
     : linkCandidate;
 
-  const total = calculateOrderTotal(parsed.data.quantity);
+  const voucherConfigs = await ensureVoucherPricingConfigs();
+  const selectedVoucher = voucherConfigs.find((voucher) => voucher.voucherType === parsed.data.voucherType);
+
+  if (!selectedVoucher) {
+    return NextResponse.json({ error: "Loại voucher không tồn tại." }, { status: 400 });
+  }
+
+  if (selectedVoucher.isMaintenance) {
+    return NextResponse.json({ error: `Voucher ${selectedVoucher.label} đang bảo trì.` }, { status: 400 });
+  }
+
+  const total = calculateVoucherOrderTotal(selectedVoucher.unitPrice, parsed.data.quantity);
 
   if (result.user.balance < total) {
     return NextResponse.json({ error: "Số dư không đủ để tạo đơn." }, { status: 400 });
   }
 
-  const orderNoteParts = ["Create order debit"];
+  const orderNoteParts = ["Tạo đơn Shopee", `Voucher: ${selectedVoucher.label}`];
   if (parsed.data.variant) {
     orderNoteParts.push(`Variant: ${parsed.data.variant}`);
   }
@@ -73,6 +88,9 @@ export async function POST(request: Request) {
         phone: parsed.data.phone?.trim() || "Không cung cấp",
         address: parsed.data.address,
         note: parsed.data.note,
+        voucherType: selectedVoucher.voucherType,
+        voucherLabel: selectedVoucher.label,
+        unitPrice: selectedVoucher.unitPrice,
         total,
         status: "PENDING",
       },
@@ -94,7 +112,7 @@ export async function POST(request: Request) {
     result.user.id,
     "ORDER_CREATED",
     `Đơn hàng #${newOrder.id} được tạo`,
-    `Bạn vừa tạo một đơn hàng mới với số tiền ${(total / 1000).toFixed(0)}k`,
+    `Bạn vừa tạo đơn ${selectedVoucher.label} với số tiền ${(total / 1000).toFixed(0)}k`,
     `/dashboard/orders`
   );
 
@@ -102,6 +120,7 @@ export async function POST(request: Request) {
   revalidatePath("/dashboard/orders");
   revalidatePath("/dashboard/create-order");
   revalidatePath("/admin/orders");
+  revalidatePath("/admin/vouchers");
 
   return NextResponse.json({ success: true, total });
 }

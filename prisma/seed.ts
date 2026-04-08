@@ -1,7 +1,15 @@
-import { PrismaClient, Role, TransactionType } from "@prisma/client";
+import { PrismaClient, Role, TransactionType, VoucherType } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
+
+const defaultVoucherPricing = [
+  { voucherType: VoucherType.DISCOUNT_80K, unitPrice: 80_000 },
+  { voucherType: VoucherType.DISCOUNT_100K, unitPrice: 100_000 },
+  { voucherType: VoucherType.DISCOUNT_50_PERCENT_MAX_100K, unitPrice: 100_000 },
+  { voucherType: VoucherType.DISCOUNT_50_PERCENT_MAX_200K, unitPrice: 200_000 },
+  { voucherType: VoucherType.DISCOUNT_60K, unitPrice: 60_000 },
+] as const;
 
 async function main() {
   // Passwords must contain: 1 uppercase letter + 1 digit minimum
@@ -98,6 +106,19 @@ async function main() {
       },
     },
   });
+
+  await Promise.all(
+    defaultVoucherPricing.map((voucher) =>
+      prisma.voucherPricing.upsert({
+        where: { voucherType: voucher.voucherType },
+        update: { unitPrice: voucher.unitPrice },
+        create: {
+          voucherType: voucher.voucherType,
+          unitPrice: voucher.unitPrice,
+        },
+      })
+    )
+  );
 }
 
 main()

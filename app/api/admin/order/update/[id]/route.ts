@@ -9,6 +9,7 @@ import { isSpAdminRole } from "@/lib/roles";
 const orderUpdateSchema = z.object({
   spcCookie: z.string().trim().max(4000).optional().or(z.literal("")),
   trackingNo: z.string().trim().max(120).optional().or(z.literal("")),
+  note: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
 export async function PATCH(
@@ -59,12 +60,29 @@ export async function PATCH(
     );
   }
 
+  const nextSpcCookie = parsed.data.spcCookie?.trim() || "";
+  const nextTrackingNo = parsed.data.trackingNo?.trim() || "";
+  const nextNote = parsed.data.note?.trim() || null;
+
+  if (order.status === "DELIVERED") {
+    const currentSpcCookie = order.spcCookie?.trim() || "";
+    const currentTrackingNo = order.trackingNo?.trim() || "";
+
+    if (nextSpcCookie !== currentSpcCookie || nextTrackingNo !== currentTrackingNo) {
+      return NextResponse.json(
+        { error: "Đơn đã giao chỉ được phép cập nhật ghi chú, không thể đổi SPC_ST hoặc mã vận đơn." },
+        { status: 400 }
+      );
+    }
+  }
+
   await prisma.order.update({
     where: { id: orderId },
     data: {
       approvedByAdminId: approvedByAdminId ?? result.user.id,
-      spcCookie: parsed.data.spcCookie?.trim() || "",
-      trackingNo: parsed.data.trackingNo?.trim() || "",
+      spcCookie: nextSpcCookie,
+      trackingNo: nextTrackingNo,
+      note: nextNote,
     },
   });
 
@@ -76,6 +94,8 @@ export async function PATCH(
     details: {
       hasTrackingNo: Boolean(parsed.data.trackingNo?.trim()),
       hasSpcCookie: Boolean(parsed.data.spcCookie?.trim()),
+      hasNote: Boolean(parsed.data.note?.trim()),
+      deliveredOrder: order.status === "DELIVERED",
     },
   });
 

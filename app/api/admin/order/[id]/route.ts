@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
+import { releaseExpiredProcessingOrders } from "@/lib/order-assignment";
 
 export async function GET(
   request: NextRequest,
@@ -11,6 +12,8 @@ export async function GET(
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
+
+  await releaseExpiredProcessingOrders();
 
   const { id } = await params;
   const orderId = parseInt(id, 10);
@@ -39,7 +42,7 @@ export async function GET(
   const approvedByAdmin = order.approvedByAdminId
     ? await prisma.user.findUnique({
         where: { id: order.approvedByAdminId },
-        select: { id: true, username: true },
+        select: { id: true, username: true, fullName: true },
       })
     : null;
 

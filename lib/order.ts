@@ -1,9 +1,3 @@
-export const ORDER_UNIT_PRICE = 75_000;
-
-export function calculateOrderTotal(quantity: number) {
-  return Math.max(1, quantity) * ORDER_UNIT_PRICE;
-}
-
 export function isValidShopeeLink(link: string) {
   return /shopee/i.test(link);
 }

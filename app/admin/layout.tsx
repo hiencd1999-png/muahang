@@ -8,12 +8,14 @@ import { isSpAdminRole } from "@/lib/roles";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const currentAdmin = await requireUser("ADMIN");
+  const canManageVouchers = isSpAdminRole(currentAdmin.role);
   const canViewTransactions = isSpAdminRole(currentAdmin.role);
 
   const navLinks = [
     { href: "/admin", label: "Tổng quan" },
     { href: "/admin/users", label: "Quản lý user" },
     { href: "/admin/orders", label: "Quản lý đơn" },
+    ...(canManageVouchers ? [{ href: "/admin/vouchers", label: "Cấu hình voucher" }] : []),
     ...(canViewTransactions ? [{ href: "/admin/transactions", label: "Giao dịch hệ thống" }] : []),
     { href: "/admin/logs", label: "Nhật ký hoạt động" },
   ];

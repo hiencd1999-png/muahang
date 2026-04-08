@@ -60,6 +60,7 @@ export default async function DashboardPage() {
                   <StatusPill status={order.status} />
                 </div>
                 <p className="mt-1 text-sm text-slate-600 truncate max-w-xs sm:max-w-md">{order.productName || order.productLink}</p>
+                <p className="mt-1 text-xs font-medium text-amber-700">{order.voucherLabel || "Chưa có voucher"}</p>
                 <p className="mt-1 text-xs text-slate-500">Shop ID: {order.shopId || "-"}</p>
                 <p className="mt-1 text-sm text-slate-600">SL: {order.quantity} | {formatCurrency(order.total)}</p>
               </div>

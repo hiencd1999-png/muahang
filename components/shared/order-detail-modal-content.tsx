@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { formatCurrency } from "@/lib/format";
+import { getVoucherLabel } from "@/lib/voucher";
 import { OrderTimeline } from "./order-timeline";
 import { useToast } from "./toast";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
@@ -13,6 +14,9 @@ interface Order {
   shopId: string | null;
   quantity: number;
   total: number;
+  voucherType?: string | null;
+  voucherLabel?: string | null;
+  unitPrice?: number | null;
   phone: string;
   address: string;
   variant?: string;
@@ -55,6 +59,7 @@ export function OrderDetailModalContent({
   const [adminForm, setAdminForm] = useState({
     spcCookie: order.spcCookie || "",
     trackingNo: order.trackingNo || "",
+    note: order.note || "",
   });
   const [isSavingOrderInfo, setIsSavingOrderInfo] = useState(false);
   const { addToast } = useToast();
@@ -63,8 +68,11 @@ export function OrderDetailModalContent({
     setAdminForm({
       spcCookie: order.spcCookie || "",
       trackingNo: order.trackingNo || "",
+      note: order.note || "",
     });
   }, [order]);
+
+  const isDeliveredOrder = order.status === "DELIVERED";
 
   const handleSaveOrderInfo = async () => {
     setIsSavingOrderInfo(true);
@@ -75,6 +83,7 @@ export function OrderDetailModalContent({
         body: JSON.stringify({
           spcCookie: adminForm.spcCookie,
           trackingNo: adminForm.trackingNo,
+          note: adminForm.note,
         }),
       });
 
@@ -93,6 +102,7 @@ export function OrderDetailModalContent({
   const formattedDate = createdDate.toLocaleString("vi-VN");
   const cancelReason = order.cancelReason?.trim();
   const cleanNote = order.note?.trim();
+  const voucherLabel = order.voucherLabel || getVoucherLabel(order.voucherType as any);
   const isLockedForAnotherAdmin =
     isAdmin &&
     !canManageAllOrders &&
@@ -153,7 +163,7 @@ export function OrderDetailModalContent({
       </div>
 
       {/* Order Details */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
           <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
             Tổng tiền
@@ -169,6 +179,19 @@ export function OrderDetailModalContent({
           <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
             {order.quantity}
           </p>
+        </div>
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+          <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+            Voucher
+          </p>
+          <p className="mt-1 text-lg font-bold text-gray-900 dark:text-white">
+            {voucherLabel}
+          </p>
+          {typeof order.unitPrice === "number" ? (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {formatCurrency(order.unitPrice)} / sản phẩm
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -202,6 +225,16 @@ export function OrderDetailModalContent({
                 <div>
                   <p className="text-gray-600 dark:text-gray-400 font-medium">Phân loại</p>
                   <p className="mt-1">{order.variant || "Mặc định"}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400 font-medium">Loại voucher</p>
+                  <p className="mt-1">{voucherLabel}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400 font-medium">Giá áp dụng</p>
+                  <p className="mt-1">{typeof order.unitPrice === "number" ? formatCurrency(order.unitPrice) : "-"}</p>
                 </div>
               </div>
               {order.trackingNo ? (
@@ -338,7 +371,7 @@ export function OrderDetailModalContent({
                 <textarea
                   value={adminForm.spcCookie}
                   onChange={(e) => setAdminForm((prev) => ({ ...prev, spcCookie: e.target.value }))}
-                  disabled={Boolean(isLockedForAnotherAdmin)}
+                  disabled={Boolean(isLockedForAnotherAdmin) || isDeliveredOrder}
                   className="block w-full min-w-0 max-w-full resize-y overflow-x-auto whitespace-pre-wrap [overflow-wrap:anywhere] rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs break-all dark:border-gray-700 dark:bg-gray-800"
                   rows={3}
                   placeholder="SPC_ST=..."
@@ -350,16 +383,29 @@ export function OrderDetailModalContent({
                   type="text"
                   value={adminForm.trackingNo}
                   onChange={(e) => setAdminForm((prev) => ({ ...prev, trackingNo: e.target.value }))}
-                  disabled={Boolean(isLockedForAnotherAdmin)}
+                  disabled={Boolean(isLockedForAnotherAdmin) || isDeliveredOrder}
                   className="block w-full min-w-0 max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                />
+              </label>
+              <label className="block min-w-0 max-w-full space-y-1 text-sm text-slate-700 dark:text-slate-200">
+                <span>Ghi chú admin</span>
+                <textarea
+                  value={adminForm.note}
+                  onChange={(e) => setAdminForm((prev) => ({ ...prev, note: e.target.value }))}
+                  disabled={Boolean(isLockedForAnotherAdmin)}
+                  className="block w-full min-w-0 max-w-full resize-y rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                  rows={3}
+                  placeholder="Ghi chú nội bộ cho đơn hàng"
                 />
               </label>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {isLockedForAnotherAdmin
                   ? "Bạn không thể chỉnh sửa vì đơn này đang thuộc admin khác."
-                  : canManageAllOrders
-                    ? "SPAdmin có thể cập nhật Cookie SPC_ST và Mã vận đơn cho mọi đơn hàng."
-                    : "Admin chỉ được cập nhật Cookie SPC_ST và Mã vận đơn cho đơn mình phụ trách."}
+                  : isDeliveredOrder
+                    ? "Đơn đã giao: chỉ được phép cập nhật ghi chú. SPC_ST và Mã vận đơn đã bị khóa."
+                    : canManageAllOrders
+                      ? "SPAdmin có thể cập nhật Cookie SPC_ST, Mã vận đơn và ghi chú cho mọi đơn hàng."
+                      : "Admin chỉ được cập nhật Cookie SPC_ST, Mã vận đơn và ghi chú cho đơn mình phụ trách."}
               </p>
               <button
                 onClick={handleSaveOrderInfo}
