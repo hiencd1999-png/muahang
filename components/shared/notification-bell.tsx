@@ -173,7 +173,7 @@ export function NotificationBell() {
                 <div className="border-t border-slate-200 dark:border-slate-800 p-5 bg-slate-50/50 dark:bg-slate-800/20">
                   <a
                     href="/dashboard/notifications"
-                    className="flex items-center justify-center w-full py-4 bg-slate-950 dark:bg-amber-600 text-white rounded-2xl text-base font-black shadow-lg shadow-slate-900/10 dark:shadow-none hover:bg-slate-800 dark:hover:bg-amber-500 transition-all active:scale-[0.98]"
+                    className="flex items-center justify-center w-full py-4 bg-amber-600 dark:bg-amber-600 text-white rounded-2xl text-base font-black shadow-lg shadow-amber-200 dark:shadow-none hover:bg-amber-700 transition-all active:scale-[0.98]"
                     onClick={() => setIsOpen(false)}
                   >
                     Tất cả thông báo
