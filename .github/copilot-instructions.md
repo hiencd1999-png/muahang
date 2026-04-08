@@ -1,0 +1,6 @@
+- Project stack: Next.js 16 App Router, TypeScript, Tailwind CSS v4, Prisma, SQLite.
+- Main domain: user login/register, deposit, create Shopee order, order history, profile, admin management.
+- Data rules: money stored as integer VND; roles are USER and ADMIN; order statuses are PENDING, PROCESSING, COMPLETED, CANCELED.
+- Auth model: cookie-based JWT session with server-side guards for dashboard and admin routes.
+- Before changing schema or auth logic, keep API paths aligned with the spec under app/api.
+- Useful scripts: npm run dev, npm run lint, npm run build, npm run db:push, npm run db:seed.

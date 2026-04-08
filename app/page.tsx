@@ -1,65 +1,113 @@
-import Image from "next/image";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { ArrowRight, CreditCard, LayoutDashboard, ShieldCheck, ShoppingBag } from "lucide-react";
+import { getSession } from "@/lib/session";
 
-export default function Home() {
+const flowSteps = [
+  "Đăng ký / đăng nhập",
+  "Vào dashboard để xem số dư và đơn gần đây",
+  "Nạp tiền hoặc tạo đơn Shopee",
+  "Admin xử lý và cập nhật trạng thái",
+  "User nhận kết quả hoàn tất",
+];
+
+const siteMap = [
+  "/login",
+  "/register",
+  "/dashboard",
+  "/dashboard/deposit",
+  "/dashboard/create-order",
+  "/dashboard/orders",
+  "/dashboard/profile",
+  "/admin",
+  "/admin/users",
+  "/admin/orders",
+  "/admin/transactions",
+];
+
+export default async function Home() {
+  const session = await getSession();
+
+  if (session) {
+    redirect(session.role === "ADMIN" ? "/admin" : "/dashboard");
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="hero-grid flex-1 py-8 sm:py-12">
+      <div className="shell grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <section className="panel animate-rise rounded-[2rem] p-8 sm:p-10">
+          <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-amber-800">
+            DatDon Shopee System
+          </span>
+          <h1 className="mt-6 max-w-2xl text-4xl font-semibold leading-tight text-slate-950 sm:text-6xl">
+            Hệ thống <span className="text-gradient">đặt đơn Shopee</span> với luồng user và admin tách bạch.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+            Nạp tiền, tạo đơn, theo dõi trạng thái xử lý và quản trị balance ngay trong một dashboard thống nhất.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/register"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Bắt đầu ngay <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
+            >
+              Đăng nhập
+            </Link>
+          </div>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            <article className="rounded-[1.5rem] bg-white/70 p-5">
+              <CreditCard className="h-5 w-5 text-amber-700" />
+              <p className="mt-4 text-sm text-slate-500">Nạp tiền</p>
+              <p className="mt-1 text-xl font-semibold text-slate-900">Tăng balance tức thì</p>
+            </article>
+            <article className="rounded-[1.5rem] bg-white/70 p-5">
+              <ShoppingBag className="h-5 w-5 text-teal-700" />
+              <p className="mt-4 text-sm text-slate-500">Tạo đơn</p>
+              <p className="mt-1 text-xl font-semibold text-slate-900">Validate link Shopee</p>
+            </article>
+            <article className="rounded-[1.5rem] bg-white/70 p-5">
+              <ShieldCheck className="h-5 w-5 text-slate-700" />
+              <p className="mt-4 text-sm text-slate-500">Admin panel</p>
+              <p className="mt-1 text-xl font-semibold text-slate-900">Quản lý user, đơn, giao dịch</p>
+            </article>
+          </div>
+        </section>
+
+        <section className="grid gap-6">
+          <div className="panel rounded-[2rem] p-6">
+            <div className="flex items-center gap-3">
+              <LayoutDashboard className="h-5 w-5 text-slate-900" />
+              <h2 className="text-lg font-semibold text-slate-900">Sơ đồ luồng</h2>
+            </div>
+            <ol className="mt-5 space-y-3 text-sm leading-7 text-slate-700">
+              {flowSteps.map((step, index) => (
+                <li key={step} className="flex gap-3 rounded-2xl bg-white/75 px-4 py-3">
+                  <span className="font-mono text-xs text-amber-700">0{index + 1}</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="panel rounded-[2rem] p-6">
+            <h2 className="text-lg font-semibold text-slate-900">Site map chính</h2>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {siteMap.map((item) => (
+                <span key={item} className="rounded-full border border-slate-200 bg-white/70 px-3 py-2 text-sm text-slate-700">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }

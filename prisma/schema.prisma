@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELED
+}
+
+enum TransactionType {
+  DEPOSIT
+  ORDER_DEBIT
+  ADMIN_ADJUSTMENT
+  ORDER_REFUND
+}
+
+enum NotificationType {
+  ORDER_CREATED
+  ORDER_COMPLETED
+  ORDER_CANCELED
+  DEPOSIT_SUCCESS
+  BALANCE_CHANGED
+  ADMIN_MESSAGE
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  username     String        @unique
+  email        String        @unique
+  phone        String        @unique
+  passwordHash String
+  role         Role          @default(USER)
+  balance      Int           @default(0)
+  orders       Order[]
+  transactions Transaction[]
+  auditLogs    AuditLog[]    @relation("AuditLogAdmin")
+  notifications Notification[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productLink String
+  productName String @default("")
+  shopId      String?
+  variant     String?
+  quantity    Int
+  phone       String
+  address     String
+  total       Int
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Transaction {
+  id        Int             @id @default(autoincrement())
+  userId    Int
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  type      TransactionType
+  note      String
+  createdAt DateTime        @default(now())
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  adminId    Int
+  admin      User     @relation("AuditLogAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  action     String
+  targetType String
+  targetId   Int
+  details    String
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+}

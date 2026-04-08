@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DatDon Shopee
 
-## Getting Started
+Hệ thống đặt đơn Shopee với hai vai trò `USER` và `ADMIN`, xây dựng bằng Next.js App Router, Prisma và SQLite.
 
-First, run the development server:
+## Chức năng chính
+
+- Đăng ký, đăng nhập bằng cookie JWT session.
+- Dashboard người dùng với số dư, đơn gần đây và thao tác nhanh.
+- Nạp tiền vào tài khoản, lưu lịch sử giao dịch.
+- Tạo đơn Shopee, tự tính tiền và trừ balance nếu đủ số dư.
+- Theo dõi lịch sử đơn với các trạng thái `PENDING`, `PROCESSING`, `COMPLETED`, `CANCELED`.
+- Trang profile để xem thông tin tài khoản và đổi mật khẩu.
+- Admin dashboard để quản lý user, đơn hàng và transactions.
+
+## Stack
+
+- Next.js 16 App Router
+- TypeScript
+- Tailwind CSS v4
+- Prisma ORM
+- SQLite
+- Cookie-based JWT auth với `jose`
+
+## Scripts
 
 ```bash
+npm install
+npm run db:push
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Các lệnh hữu ích khác:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run lint
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tài khoản seed mặc định
 
-## Learn More
+- Username: `admin`
+- Password: `admin123`
 
-To learn more about Next.js, take a look at the following resources:
+## Biến môi trường
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Tạo từ `.env.example` hoặc dùng sẵn `.env` trong local development:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```env
+DATABASE_URL="file:./dev.db"
+AUTH_SECRET="replace-with-a-long-random-secret"
+```
 
-## Deploy on Vercel
+## API map
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/user/profile`
+- `PUT /api/user/profile`
+- `POST /api/user/deposit`
+- `POST /api/order/create`
+- `GET /api/order/list`
+- `GET /api/admin/users`
+- `PUT /api/admin/user/balance`
+- `GET /api/admin/orders`
+- `PUT /api/admin/order/update`
+- `GET /api/admin/transactions`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Ghi chú domain
+
+- Tiền tệ được lưu bằng số nguyên VND.
+- Đơn giá mặc định đang dùng cho tính đơn là `75_000 VND / sản phẩm`.
+- Link tạo đơn bắt buộc chứa chuỗi `shopee`.
+- Khi số dư không đủ, API tạo đơn trả lỗi và không ghi dữ liệu.

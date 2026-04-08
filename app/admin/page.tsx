@@ -1,0 +1,33 @@
+import { prisma } from "@/lib/prisma";
+import { formatCurrency } from "@/lib/format";
+import { requireUser } from "@/lib/session";
+
+export default async function AdminPage() {
+  await requireUser("ADMIN");
+
+  const [totalUsers, totalOrders, revenue] = await Promise.all([
+    prisma.user.count(),
+    prisma.order.count(),
+    prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: { type: "ORDER_DEBIT" },
+    }),
+  ]);
+
+  return (
+    <section className="grid gap-4 md:grid-cols-3">
+      <article className="panel rounded-[1.75rem] p-6">
+        <p className="text-sm text-slate-500">Tổng user</p>
+        <p className="mt-2 text-3xl font-semibold text-slate-950">{totalUsers}</p>
+      </article>
+      <article className="panel rounded-[1.75rem] p-6">
+        <p className="text-sm text-slate-500">Tổng đơn</p>
+        <p className="mt-2 text-3xl font-semibold text-slate-950">{totalOrders}</p>
+      </article>
+      <article className="panel rounded-[1.75rem] p-6">
+        <p className="text-sm text-slate-500">Doanh thu</p>
+        <p className="mt-2 text-3xl font-semibold text-slate-950">{formatCurrency(Math.abs(revenue._sum.amount ?? 0))}</p>
+      </article>
+    </section>
+  );
+}
