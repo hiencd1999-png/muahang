@@ -25,6 +25,7 @@ interface OrderData {
   status: "PENDING" | "PROCESSING" | "ORDER_PLACED" | "TRACKING_GENERATED" | "DELIVERED" | "CANCELED";
   spcCookie?: string;
   trackingNo?: string;
+  shopeeTrackingData?: string | null;
   createdAt: Date;
   updatedAt: Date;
   userId: number;
@@ -78,6 +79,7 @@ export function UserOrderActions({ orderId, status, buttonClassName }: { orderId
       status: order.status,
       spcCookie: order.spcCookie,
       trackingNo: order.trackingNo,
+      shopeeTrackingData: order.shopeeTrackingData,
       createdAt: new Date(order.createdAt),
       updatedAt: new Date(order.updatedAt),
       userId: order.userId,

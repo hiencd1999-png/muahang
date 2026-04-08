@@ -26,6 +26,7 @@ interface OrderData {
   status: "PENDING" | "PROCESSING" | "ORDER_PLACED" | "TRACKING_GENERATED" | "DELIVERED" | "CANCELED";
   spcCookie?: string;
   trackingNo?: string;
+  shopeeTrackingData?: string | null;
   createdAt: Date;
   updatedAt: Date;
   userId: number;
@@ -174,6 +175,7 @@ export function OrderActions({
           status: order.status,
           spcCookie: order.spcCookie,
           trackingNo: order.trackingNo,
+          shopeeTrackingData: order.shopeeTrackingData,
           approvedByAdminId: order.approvedByAdminId,
           createdAt: new Date(order.createdAt),
           updatedAt: new Date(order.updatedAt),
@@ -297,26 +299,14 @@ export function OrderActions({
           </button>
         ) : null}
         {status === "ORDER_PLACED" ? (
-          <button
-            type="button"
-            onClick={() => updateStatus("TRACKING_GENERATED")}
-            disabled={loading !== "" || isOwnedByAnotherAdmin}
-            className="shrink-0 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
-            title={isOwnedByAnotherAdmin ? ownershipMessage : "Lên mã vận đơn"}
-          >
-            {loading === "TRACKING_GENERATED" ? "..." : "Lên mã VĐ"}
-          </button>
+          <span className="shrink-0 rounded-xl bg-indigo-500/10 px-3 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-400">
+            Đang chờ hệ thống tự lên mã VĐ...
+          </span>
         ) : null}
         {status === "TRACKING_GENERATED" ? (
-          <button
-            type="button"
-            onClick={() => updateStatus("DELIVERED")}
-            disabled={loading !== "" || isOwnedByAnotherAdmin}
-            className="shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
-            title={isOwnedByAnotherAdmin ? ownershipMessage : "Giao hàng"}
-          >
-            {loading === "DELIVERED" ? "..." : "Giao hàng"}
-          </button>
+          <span className="shrink-0 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+            Hệ thống đang tự theo dõi hành trình...
+          </span>
         ) : null}
         {status !== "DELIVERED" && status !== "CANCELED" ? (
           <button

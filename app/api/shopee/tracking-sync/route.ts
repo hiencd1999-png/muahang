@@ -32,6 +32,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ tracking: [] });
     }
 
+    if (order.status === "DELIVERED" || order.status === "CANCELED") {
+      let cached = [];
+      try {
+        if (order.shopeeTrackingData) cached = JSON.parse(order.shopeeTrackingData);
+      } catch (e) {}
+      return NextResponse.json({ tracking: cached, autoUpdatedStatus: order.status });
+    }
+
     // Pick a random proxy
     const proxies = await prisma.systemProxy.findMany({
       where: { isActive: true },
@@ -51,11 +59,57 @@ export async function GET(request: NextRequest) {
     const checker = new ShopeeTrackingChecker(order.spcCookie, proxyConf);
     const results = await checker.run(15, 0); // Limit 15 to get enough history if many orders placed
 
-    return NextResponse.json({ tracking: results });
+    let newStatus = order.status;
+    let newTrackingNo = order.trackingNo || "";
+
+    if (results.length > 0) {
+      const allDelivered = results.every((r: any) => r.description === "Đã giao hàng" || r.description === "Hoàn thành");
+      const allCanceled = results.every((r: any) => r.description === "Đã hủy" || r.description === "Hủy bởi hệ thống");
+
+      const firstTracking = results.find((r: any) => r.tracking_number);
+      if (firstTracking && !newTrackingNo) {
+        newTrackingNo = firstTracking.tracking_number;
+      }
+
+      if (allDelivered) {
+        newStatus = "DELIVERED";
+      } else if (allCanceled) {
+        newStatus = "CANCELED";
+      } else if (newTrackingNo && (newStatus === "PENDING" || newStatus === "PROCESSING" || newStatus === "ORDER_PLACED")) {
+        newStatus = "TRACKING_GENERATED";
+      }
+    }
+
+    const stringifiedResults = JSON.stringify(results);
+    const updates: any = {};
+    if (order.shopeeTrackingData !== stringifiedResults) updates.shopeeTrackingData = stringifiedResults;
+    if (order.status !== newStatus) updates.status = newStatus;
+    if (order.trackingNo !== newTrackingNo) updates.trackingNo = newTrackingNo;
+
+    if (Object.keys(updates).length > 0) {
+      await prisma.order.update({
+        where: { id: orderId },
+        data: updates,
+      });
+    }
+
+    return NextResponse.json({ tracking: results, autoUpdatedStatus: newStatus });
   } catch (error) {
-    console.error("Shopee tracking error:", error);
+    const msg = error instanceof Error ? error.message : "Error";
+    console.error("Shopee tracking error:", msg);
+    
+    if (msg.includes("SPC_ST expired") || msg.includes("Shopee rejected cookie")) {
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { spcCookie: "" }
+      });
+      return NextResponse.json({ 
+        error: "Cookie bị lỗi hoặc hết hạn, đã tự động xóa. Hệ thống dừng theo dõi." 
+      }, { status: 400 });
+    }
+
     return NextResponse.json({ 
-      error: error instanceof Error ? error.message : "Failed to fetch Shopee tracking" 
+      error: msg 
     }, { status: 500 });
   }
 }

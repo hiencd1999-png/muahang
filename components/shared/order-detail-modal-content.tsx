@@ -25,6 +25,7 @@ interface Order {
   status: "PENDING" | "PROCESSING" | "ORDER_PLACED" | "TRACKING_GENERATED" | "DELIVERED" | "CANCELED";
   spcCookie?: string;
   trackingNo?: string;
+  shopeeTrackingData?: string | null;
   createdAt: Date;
   updatedAt: Date;
   userId: number;
@@ -64,14 +65,26 @@ export function OrderDetailModalContent({
   const [isSavingOrderInfo, setIsSavingOrderInfo] = useState(false);
   const { addToast } = useToast();
 
-  const [shopeeTracking, setShopeeTracking] = useState<any[] | null>(null);
+  const [shopeeTracking, setShopeeTracking] = useState<any[] | null>(() => {
+    if (order.shopeeTrackingData) {
+      try {
+        return JSON.parse(order.shopeeTrackingData);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
   const [isFetchingTracking, setIsFetchingTracking] = useState(false);
   const [trackingFetchError, setTrackingFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!order.spcCookie) return;
+    if (order.status === "DELIVERED" || order.status === "CANCELED") return;
     
     let isMounted = true;
+    let intervalId: NodeJS.Timeout | undefined;
+
     const fetchTracking = async () => {
       if (isMounted && !shopeeTracking) setIsFetchingTracking(true);
       try {
@@ -81,8 +94,15 @@ export function OrderDetailModalContent({
           if (res.ok && data.tracking) {
             setShopeeTracking(data.tracking);
             setTrackingFetchError(null);
+            
+            if (data.autoUpdatedStatus === "DELIVERED" || data.autoUpdatedStatus === "CANCELED") {
+              if (intervalId) clearInterval(intervalId);
+            }
           } else {
             setTrackingFetchError(data.error || "Lỗi khi lấy thông tin tracking");
+            if (res.status === 400 && data.error && data.error.includes("Cookie")) {
+               if (intervalId) clearInterval(intervalId);
+            }
           }
         }
       } catch (err) {
@@ -93,13 +113,13 @@ export function OrderDetailModalContent({
     };
 
     fetchTracking();
-    const intervalId = setInterval(fetchTracking, 5 * 60 * 1000); // 5 minutes
+    intervalId = setInterval(fetchTracking, 5 * 60 * 1000); // 5 minutes
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
+      if (intervalId) clearInterval(intervalId);
     };
-  }, [order.spcCookie, order.id]);
+  }, [order.spcCookie, order.id, order.status, shopeeTracking]);
 
   useEffect(() => {
     setAdminForm({

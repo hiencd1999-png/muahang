@@ -19,8 +19,8 @@ const schema = z.object({
 const allowedTransitions: Record<string, string[]> = {
   PENDING: ["PROCESSING", "CANCELED"],
   PROCESSING: ["ORDER_PLACED", "CANCELED"],
-  ORDER_PLACED: ["TRACKING_GENERATED", "CANCELED"],
-  TRACKING_GENERATED: ["DELIVERED", "CANCELED"],
+  ORDER_PLACED: ["CANCELED"],
+  TRACKING_GENERATED: ["CANCELED"],
   DELIVERED: [],
   CANCELED: [],
 };
