@@ -1,37 +1,48 @@
 import { prisma } from "@/lib/prisma";
 import {
   DEFAULT_VOUCHER_PRICING,
-  getVoucherLabel,
-  VOUCHER_TYPE_ORDER,
+  LEGACY_VOUCHER_CODES,
   type VoucherOption,
 } from "@/lib/voucher";
 
 export async function ensureVoucherPricingConfigs() {
+  await prisma.voucherPricing.deleteMany({
+    where: {
+      code: {
+        in: LEGACY_VOUCHER_CODES,
+      },
+    },
+  });
+
   await Promise.all(
-    VOUCHER_TYPE_ORDER.map((voucherType) =>
+    DEFAULT_VOUCHER_PRICING.map((voucher) =>
       prisma.voucherPricing.upsert({
-        where: { voucherType },
-        update: {},
+        where: { code: voucher.code },
+        update: {
+          label: voucher.label,
+          unitPrice: voucher.unitPrice,
+        },
         create: {
-          voucherType,
-          unitPrice: DEFAULT_VOUCHER_PRICING[voucherType],
+          code: voucher.code,
+          label: voucher.label,
+          unitPrice: voucher.unitPrice,
           isMaintenance: false,
         },
       })
     )
   );
 
-  const configs = await prisma.voucherPricing.findMany();
-  const configMap = new Map(configs.map((config) => [config.voucherType, config]));
-
-  return VOUCHER_TYPE_ORDER.map((voucherType) => {
-    const config = configMap.get(voucherType);
-
-    return {
-      voucherType,
-      label: getVoucherLabel(voucherType),
-      unitPrice: config?.unitPrice ?? DEFAULT_VOUCHER_PRICING[voucherType],
-      isMaintenance: config?.isMaintenance ?? false,
-    } satisfies VoucherOption;
+  const configs = await prisma.voucherPricing.findMany({
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
+
+  return configs.map(
+    (config) =>
+      ({
+        code: config.code,
+        label: config.label,
+        unitPrice: config.unitPrice,
+        isMaintenance: config.isMaintenance,
+      }) satisfies VoucherOption
+  );
 }

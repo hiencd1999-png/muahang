@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { VoucherType } from "@prisma/client";
 import { createAuditLog } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
@@ -9,7 +8,8 @@ import { ensureVoucherPricingConfigs } from "@/lib/voucher-store";
 const updateVoucherPricingSchema = z.object({
   configs: z.array(
     z.object({
-      voucherType: z.nativeEnum(VoucherType),
+      code: z.string().trim().min(2).max(60).regex(/^[A-Za-z0-9_\-]+$/),
+      label: z.string().trim().min(2).max(120),
       unitPrice: z.number().int().min(0).max(10_000_000),
       isMaintenance: z.boolean(),
     })
@@ -41,19 +41,43 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Dữ liệu cấu hình voucher không hợp lệ." }, { status: 400 });
   }
 
+  const normalizedCodes = parsed.data.configs.map((config) => config.code.trim().toUpperCase());
+  if (new Set(normalizedCodes).size !== normalizedCodes.length) {
+    return NextResponse.json({ error: "Mã voucher bị trùng." }, { status: 400 });
+  }
+
   await ensureVoucherPricingConfigs();
 
-  await prisma.$transaction(
-    parsed.data.configs.map((config) =>
-      prisma.voucherPricing.update({
-        where: { voucherType: config.voucherType },
-        data: {
-          unitPrice: config.unitPrice,
-          isMaintenance: config.isMaintenance,
+  await prisma.$transaction(async (tx) => {
+    const incomingCodes = parsed.data.configs.map((config) => config.code);
+
+    await tx.voucherPricing.deleteMany({
+      where: {
+        code: {
+          notIn: incomingCodes,
         },
-      })
-    )
-  );
+      },
+    });
+
+    await Promise.all(
+      parsed.data.configs.map((config) =>
+        tx.voucherPricing.upsert({
+          where: { code: config.code },
+          update: {
+            label: config.label,
+            unitPrice: config.unitPrice,
+            isMaintenance: config.isMaintenance,
+          },
+          create: {
+            code: config.code,
+            label: config.label,
+            unitPrice: config.unitPrice,
+            isMaintenance: config.isMaintenance,
+          },
+        })
+      )
+    );
+  });
 
   await createAuditLog({
     actorId: result.user.id,

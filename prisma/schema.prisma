@@ -38,14 +38,6 @@ enum NotificationType {
   ADMIN_MESSAGE
 }
 
-enum VoucherType {
-  DISCOUNT_80K
-  DISCOUNT_100K
-  DISCOUNT_50_PERCENT_MAX_100K
-  DISCOUNT_50_PERCENT_MAX_200K
-  DISCOUNT_60K
-}
-
 model User {
   id           Int           @id @default(autoincrement())
   fullName     String        @default("")
@@ -77,7 +69,7 @@ model Order {
   phone         String
   address       String
   note          String?
-  voucherType   VoucherType?
+  voucherCode   String?     @map("voucherType")
   voucherLabel  String?
   unitPrice     Int?
   total         Int
@@ -91,7 +83,8 @@ model Order {
 
 model VoucherPricing {
   id            Int         @id @default(autoincrement())
-  voucherType   VoucherType @unique
+  code          String      @unique @map("voucherType")
+  label         String      @default("")
   unitPrice     Int
   isMaintenance Boolean     @default(false)
   createdAt     DateTime    @default(now())

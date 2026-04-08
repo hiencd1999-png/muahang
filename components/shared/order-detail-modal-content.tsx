@@ -14,7 +14,7 @@ interface Order {
   shopId: string | null;
   quantity: number;
   total: number;
-  voucherType?: string | null;
+  voucherCode?: string | null;
   voucherLabel?: string | null;
   unitPrice?: number | null;
   phone: string;
@@ -102,7 +102,7 @@ export function OrderDetailModalContent({
   const formattedDate = createdDate.toLocaleString("vi-VN");
   const cancelReason = order.cancelReason?.trim();
   const cleanNote = order.note?.trim();
-  const voucherLabel = order.voucherLabel || getVoucherLabel(order.voucherType as any);
+  const voucherLabel = order.voucherLabel || getVoucherLabel(order.voucherCode);
   const isLockedForAnotherAdmin =
     isAdmin &&
     !canManageAllOrders &&

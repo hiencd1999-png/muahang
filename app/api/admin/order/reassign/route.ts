@@ -42,6 +42,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Đơn hàng không tồn tại." }, { status: 404 });
   }
 
+  if (order.status === "DELIVERED") {
+    return NextResponse.json({ error: "Đơn đã giao không thể đổi phụ trách." }, { status: 400 });
+  }
+
   if (!nextAdmin) {
     return NextResponse.json({ error: "Admin phụ trách mới không hợp lệ." }, { status: 400 });
   }

@@ -7,7 +7,6 @@ import {
   buildCanonicalShopeeLink,
   isValidShopeeLink,
   parseShopeeProductLink,
-  suggestAddressOptions,
 } from "@/lib/order";
 import { calculateVoucherOrderTotal, type VoucherOption } from "@/lib/voucher";
 import { useToast } from "@/components/shared/toast";
@@ -22,26 +21,29 @@ export function CreateOrderForm({
   const router = useRouter();
   const { addToast } = useToast();
   const activeVoucherConfigs = voucherConfigs.filter((voucher) => !voucher.isMaintenance);
-  const initialVoucherType = activeVoucherConfigs[0]?.voucherType ?? "";
+  const initialVoucherCode = activeVoucherConfigs[0]?.code ?? "";
   const [productLink, setProductLink] = useState("");
   const [resolvedLink, setResolvedLink] = useState("");
   const [productName, setProductName] = useState("");
   const [shopId, setShopId] = useState("");
   const [variantOptions, setVariantOptions] = useState<string[]>([]);
   const [selectedVariant, setSelectedVariant] = useState("");
-  const [selectedVoucherType, setSelectedVoucherType] = useState(initialVoucherType);
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState(initialVoucherCode);
   const [analysisError, setAnalysisError] = useState("");
   const [analysisMessage, setAnalysisMessage] = useState("");
   const [quantity, setQuantity] = useState(2);
   const [note, setNote] = useState("");
+  const [addressPhone, setAddressPhone] = useState("");
+  const [spcCookieForAddress, setSpcCookieForAddress] = useState("");
   const [address, setAddress] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const [isAnalyzingAddress, setIsAnalyzingAddress] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const selectedVoucher = useMemo(
-    () => activeVoucherConfigs.find((voucher) => voucher.voucherType === selectedVoucherType) ?? null,
-    [selectedVoucherType, activeVoucherConfigs]
+    () => activeVoucherConfigs.find((voucher) => voucher.code === selectedVoucherCode) ?? null,
+    [selectedVoucherCode, activeVoucherConfigs]
   );
 
   const total = useMemo(
@@ -101,20 +103,51 @@ export function CreateOrderForm({
     }
   };
 
-  const handleAnalyzeAddress = () => {
-    const suggestions = suggestAddressOptions(address);
-    if (suggestions.length === 0) {
-      addToast("error", "Vui lòng nhập địa chỉ hợp lệ để phân tích.");
+  const handleAnalyzeAddress = async () => {
+    const normalizedAddress = address.trim();
+    if (!normalizedAddress || normalizedAddress.length < 8) {
+      addToast("error", "Vui lòng nhập địa chỉ chi tiết trước khi phân tích.");
       return;
     }
 
-    setAddressSuggestions(suggestions);
-    setShowAddressSuggestions(true);
+    setIsAnalyzingAddress(true);
+    try {
+      const response = await fetch("/api/shopee/address-analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address: normalizedAddress,
+          phone: addressPhone.trim() || note.trim(),
+          note: note.trim(),
+          spcCookie: spcCookieForAddress.trim(),
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        addToast("error", data.error || "Không phân tích được địa chỉ từ Shopee API.");
+        return;
+      }
+
+      if (!Array.isArray(data.suggestions) || data.suggestions.length === 0) {
+        addToast("error", "Shopee API không trả về gợi ý địa chỉ phù hợp.");
+        return;
+      }
+
+      setAddressSuggestions(data.suggestions);
+      setShowAddressSuggestions(true);
+      addToast("success", "Đã nhận gợi ý địa chỉ từ Shopee API.");
+    } catch {
+      addToast("error", "Lỗi khi gọi Shopee API để phân tích địa chỉ.");
+    } finally {
+      setIsAnalyzingAddress(false);
+    }
   };
 
   const handleUseSuggestion = (value: string) => {
     setAddress(value);
     setShowAddressSuggestions(false);
+    addToast("success", "Đã áp dụng địa chỉ đã phân tích.");
   };
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -148,7 +181,7 @@ export function CreateOrderForm({
       resolvedLink: resolvedLink || productLink,
       productName,
       shopId,
-      voucherType: selectedVoucher.voucherType,
+      voucherCode: selectedVoucher.code,
       quantity,
       phone: note.trim() || "Không cung cấp",
       address: normalizedAddress,
@@ -176,10 +209,12 @@ export function CreateOrderForm({
     setShopId("");
     setVariantOptions([]);
     setSelectedVariant("");
-    setSelectedVoucherType(initialVoucherType);
+    setSelectedVoucherCode(initialVoucherCode);
     setAnalysisError("");
     setQuantity(2);
     setNote("");
+    setAddressPhone("");
+    setSpcCookieForAddress("");
     setAddress("");
     setAddressSuggestions([]);
     setShowAddressSuggestions(false);
@@ -209,14 +244,14 @@ export function CreateOrderForm({
               </span>
             </div>
             <select
-              value={selectedVoucherType}
-              onChange={(event) => setSelectedVoucherType(event.target.value as typeof initialVoucherType)}
+              value={selectedVoucherCode}
+              onChange={(event) => setSelectedVoucherCode(event.target.value as typeof initialVoucherCode)}
               className="mt-4 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
               required
             >
               <option value="">Chọn loại voucher</option>
               {activeVoucherConfigs.map((voucher) => (
-                <option key={voucher.voucherType} value={voucher.voucherType}>
+                <option key={voucher.code} value={voucher.code}>
                   {voucher.label} - {formatCurrency(voucher.unitPrice)} / sản phẩm
                 </option>
               ))}
@@ -326,6 +361,30 @@ export function CreateOrderForm({
           </label>
 
           <label className="space-y-2 text-sm font-medium text-slate-700">
+            <span>Số điện thoại nhận hàng (phục vụ phân tích địa chỉ)</span>
+            <input
+              value={addressPhone}
+              onChange={(event) => setAddressPhone(event.target.value)}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+              placeholder="Ví dụ: 098xxxxxxx"
+            />
+          </label>
+
+          <label className="space-y-2 text-sm font-medium text-slate-700">
+            <span>Cookie SPC_ST (để gọi Shopee API phân tích địa chỉ)</span>
+            <textarea
+              value={spcCookieForAddress}
+              onChange={(event) => setSpcCookieForAddress(event.target.value)}
+              rows={3}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-xs outline-none transition focus:border-amber-500"
+              placeholder="SPC_ST=..."
+            />
+            <p className="text-xs text-slate-500">
+              Nếu để trống, hệ thống thử dùng cookie cấu hình server. Khuyến nghị dán SPC_ST hợp lệ để trả kết quả chính xác.
+            </p>
+          </label>
+
+          <label className="space-y-2 text-sm font-medium text-slate-700">
             <span>Địa chỉ</span>
             <textarea
               value={address}
@@ -338,15 +397,19 @@ export function CreateOrderForm({
             <button
               type="button"
               onClick={handleAnalyzeAddress}
-              className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+              disabled={isAnalyzingAddress}
+              className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Phân tích địa chỉ
+              {isAnalyzingAddress ? "Đang phân tích..." : "Phân tích địa chỉ"}
             </button>
           </label>
 
           {showAddressSuggestions && addressSuggestions.length > 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <p className="mb-3 text-sm font-semibold text-slate-900">Đề xuất địa chỉ</p>
+              <p className="mb-3 text-xs text-slate-500">
+                Dữ liệu được phân tích trực tiếp từ Shopee API (autofill) để tăng khả năng add địa chỉ thành công.
+              </p>
               <div className="space-y-2">
                 {addressSuggestions.map((option) => (
                   <button

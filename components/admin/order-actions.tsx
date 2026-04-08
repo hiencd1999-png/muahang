@@ -15,7 +15,7 @@ interface OrderData {
   shopId: string | null;
   quantity: number;
   total: number;
-  voucherType?: string | null;
+  voucherCode?: string | null;
   voucherLabel?: string | null;
   unitPrice?: number | null;
   phone: string;
@@ -98,6 +98,7 @@ export function OrderActions({
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedAdminId, setSelectedAdminId] = useState<number | "">(approvedByAdminId ?? "");
   const [isAssignLoading, setIsAssignLoading] = useState(false);
+  const isDeliveredOrder = status === "DELIVERED";
   const isOwnedByAnotherAdmin =
     !canManageAllOrders && approvedByAdminId !== null && approvedByAdminId !== currentAdminId;
   const ownershipMessage = approvedByAdminName
@@ -162,7 +163,7 @@ export function OrderActions({
           shopId: order.shopId,
           quantity: order.quantity,
           total: order.total,
-          voucherType: order.voucherType,
+          voucherCode: order.voucherCode,
           voucherLabel: order.voucherLabel,
           unitPrice: order.unitPrice,
           phone: order.phone,
@@ -220,6 +221,11 @@ export function OrderActions({
   };
 
   const handleOpenAssignModal = () => {
+    if (isDeliveredOrder) {
+      addToast("error", "Đơn đã giao không thể đổi phụ trách.");
+      return;
+    }
+
     setSelectedAdminId(approvedByAdminId ?? assignableAdmins[0]?.id ?? "");
     setShowAssignModal(true);
   };
@@ -327,9 +333,9 @@ export function OrderActions({
           <button
             type="button"
             onClick={handleOpenAssignModal}
-            disabled={isAssignLoading || assignableAdmins.length === 0}
+            disabled={isAssignLoading || assignableAdmins.length === 0 || isDeliveredOrder}
             className="shrink-0 rounded-xl bg-violet-600 hover:bg-violet-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
-            title="Đổi admin phụ trách"
+            title={isDeliveredOrder ? "Đơn đã giao không thể đổi phụ trách" : "Đổi admin phụ trách"}
           >
             Đổi phụ trách
           </button>

@@ -1,14 +1,15 @@
-import { PrismaClient, Role, TransactionType, VoucherType } from "@prisma/client";
+import { PrismaClient, Role, TransactionType } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { LEGACY_VOUCHER_CODES } from "../lib/voucher";
 
 const prisma = new PrismaClient();
 
 const defaultVoucherPricing = [
-  { voucherType: VoucherType.DISCOUNT_80K, unitPrice: 80_000 },
-  { voucherType: VoucherType.DISCOUNT_100K, unitPrice: 100_000 },
-  { voucherType: VoucherType.DISCOUNT_50_PERCENT_MAX_100K, unitPrice: 100_000 },
-  { voucherType: VoucherType.DISCOUNT_50_PERCENT_MAX_200K, unitPrice: 200_000 },
-  { voucherType: VoucherType.DISCOUNT_60K, unitPrice: 60_000 },
+  { code: "MA_80K", label: "Mã 80k", unitPrice: 80_000 },
+  { code: "MA_100K", label: "Mã 100k", unitPrice: 100_000 },
+  { code: "MA_50_100K", label: "Mã 50%/100k", unitPrice: 100_000 },
+  { code: "MA_50_200K", label: "Mã 50%/200k", unitPrice: 200_000 },
+  { code: "MA_60K", label: "Mã 60k", unitPrice: 60_000 },
 ] as const;
 
 async function main() {
@@ -107,13 +108,25 @@ async function main() {
     },
   });
 
+  await prisma.voucherPricing.deleteMany({
+    where: {
+      code: {
+        in: LEGACY_VOUCHER_CODES,
+      },
+    },
+  });
+
   await Promise.all(
     defaultVoucherPricing.map((voucher) =>
       prisma.voucherPricing.upsert({
-        where: { voucherType: voucher.voucherType },
-        update: { unitPrice: voucher.unitPrice },
+        where: { code: voucher.code },
+        update: {
+          label: voucher.label,
+          unitPrice: voucher.unitPrice,
+        },
         create: {
-          voucherType: voucher.voucherType,
+          code: voucher.code,
+          label: voucher.label,
           unitPrice: voucher.unitPrice,
         },
       })

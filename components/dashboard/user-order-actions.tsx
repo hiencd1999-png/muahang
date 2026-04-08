@@ -14,7 +14,7 @@ interface OrderData {
   shopId: string | null;
   quantity: number;
   total: number;
-  voucherType?: string | null;
+  voucherCode?: string | null;
   voucherLabel?: string | null;
   unitPrice?: number | null;
   phone: string;
@@ -68,7 +68,7 @@ export function UserOrderActions({ orderId, status }: { orderId: number; status:
       shopId: order.shopId,
       quantity: order.quantity,
       total: order.total,
-      voucherType: order.voucherType,
+      voucherCode: order.voucherCode,
       voucherLabel: order.voucherLabel,
       unitPrice: order.unitPrice,
       phone: order.phone,

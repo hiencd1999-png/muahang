@@ -75,31 +75,90 @@ export function parseShopeeProductLink(link: string): ParsedShopeeLink {
   };
 }
 
-export function suggestAddressOptions(address: string): string[] {
-  const normalized = address
+function normalizePhone(phoneOrText: string) {
+  const digits = (phoneOrText || "").replace(/\D/g, "");
+  if (!digits) {
+    return "";
+  }
+
+  if (digits.length === 9) {
+    return `0${digits}`;
+  }
+
+  return digits;
+}
+
+function sanitizeFragment(value: string) {
+  return value
     .trim()
     .replace(/\s+/g, " ")
-    .replace(/\s*,\s*/g, ", ");
+    .replace(/\s*,\s*/g, ", ")
+    .replace(/\s*[-–]\s*/g, " - ");
+}
+
+function dedupeByNormalizedSpace(values: string[]) {
+  const seen = new Set<string>();
+  const output: string[] = [];
+
+  for (const value of values) {
+    const key = value.replace(/\s+/g, " ").trim().toLowerCase();
+    if (!key || seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    output.push(value.replace(/\s+/g, " ").trim());
+  }
+
+  return output;
+}
+
+export function suggestAddressOptions(address: string, note = ""): string[] {
+  const normalized = sanitizeFragment(address);
 
   if (!normalized) {
     return [];
   }
 
-  const suggestions = new Set<string>();
-  suggestions.add(normalized);
+  const normalizedNote = sanitizeFragment(note);
 
-  const parts = normalized.split(/[,\-]/).map((segment) => segment.trim()).filter(Boolean);
+  // Follow add_diachi.py behavior: strip to digits and normalize 9-digit numbers to leading-0 format.
+  const normalizedPhone = normalizePhone(`${normalizedNote} ${normalized}`);
+
+  const suggestions: string[] = [normalized];
+
+  if (normalizedPhone) {
+    suggestions.push(`${normalized} - SĐT ${normalizedPhone}`);
+    suggestions.push(`${normalized}\nSĐT: ${normalizedPhone}`);
+  }
+
+  if (normalizedNote) {
+    suggestions.push(`${normalizedNote} ${normalized}`);
+    suggestions.push(`${normalized}\nGhi chú: ${normalizedNote}`);
+
+    if (normalizedPhone) {
+      suggestions.push(`${normalizedNote} ${normalized} - SĐT ${normalizedPhone}`);
+    }
+  }
+
+  const parts = normalized
+    .split(/[,-]/)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
   if (parts.length > 1) {
-    suggestions.add(parts.join(", "));
-    suggestions.add(parts.reverse().join(", "));
+    suggestions.push(parts.join(", "));
+
+    const reversed = [...parts].reverse();
+    suggestions.push(reversed.join(", "));
   }
 
   if (!normalized.includes(",")) {
     const splitted = normalized.split(" ");
     if (splitted.length > 4) {
-      suggestions.add(`${splitted.slice(0, 3).join(" ")}, ${splitted.slice(3).join(" ")}`);
+      suggestions.push(`${splitted.slice(0, 3).join(" ")}, ${splitted.slice(3).join(" ")}`);
     }
   }
 
-  return Array.from(suggestions).slice(0, 4);
+  return dedupeByNormalizedSpace(suggestions).slice(0, 6);
 }

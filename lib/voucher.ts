@@ -1,42 +1,39 @@
-import { VoucherType } from "@prisma/client";
-
-export const VOUCHER_TYPE_ORDER = [
-  VoucherType.DISCOUNT_80K,
-  VoucherType.DISCOUNT_100K,
-  VoucherType.DISCOUNT_50_PERCENT_MAX_100K,
-  VoucherType.DISCOUNT_50_PERCENT_MAX_200K,
-  VoucherType.DISCOUNT_60K,
+export const DEFAULT_VOUCHER_PRICING = [
+  { code: "MA_80K", label: "Mã 80k", unitPrice: 80_000 },
+  { code: "MA_100K", label: "Mã 100k", unitPrice: 100_000 },
+  { code: "MA_50_100K", label: "Mã 50%/100k", unitPrice: 100_000 },
+  { code: "MA_50_200K", label: "Mã 50%/200k", unitPrice: 200_000 },
+  { code: "MA_60K", label: "Mã 60k", unitPrice: 60_000 },
 ] as const;
 
-export const DEFAULT_VOUCHER_PRICING = {
-  [VoucherType.DISCOUNT_80K]: 80_000,
-  [VoucherType.DISCOUNT_100K]: 100_000,
-  [VoucherType.DISCOUNT_50_PERCENT_MAX_100K]: 100_000,
-  [VoucherType.DISCOUNT_50_PERCENT_MAX_200K]: 200_000,
-  [VoucherType.DISCOUNT_60K]: 60_000,
-} satisfies Record<VoucherType, number>;
+const LEGACY_VOUCHER_LABELS: Record<string, string> = {
+  DISCOUNT_80K: "Mã 80k",
+  DISCOUNT_100K: "Mã 100k",
+  DISCOUNT_50_PERCENT_MAX_100K: "Mã 50%/100k",
+  DISCOUNT_50_PERCENT_MAX_200K: "Mã 50%/200k",
+  DISCOUNT_60K: "Mã 60k",
+};
 
-export const VOUCHER_LABELS = {
-  [VoucherType.DISCOUNT_80K]: "Mã giảm 80k",
-  [VoucherType.DISCOUNT_100K]: "Mã giảm 100k",
-  [VoucherType.DISCOUNT_50_PERCENT_MAX_100K]: "Mã giảm 50% tối đa 100k",
-  [VoucherType.DISCOUNT_50_PERCENT_MAX_200K]: "Mã giảm 50% tối đa 200k",
-  [VoucherType.DISCOUNT_60K]: "Mã giảm 60k",
-} satisfies Record<VoucherType, string>;
+export const LEGACY_VOUCHER_CODES = Object.keys(LEGACY_VOUCHER_LABELS);
 
 export interface VoucherOption {
-  voucherType: VoucherType;
+  code: string;
   label: string;
   unitPrice: number;
   isMaintenance: boolean;
 }
 
-export function getVoucherLabel(voucherType: VoucherType | null | undefined) {
-  if (!voucherType) {
+export function getVoucherLabel(voucherCodeOrType: string | null | undefined) {
+  if (!voucherCodeOrType) {
     return "Chưa chọn voucher";
   }
 
-  return VOUCHER_LABELS[voucherType];
+  const matchedDefault = DEFAULT_VOUCHER_PRICING.find((item) => item.code === voucherCodeOrType);
+  if (matchedDefault) {
+    return matchedDefault.label;
+  }
+
+  return LEGACY_VOUCHER_LABELS[voucherCodeOrType] || voucherCodeOrType;
 }
 
 export function calculateVoucherOrderTotal(unitPrice: number, quantity: number) {
