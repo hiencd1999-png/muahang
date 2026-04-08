@@ -64,8 +64,6 @@ export default async function DashboardPage() {
                   <p className="mt-1 text-xs text-slate-500 line-clamp-1">Địa chỉ: {order.address}</p>
                 )}
                 <p className="mt-1 text-xs font-medium text-amber-700">{order.voucherLabel || "Chưa có voucher"}</p>
-                <p className="mt-1 text-xs text-slate-500">Shop ID: {order.shopId || "-"}</p>
-                <p className="mt-1 text-sm text-slate-600">SL: {order.quantity} | {formatCurrency(order.total)}</p>
               </div>
               <div className="text-xs text-slate-500 sm:text-right">
                 {formatDate(order.createdAt)}
