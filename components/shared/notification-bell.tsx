@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/format";
 import { useToast } from "@/components/shared/toast";
 
@@ -15,6 +16,7 @@ interface Notification {
 }
 
 export function NotificationBell() {
+  const router = useRouter();
   const { addToast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -60,8 +62,34 @@ export function NotificationBell() {
     }
   }
 
+  function resolveNotificationLink(notif: Notification) {
+    if (notif.link && notif.link.trim()) {
+      const orderIdMatch = /#(\d+)/.exec(notif.title) || /#(\d+)/.exec(notif.message);
+      if (notif.link.startsWith("/dashboard/orders") && orderIdMatch && !notif.link.includes("orderId=")) {
+        return `/dashboard/orders?orderId=${orderIdMatch[1]}`;
+      }
+      return notif.link;
+    }
+
+    const fallbackOrderId = /#(\d+)/.exec(notif.title) || /#(\d+)/.exec(notif.message);
+    if (fallbackOrderId) {
+      return `/dashboard/orders?orderId=${fallbackOrderId[1]}`;
+    }
+
+    return "/dashboard/notifications";
+  }
+
+  async function handleNotificationClick(notif: Notification) {
+    if (!notif.read) {
+      await markAsRead(notif.id);
+    }
+
+    setIsOpen(false);
+    router.push(resolveNotificationLink(notif));
+  }
+
   return (
-    <div className="relative">
+    <div className="relative z-50">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative rounded-full bg-white border border-slate-200 p-2.5 hover:bg-slate-50 transition"
@@ -94,7 +122,7 @@ export function NotificationBell() {
                   className={`p-4 hover:bg-slate-50 cursor-pointer transition ${
                     !notif.read ? "bg-blue-50" : ""
                   }`}
-                  onClick={() => !notif.read && markAsRead(notif.id)}
+                  onClick={() => handleNotificationClick(notif)}
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-1">

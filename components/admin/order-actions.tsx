@@ -9,6 +9,7 @@ import { OrderDetailModalContent } from "@/components/shared/order-detail-modal-
 
 interface OrderData {
   id: number;
+  approvedByAdminId?: number | null;
   productLink: string;
   productName: string;
   shopId: string | null;
@@ -18,6 +19,7 @@ interface OrderData {
   address: string;
   variant?: string;
   note?: string;
+  cancelReason?: string;
   status: "PENDING" | "PROCESSING" | "ORDER_PLACED" | "TRACKING_GENERATED" | "DELIVERED" | "CANCELED";
   spcCookie?: string;
   trackingNo?: string;
@@ -29,6 +31,10 @@ interface OrderData {
     email: string;
     phone: string;
   };
+  approvedByAdmin?: {
+    id: number;
+    username: string;
+  } | null;
 }
 
 const statusLabels: Record<string, string> = {
@@ -49,7 +55,19 @@ const statusColors: Record<string, string> = {
   CANCELED: "bg-rose-600 hover:bg-rose-700",
 };
 
-export function OrderActions({ orderId, status }: { orderId: number; status: string }) {
+export function OrderActions({
+  orderId,
+  status,
+  currentAdminId,
+  approvedByAdminId,
+  approvedByAdminName,
+}: {
+  orderId: number;
+  status: string;
+  currentAdminId: number;
+  approvedByAdminId: number | null;
+  approvedByAdminName: string | null;
+}) {
   const router = useRouter();
   const { addToast } = useToast();
   const [loading, setLoading] = useState("");
@@ -59,13 +77,34 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
   const [showCookieModal, setShowCookieModal] = useState(false);
   const [spcCookie, setSpcCookie] = useState("");
   const [isCookieLoading, setIsCookieLoading] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelLoading, setIsCancelLoading] = useState(false);
+  const isOwnedByAnotherAdmin =
+    approvedByAdminId !== null && approvedByAdminId !== currentAdminId;
+  const ownershipMessage = approvedByAdminName
+    ? `Đơn này đang do admin ${approvedByAdminName} phụ trách.`
+    : "Đơn này chưa có admin phụ trách.";
 
-  async function updateStatus(nextStatus: string, cookie?: string) {
+  async function readApiResponse(response: Response) {
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      return response.json();
+    }
+
+    const text = await response.text();
+    return { error: text?.slice(0, 120) || "Phản hồi không hợp lệ từ server." };
+  }
+
+  async function updateStatus(nextStatus: string, cookie?: string, reason?: string) {
     setLoading(nextStatus);
 
     const payload: any = { orderId, status: nextStatus };
     if (cookie) {
       payload.spcCookie = cookie;
+    }
+    if (reason) {
+      payload.cancelReason = reason;
     }
 
     const response = await fetch("/api/admin/order/update", {
@@ -73,14 +112,16 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+    const data = await readApiResponse(response);
 
     if (response.ok) {
       addToast("success", "Cập nhật trạng thái thành công!");
       setSpcCookie("");
       setShowCookieModal(false);
+      setCancelReason("");
+      setShowCancelModal(false);
       router.refresh();
     } else {
-      const data = await response.json();
       addToast("error", data.error ?? "Cập nhật thất bại.");
     }
 
@@ -92,7 +133,7 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
     setIsLoadingDetails(true);
     try {
       const response = await fetch(`/api/admin/order/${orderId}`);
-      const data = await response.json();
+      const data = await readApiResponse(response);
 
       if (response.ok && data.order) {
         const order = data.order;
@@ -107,13 +148,16 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
           address: order.address,
           variant: order.variant,
           note: order.note,
+          cancelReason: order.cancelReason,
           status: order.status,
           spcCookie: order.spcCookie,
           trackingNo: order.trackingNo,
+          approvedByAdminId: order.approvedByAdminId,
           createdAt: new Date(order.createdAt),
           updatedAt: new Date(order.updatedAt),
           userId: order.userId,
           user: order.user,
+          approvedByAdmin: order.approvedByAdmin,
         });
         setIsModalOpen(true);
       } else {
@@ -131,6 +175,10 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
     setShowCookieModal(true);
   };
 
+  const handleCancelClick = () => {
+    setShowCancelModal(true);
+  };
+
   const handleCookieSubmit = async () => {
     if (!spcCookie.trim()) {
       addToast("error", "Vui lòng nhập cookie SPC_ST");
@@ -140,14 +188,24 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
     await updateStatus("ORDER_PLACED", spcCookie);
   };
 
+  const handleCancelSubmit = async () => {
+    if (!cancelReason.trim()) {
+      addToast("error", "Vui lòng nhập lý do hủy đơn.");
+      return;
+    }
+    setIsCancelLoading(true);
+    await updateStatus("CANCELED", undefined, cancelReason.trim());
+    setIsCancelLoading(false);
+  };
+
   return (
     <>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex items-center gap-2 whitespace-nowrap overflow-x-auto">
         <button
           type="button"
           onClick={handleViewDetails}
           disabled={isLoadingDetails}
-          className="rounded-xl bg-slate-500 hover:bg-slate-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors flex items-center gap-1"
+          className="shrink-0 rounded-xl bg-slate-500 hover:bg-slate-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors flex items-center gap-1"
           title="Xem chi tiết"
         >
           {isLoadingDetails ? "..." : <><Eye size={14} /> Chi tiết</>}
@@ -156,8 +214,9 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
           <button
             type="button"
             onClick={() => updateStatus("PROCESSING")}
-            disabled={loading !== ""}
-            className="rounded-xl bg-sky-600 hover:bg-sky-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            disabled={loading !== "" || isOwnedByAnotherAdmin}
+            className="shrink-0 rounded-xl bg-sky-600 hover:bg-sky-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            title={isOwnedByAnotherAdmin ? ownershipMessage : "Duyệt đơn"}
           >
             {loading === "PROCESSING" ? "..." : "Duyệt"}
           </button>
@@ -166,8 +225,9 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
           <button
             type="button"
             onClick={handleOrderPlacedClick}
-            disabled={loading !== ""}
-            className="rounded-xl bg-blue-600 hover:bg-blue-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            disabled={loading !== "" || isOwnedByAnotherAdmin}
+            className="shrink-0 rounded-xl bg-blue-600 hover:bg-blue-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            title={isOwnedByAnotherAdmin ? ownershipMessage : "Đặt đơn"}
           >
             {loading === "ORDER_PLACED" ? "..." : "Đặt đơn"}
           </button>
@@ -176,8 +236,9 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
           <button
             type="button"
             onClick={() => updateStatus("TRACKING_GENERATED")}
-            disabled={loading !== ""}
-            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            disabled={loading !== "" || isOwnedByAnotherAdmin}
+            className="shrink-0 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            title={isOwnedByAnotherAdmin ? ownershipMessage : "Lên mã vận đơn"}
           >
             {loading === "TRACKING_GENERATED" ? "..." : "Lên mã VĐ"}
           </button>
@@ -186,8 +247,9 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
           <button
             type="button"
             onClick={() => updateStatus("DELIVERED")}
-            disabled={loading !== ""}
-            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            disabled={loading !== "" || isOwnedByAnotherAdmin}
+            className="shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            title={isOwnedByAnotherAdmin ? ownershipMessage : "Giao hàng"}
           >
             {loading === "DELIVERED" ? "..." : "Giao hàng"}
           </button>
@@ -195,14 +257,18 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
         {status !== "DELIVERED" && status !== "CANCELED" ? (
           <button
             type="button"
-            onClick={() => updateStatus("CANCELED")}
-            disabled={loading !== ""}
-            className="rounded-xl bg-rose-600 hover:bg-rose-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            onClick={handleCancelClick}
+            disabled={loading !== "" || isOwnedByAnotherAdmin}
+            className="shrink-0 rounded-xl bg-rose-600 hover:bg-rose-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            title={isOwnedByAnotherAdmin ? ownershipMessage : "Hủy đơn"}
           >
             {loading === "CANCELED" ? "..." : "Hủy"}
           </button>
         ) : null}
       </div>
+      {isOwnedByAnotherAdmin ? (
+        <p className="mt-2 text-xs font-medium text-amber-700">{ownershipMessage}</p>
+      ) : null}
 
       {/* Order Detail Modal */}
       {orderData && (
@@ -216,6 +282,8 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
             order={orderData}
             user={orderData.user}
             isAdmin={true}
+            currentAdminId={currentAdminId}
+            responsibleAdmin={orderData.approvedByAdmin || null}
             onClose={() => setIsModalOpen(false)}
           />
         </Modal>
@@ -267,6 +335,52 @@ export function OrderActions({ orderId, status }: { orderId: number; status: str
                 disabled={isCookieLoading || !spcCookie.trim()}
               >
                 {isCookieLoading ? "Đang xử lý..." : "Xác nhận"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {showCancelModal && (
+        <Modal
+          isOpen={showCancelModal}
+          onClose={() => {
+            setShowCancelModal(false);
+            setCancelReason("");
+          }}
+          title="Lý do hủy đơn"
+          size="medium"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600">
+              Lý do này sẽ hiển thị cho user trong chi tiết đơn hàng.
+            </p>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Nhập lý do hủy đơn..."
+              rows={4}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelReason("");
+                }}
+                className="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-sm"
+                disabled={isCancelLoading}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelSubmit}
+                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm disabled:opacity-60"
+                disabled={isCancelLoading || !cancelReason.trim()}
+              >
+                {isCancelLoading ? "Đang xử lý..." : "Xác nhận hủy"}
               </button>
             </div>
           </div>

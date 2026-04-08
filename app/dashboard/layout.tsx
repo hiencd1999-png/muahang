@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <main className="shell flex-1 py-6 sm:py-8">
-      <header className="panel mb-6 flex flex-col gap-5 rounded-[2rem] p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-gray-900 border dark:border-gray-800">
+      <header className="panel relative z-40 mb-6 flex flex-col gap-5 rounded-[2rem] p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-gray-900 border dark:border-gray-800">
         <div className="flex-1">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500 dark:text-gray-400">User dashboard</p>
           <h1 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white sm:text-3xl">Xin chào, {user.username}</h1>

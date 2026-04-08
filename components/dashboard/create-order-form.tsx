@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/format";
 import {
   ORDER_UNIT_PRICE,
+  buildCanonicalShopeeLink,
   calculateOrderTotal,
   isValidShopeeLink,
   parseShopeeProductLink,
@@ -24,7 +25,6 @@ export function CreateOrderForm({ balance }: { balance: number }) {
   const [analysisError, setAnalysisError] = useState("");
   const [analysisMessage, setAnalysisMessage] = useState("");
   const [quantity, setQuantity] = useState(2);
-  const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
   const [address, setAddress] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
@@ -76,7 +76,7 @@ export function CreateOrderForm({ balance }: { balance: number }) {
       if (parsed.shopId && parsed.itemId) {
         setProductName(parsed.productName);
         setShopId(parsed.shopId);
-        setResolvedLink(productLink); // fallback to original
+        setResolvedLink(buildCanonicalShopeeLink(parsed.shopId, parsed.itemId));
         setVariantOptions([]);
         setSelectedVariant("");
         setAnalysisMessage("Link đã được phân tích cơ bản. Vui lòng nhập phân loại sản phẩm.");
@@ -112,15 +112,19 @@ export function CreateOrderForm({ balance }: { balance: number }) {
       return;
     }
 
+    const normalizedAddress = note.trim()
+      ? `${address.trim()}\nGhi chú SĐT: ${note.trim()}`
+      : address.trim();
+
     const payload = {
-      productLink: resolvedLink,
+      productLink,
+      resolvedLink: resolvedLink || productLink,
       productName,
       shopId,
       quantity,
-      phone,
-      address,
+      phone: note.trim() || "Không cung cấp",
+      address: normalizedAddress,
       variant: selectedVariant,
-      note: note.trim() || undefined,
     };
 
     const response = await fetch("/api/order/create", {
@@ -146,7 +150,6 @@ export function CreateOrderForm({ balance }: { balance: number }) {
     setSelectedVariant("");
     setAnalysisError("");
     setQuantity(2);
-    setPhone("");
     setNote("");
     setAddress("");
     setAddressSuggestions([]);
@@ -188,11 +191,26 @@ export function CreateOrderForm({ balance }: { balance: number }) {
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
               <p className="text-sm font-medium text-amber-900">Sản phẩm</p>
               <p className="mt-1 text-base font-semibold text-slate-900">{productName}</p>
-              {shopId ? (
-                <p className="mt-1 text-sm text-slate-600">Shop ID: {shopId}</p>
-              ) : null}
-              {analysisMessage ? <p className="mt-2 text-sm text-emerald-700">{analysisMessage}</p> : null}
-              <p className="mt-3 text-sm text-slate-600">Nhập phân loại sản phẩm:</p>
+              <div className="mt-3 grid gap-3">
+                {shopId ? (
+                  <p className="text-sm text-slate-600">Shop ID: {shopId}</p>
+                ) : null}
+                {resolvedLink ? (
+                  <div className="rounded-2xl bg-white p-3 border border-slate-200">
+                    <p className="text-xs font-medium text-slate-500">Link sau phân tích</p>
+                    <a
+                      href={resolvedLink}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="mt-1 block text-sm text-amber-700 hover:underline break-words"
+                    >
+                      {resolvedLink}
+                    </a>
+                  </div>
+                ) : null}
+                {analysisMessage ? <p className="text-sm text-emerald-700">{analysisMessage}</p> : null}
+              </div>
+              <p className="mt-4 text-sm text-slate-600">Nhập phân loại sản phẩm:</p>
               {variantOptions.length > 0 ? (
                 <select
                   value={selectedVariant}
@@ -229,24 +247,16 @@ export function CreateOrderForm({ balance }: { balance: number }) {
           </label>
 
           <label className="space-y-2 text-sm font-medium text-slate-700">
-            <span>SĐT</span>
-            <input
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              required
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
-              placeholder="098xxxx"
-            />
-          </label>
-
-          <label className="space-y-2 text-sm font-medium text-slate-700">
-            <span>Ghi chú SĐT (tùy chọn)</span>
+            <span>Ghi chú SĐT</span>
             <input
               value={note}
               onChange={(event) => setNote(event.target.value)}
               className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
-              placeholder="Ví dụ: ghi chú số điện thoại cho nhà bán"
+              placeholder="Ví dụ: 098xxxxxxx - gọi giờ hành chính"
             />
+            <p className="text-xs text-slate-500">
+              Ghi chú SĐT sẽ được thêm trực tiếp vào phần địa chỉ giao hàng.
+            </p>
           </label>
 
           <label className="space-y-2 text-sm font-medium text-slate-700">

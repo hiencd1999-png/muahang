@@ -57,6 +57,7 @@ model Order {
   id            Int         @id @default(autoincrement())
   userId        Int
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvedByAdminId Int?
   productLink   String
   productName   String      @default("")
   shopId        String?
@@ -64,8 +65,10 @@ model Order {
   quantity      Int
   phone         String
   address       String
+  note          String?
   total         Int
   status        OrderStatus @default(PENDING)
+  cancelReason  String?
   spcCookie     String?     @default("")
   trackingNo    String?     @default("")
   createdAt     DateTime    @default(now())

@@ -7,11 +7,15 @@ export interface ShopeeProductDetails {
 }
 
 const LINK_PATTERNS = [
-  /shopee\.vn\/[^^\/]+\/(\d+)\.(\d+)/i,
+  /shopee\.vn\/[^\/]+\/(\d+)\.(\d+)/i,
   /shopee\.vn\/product\/(\d+)\/(\d+)/i,
-  /shopee\.vn\/[^^\/]+\/(\d+)\/(\d+)/i,
+  /shopee\.vn\/[^\/]+\/(\d+)\/(\d+)/i,
   /shopee\.vn\/.*?-i\.(\d+)\.(\d+)/i,
 ];
+
+function buildCanonicalLink(shopId: string, itemId: string) {
+  return `https://shopee.vn/product/${shopId}/${itemId}`;
+}
 
 function extractShopAndItemIds(url: string) {
   for (const pattern of LINK_PATTERNS) {
@@ -75,13 +79,19 @@ async function fetchSharingLink(productLink: string, cookie?: string) {
 async function resolveShopAndItemIds(productLink: string, cookie?: string) {
   const direct = extractShopAndItemIds(productLink);
   if (direct.shopId && direct.itemId) {
-    return { ...direct, resolvedLink: productLink.trim() };
+    return {
+      ...direct,
+      resolvedLink: buildCanonicalLink(direct.shopId, direct.itemId),
+    };
   }
 
   const resolved = await resolveRedirectLink(productLink, cookie);
   const second = extractShopAndItemIds(resolved);
   if (second.shopId && second.itemId) {
-    return { ...second, resolvedLink: resolved };
+    return {
+      ...second,
+      resolvedLink: buildCanonicalLink(second.shopId, second.itemId),
+    };
   }
 
   try {
@@ -89,7 +99,10 @@ async function resolveShopAndItemIds(productLink: string, cookie?: string) {
     const sharedResolved = await resolveRedirectLink(sharedLink, cookie);
     const third = extractShopAndItemIds(sharedResolved);
     if (third.shopId && third.itemId) {
-      return { ...third, resolvedLink: sharedResolved };
+      return {
+        ...third,
+        resolvedLink: buildCanonicalLink(third.shopId, third.itemId),
+      };
     }
   } catch {
     // ignore sharing fallback errors

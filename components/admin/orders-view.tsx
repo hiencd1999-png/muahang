@@ -12,6 +12,8 @@ import { useToast } from "@/components/shared/toast";
 interface Order {
   id: number;
   userId: number;
+  approvedByAdminId: number | null;
+  approvedByAdminName: string | null;
   productLink: string;
   productName: string;
   shopId: string | null;
@@ -27,18 +29,18 @@ export function AdminOrdersView({
   totalCount,
   totalPages,
   page,
+  currentAdminId,
 }: {
   orders: Order[];
   totalCount: number;
   totalPages: number;
   page: number;
+  currentAdminId: number;
 }) {
   const { addToast } = useToast();
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [action, setAction] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) =>
@@ -54,38 +56,41 @@ export function AdminOrdersView({
     setSelectedIds([]);
   };
 
-  const handleBatchAction = async () => {
-    if (!action || selectedIds.length === 0) return;
+  async function handleExportExcel() {
+    if (selectedIds.length === 0) return;
 
-    setLoading(true);
-
+    setIsExporting(true);
     try {
-      const status = action.split("_")[1].toUpperCase();
-
-      const response = await fetch("/api/admin/orders/batch-update", {
+      const response = await fetch("/api/admin/orders/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderIds: selectedIds, status }),
+        body: JSON.stringify({ orderIds: selectedIds }),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        addToast("error", result.error || "Thao tác thất bại");
-      } else {
-        addToast("success", result.message);
-        setAction("");
-        clearAll();
-        router.refresh();
+        const result = await response.json();
+        addToast("error", result.error || "Không thể xuất Excel.");
+        return;
       }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `admin-orders-${Date.now()}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      addToast("success", "Xuất Excel thành công.");
     } catch (error) {
-      addToast("error", "Lỗi khi thực hiện thao tác");
+      addToast("error", "Lỗi khi xuất Excel.");
       console.error(error);
     } finally {
-      setLoading(false);
-      setShowModal(false);
+      setIsExporting(false);
     }
-  };
+  }
 
   const searchParams = useSearchParams();
   const currentQuery = searchParams.get("q") || "";
@@ -106,78 +111,93 @@ export function AdminOrdersView({
   };
 
   return (
-    <section className="panel rounded-[1.75rem] p-4 sm:p-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-xl font-semibold text-slate-950">Quản lý đơn hàng</h2>
-        <form onSubmit={handleSearch} className="flex flex-col gap-2 sm:flex-row sm:gap-2">
-          <input
-            name="q"
-            placeholder="Tìm username hoặc link..."
-            defaultValue={currentQuery}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500 sm:w-48"
-          />
-          <select
-            name="status"
-            defaultValue={currentStatus}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500"
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="PENDING">Chờ xử lý</option>
-            <option value="PROCESSING">Đang xử lý</option>
-            <option value="DELIVERED">Đã giao hàng</option>
-            <option value="TRACKING_GENERATED">Đã lên mã VĐ</option>
-            <option value="ORDER_PLACED">Đã đặt đơn</option>
-            <option value="CANCELED">Đã hủy</option>
-          </select>
-          <button
-            type="submit"
-            className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
-          >
-            Tìm
-          </button>
-        </form>
+    <section className="min-w-0 space-y-6">
+      <div className="mb-6 grid gap-4 lg:grid-cols-[1.5fr_0.9fr] lg:items-end">
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-2xl font-semibold text-slate-950">Quản lý đơn hàng</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Xem và xử lý đơn hàng Shopee, lọc theo trạng thái và tìm nhanh theo username hoặc link.
+            </p>
+          </div>
+          <form onSubmit={handleSearch} className="grid gap-3 sm:grid-cols-[1.2fr_0.8fr_0.7fr_0.5fr]">
+            <input
+              name="q"
+              placeholder="Tìm username hoặc link..."
+              defaultValue={currentQuery}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500"
+            />
+            <select
+              name="status"
+              defaultValue={currentStatus}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="PENDING">Chờ xử lý</option>
+              <option value="PROCESSING">Đang xử lý</option>
+              <option value="ORDER_PLACED">Đã đặt đơn</option>
+              <option value="TRACKING_GENERATED">Đã lên mã VĐ</option>
+              <option value="DELIVERED">Đã giao hàng</option>
+              <option value="CANCELED">Đã hủy</option>
+            </select>
+            <button
+              type="submit"
+              className="rounded-2xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-700 transition"
+            >
+              Tìm
+            </button>
+          </form>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 shadow-sm">
+            <p className="text-sm text-slate-500">Tổng đơn</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{totalCount}</p>
+          </div>
+          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-sm text-slate-500">Trang hiện tại</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{page}</p>
+          </div>
+        </div>
       </div>
 
-      <AdvancedFilterPanel filterType="orders" />
+      <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
+        <AdvancedFilterPanel filterType="orders" />
+      </div>
 
-      {/* Batch Actions Bar */}
       {selectedIds.length > 0 && (
-        <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 p-4 flex items-center justify-between gap-4">
-          <div className="text-sm font-medium text-amber-900">
-            {selectedIds.length} / {orders.length} được chọn
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={selectedIds.length === orders.length ? clearAll : selectAll}
-              className="rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50"
-            >
-              {selectedIds.length === orders.length ? "Bỏ chọn tất cả" : "Chọn tất cả"}
-            </button>
-            <select
-              value={action}
-              onChange={(e) => {
-                setAction(e.target.value);
-                if (e.target.value) setShowModal(true);
-              }}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500"
-            >
-              <option value="">-- Chọn thao tác --</option>
-              <option value="status_pending">Đặt lại Chờ xử lý</option>
-              <option value="status_processing">Đổi thành Đang xử lý</option>
-              <option value="status_completed">Đánh dấu Hoàn thành</option>
-              <option value="status_canceled">Hủy đơn</option>
-            </select>
+        <div className="mb-4 rounded-[1.75rem] border border-amber-200 bg-amber-50/90 p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm font-medium text-amber-900">
+              Đã chọn {selectedIds.length} đơn hàng
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <button
+                onClick={selectedIds.length === orders.length ? clearAll : selectAll}
+                className="rounded-2xl border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50"
+              >
+                {selectedIds.length === orders.length ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+              </button>
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                disabled={isExporting}
+                className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {isExporting ? "Đang xuất..." : "Xuất Excel"}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Tables */}
-      <div className="mt-5">
-        <div className="hidden lg:block overflow-x-auto">
+      <div className="mt-5 min-w-0">
+        <div className="hidden lg:block overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
           <table className="min-w-full text-left text-sm">
-            <thead className="text-slate-500">
-              <tr className="border-b border-slate-200">
-                <th className="pb-3 px-3 w-8">
+            <thead className="bg-slate-100 text-slate-500">
+              <tr>
+                <th className="px-4 py-3 w-10">
                   <input
                     type="checkbox"
                     checked={selectedIds.length === orders.length && orders.length > 0}
@@ -185,21 +205,22 @@ export function AdminOrdersView({
                     className="rounded"
                   />
                 </th>
-                <th className="pb-3">ID</th>
-                <th className="pb-3">User</th>
-                <th className="pb-3">Sản phẩm</th>
-                <th className="pb-3">Shop ID</th>
-                <th className="pb-3">SL</th>
-                <th className="pb-3">Tổng</th>
-                <th className="pb-3">Trạng thái</th>
-                <th className="pb-3">Ngày</th>
-                <th className="pb-3">Hành động</th>
+                <th className="px-4 py-3">ID</th>
+                <th className="px-4 py-3">User</th>
+                <th className="px-4 py-3">Sản phẩm</th>
+                <th className="px-4 py-3">Shop ID</th>
+                <th className="px-4 py-3">SL</th>
+                <th className="px-4 py-3">Tổng</th>
+                <th className="px-4 py-3">Trạng thái</th>
+                <th className="px-4 py-3">Phụ trách</th>
+                <th className="px-4 py-3">Ngày</th>
+                <th className="px-4 py-3 w-[300px] whitespace-nowrap">Hành động</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody>
               {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-amber-50/30">
-                  <td className="py-4 px-3">
+                <tr key={order.id} className="border-t border-slate-200 hover:bg-slate-50">
+                  <td className="px-4 py-4 align-top">
                     <input
                       type="checkbox"
                       checked={selectedIds.includes(order.id)}
@@ -207,18 +228,29 @@ export function AdminOrdersView({
                       className="rounded"
                     />
                   </td>
-                  <td className="py-4 font-medium text-slate-900 whitespace-nowrap">#{order.id}</td>
-                  <td className="py-4 text-slate-700 max-w-[140px] truncate text-sm">{order.user.username}</td>
-                  <td className="py-4 text-slate-600 max-w-[300px] min-w-[200px] truncate text-xs">{order.productName || order.productLink}</td>
-                  <td className="py-4 text-slate-600 whitespace-nowrap">{order.shopId || "-"}</td>
-                  <td className="py-4 text-slate-700">{order.quantity}</td>
-                  <td className="py-4 text-slate-700 font-semibold">{formatCurrency(order.total)}</td>
-                  <td className="py-4">
-                    <StatusPill status={order.status} />
+                  <td className="px-4 py-4 font-semibold text-slate-900 whitespace-nowrap">#{order.id}</td>
+                  <td className="px-4 py-4 text-slate-700 text-sm whitespace-nowrap">{order.user.username}</td>
+                  <td className="px-4 py-4 text-slate-700 max-w-[260px] truncate text-sm">{order.productName || order.productLink}</td>
+                  <td className="px-4 py-4 text-slate-700 whitespace-nowrap">{order.shopId || "-"}</td>
+                  <td className="px-4 py-4 text-slate-700">{order.quantity}</td>
+                  <td className="px-4 py-4 text-slate-900 font-semibold">{formatCurrency(order.total)}</td>
+                  <td className="px-4 py-4"><StatusPill status={order.status} /></td>
+                  <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                    {order.approvedByAdminName
+                      ? order.approvedByAdminId === currentAdminId
+                        ? "Bạn"
+                        : order.approvedByAdminName
+                      : "Chưa phụ trách"}
                   </td>
-                  <td className="py-4 text-slate-600 text-xs">{formatDate(order.createdAt)}</td>
-                  <td className="py-4">
-                    <OrderActions orderId={order.id} status={order.status} />
+                  <td className="px-4 py-4 text-slate-500 text-xs whitespace-nowrap">{formatDate(order.createdAt)}</td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <OrderActions
+                      orderId={order.id}
+                      status={order.status}
+                      currentAdminId={currentAdminId}
+                      approvedByAdminId={order.approvedByAdminId}
+                      approvedByAdminName={order.approvedByAdminName}
+                    />
                   </td>
                 </tr>
               ))}
@@ -228,26 +260,67 @@ export function AdminOrdersView({
 
         <div className="lg:hidden space-y-4">
           {orders.map((order) => (
-            <div key={order.id} className="rounded-xl border border-slate-200 bg-white/70 p-4">
-              <div className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(order.id)}
-                  onChange={() => toggleSelect(order.id)}
-                  className="rounded mt-1"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-900">#{order.id}</span>
-                    <StatusPill status={order.status} />
+            <div key={order.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">#{order.id}</p>
+                    <p className="text-xs text-slate-500">{formatDate(order.createdAt)}</p>
                   </div>
-                  <p className="mt-1 text-sm text-slate-700">{order.user.username}</p>
-                  <p className="text-xs text-slate-600 truncate">{order.productName || order.productLink}</p>
-                  <p className="mt-1 text-xs text-slate-500">Shop ID: {order.shopId || "-"}</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-900">{formatCurrency(order.total)}</p>
-                  <p className="text-xs text-slate-500">{formatDate(order.createdAt)}</p>
-                  <div className="mt-2">
-                    <OrderActions orderId={order.id} status={order.status} />
+                  <StatusPill status={order.status} />
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs text-slate-500">Sản phẩm</p>
+                  <p className="mt-2 font-medium text-slate-900 truncate">{order.productName || order.productLink}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="text-xs text-slate-500">Khách hàng</p>
+                    <p className="mt-1 font-medium text-slate-900">{order.user.username}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="text-xs text-slate-500">Shop ID</p>
+                    <p className="mt-1 font-medium text-slate-900">{order.shopId || "-"}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="text-xs text-slate-500">Số lượng</p>
+                    <p className="mt-1 font-medium text-slate-900">{order.quantity}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="text-xs text-slate-500">Tổng tiền</p>
+                    <p className="mt-1 text-slate-900 font-semibold">{formatCurrency(order.total)}</p>
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-700">
+                  <p className="text-xs text-slate-500">Admin phụ trách</p>
+                  <p className="mt-1 font-medium text-slate-900">
+                    {order.approvedByAdminName
+                      ? order.approvedByAdminId === currentAdminId
+                        ? "Bạn"
+                        : order.approvedByAdminName
+                      : "Chưa phụ trách"}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+                  <label className="flex items-center gap-2 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(order.id)}
+                      onChange={() => toggleSelect(order.id)}
+                      className="rounded"
+                    />
+                    Chọn
+                  </label>
+                  <div className="max-w-full overflow-x-auto">
+                    <OrderActions
+                      orderId={order.id}
+                      status={order.status}
+                      currentAdminId={currentAdminId}
+                      approvedByAdminId={order.approvedByAdminId}
+                      approvedByAdminName={order.approvedByAdminName}
+                    />
                   </div>
                 </div>
               </div>
@@ -257,36 +330,6 @@ export function AdminOrdersView({
       </div>
 
       <Pagination currentPage={page} totalPages={totalPages} baseUrl="/admin/orders" />
-
-      {/* Confirmation Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-lg bg-white p-6 max-w-sm">
-            <h3 className="text-lg font-semibold text-slate-900">Xác nhận thao tác</h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Bạn sắp thực hiện thao tác trên {selectedIds.length} đơn hàng. Hành động này không thể hoàn tác.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setAction("");
-                }}
-                className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleBatchAction}
-                disabled={loading}
-                className="flex-1 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
-              >
-                {loading ? "Đang xử lý..." : "Xác nhận"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 }

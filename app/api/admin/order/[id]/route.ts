@@ -35,5 +35,17 @@ export async function GET(
     return NextResponse.json({ error: "Đơn hàng không tồn tại." }, { status: 404 });
   }
 
-  return NextResponse.json({ order });
+  const approvedByAdmin = order.approvedByAdminId
+    ? await prisma.user.findUnique({
+        where: { id: order.approvedByAdminId },
+        select: { id: true, username: true },
+      })
+    : null;
+
+  return NextResponse.json({
+    order: {
+      ...order,
+      approvedByAdmin,
+    },
+  });
 }

@@ -5,11 +5,14 @@ import { TransactionType } from "@prisma/client";
 import { calculateOrderTotal } from "@/lib/order";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
+import { createNotification } from "@/lib/notifications";
+import { createAuditLog } from "@/lib/audit";
 
 const schema = z.object({
   orderId: z.number().int().positive(),
   status: z.enum(["PROCESSING", "ORDER_PLACED", "TRACKING_GENERATED", "DELIVERED", "CANCELED"]),
   spcCookie: z.string().optional(),
+  cancelReason: z.string().trim().max(300).optional(),
 });
 
 const allowedTransitions: Record<string, string[]> = {
@@ -47,6 +50,13 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Chuyển trạng thái không hợp lệ." }, { status: 400 });
   }
 
+  if (order.approvedByAdminId && order.approvedByAdminId !== result.user.id) {
+    return NextResponse.json(
+      { error: "Bạn chỉ có thể xử lý các đơn do mình đã duyệt." },
+      { status: 403 }
+    );
+  }
+
   // Validate cookie when transitioning to ORDER_PLACED
   if (parsed.data.status === "ORDER_PLACED") {
     if (!parsed.data.spcCookie || !parsed.data.spcCookie.trim()) {
@@ -61,15 +71,34 @@ export async function PUT(request: Request) {
     }
   }
 
+  if (parsed.data.status === "CANCELED" && !parsed.data.cancelReason?.trim()) {
+    return NextResponse.json(
+      { error: "Bắt buộc nhập lý do hủy đơn để user có thể theo dõi." },
+      { status: 400 }
+    );
+  }
+
   const shouldRefund = parsed.data.status === "CANCELED" && (order.status === "PENDING" || order.status === "PROCESSING");
 
   const updateData: Record<string, any> = { 
     status: parsed.data.status,
   };
 
+  if (order.status === "PENDING" && parsed.data.status === "PROCESSING") {
+    updateData.approvedByAdminId = result.user.id;
+  } else if (!order.approvedByAdminId && order.status !== "PENDING") {
+    updateData.approvedByAdminId = result.user.id;
+  }
+
   // Store cookie when transitioning to ORDER_PLACED
   if (parsed.data.status === "ORDER_PLACED") {
     updateData.spcCookie = parsed.data.spcCookie;
+  }
+
+  if (parsed.data.status === "CANCELED") {
+    updateData.cancelReason = parsed.data.cancelReason?.trim();
+  } else {
+    updateData.cancelReason = null;
   }
 
   await prisma.$transaction([
@@ -96,6 +125,28 @@ export async function PUT(request: Request) {
   revalidatePath("/admin/orders");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/orders");
+
+  if (parsed.data.status === "CANCELED") {
+    await createNotification(
+      order.userId,
+      "ORDER_CANCELED",
+      `Đơn hàng #${order.id} đã bị hủy`,
+      `Lý do hủy: ${parsed.data.cancelReason?.trim()}`,
+      `/dashboard/orders?orderId=${order.id}`
+    );
+  }
+
+  await createAuditLog({
+    actorId: result.user.id,
+    action: `ADMIN_UPDATE_ORDER_STATUS_${parsed.data.status}`,
+    targetType: "ORDER",
+    targetId: order.id,
+    details: {
+      previousStatus: order.status,
+      nextStatus: parsed.data.status,
+      approvedByAdminId: updateData.approvedByAdminId ?? order.approvedByAdminId ?? null,
+    },
+  });
 
   return NextResponse.json({ success: true });
 }

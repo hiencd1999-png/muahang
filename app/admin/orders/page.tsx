@@ -13,22 +13,33 @@ export default async function AdminOrdersPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string; page?: string }>;
 }) {
-  await requireUser("ADMIN");
+  const currentAdmin = await requireUser("ADMIN");
 
   const params = await searchParams;
   const query = params.q || "";
   const statusFilter = params.status || "";
   const page = Math.max(1, parseInt(params.page || "1"));
 
+  const visibilityWhere = {
+    OR: [
+      { status: "PENDING" as const },
+      { approvedByAdminId: currentAdmin.id },
+    ],
+  };
+
+  const queryWhere = query
+    ? {
+        OR: [
+          { user: { username: { contains: query } } },
+          { productLink: { contains: query } },
+        ],
+      }
+    : undefined;
+
   const [orders, totalCount] = await Promise.all([
     prisma.order.findMany({
       where: {
-        ...(query && {
-          OR: [
-            { user: { username: { contains: query } } },
-            { productLink: { contains: query } },
-          ],
-        }),
+        AND: [visibilityWhere, ...(queryWhere ? [queryWhere] : [])],
         ...(statusFilter && { status: statusFilter as any }),
       },
       include: { user: true },
@@ -38,25 +49,47 @@ export default async function AdminOrdersPage({
     }),
     prisma.order.count({
       where: {
-        ...(query && {
-          OR: [
-            { user: { username: { contains: query } } },
-            { productLink: { contains: query } },
-          ],
-        }),
+        AND: [visibilityWhere, ...(queryWhere ? [queryWhere] : [])],
         ...(statusFilter && { status: statusFilter as any }),
       },
     }),
   ]);
 
+  const approvedAdminIds = Array.from(
+    new Set(
+      orders
+        .map((order) => order.approvedByAdminId)
+        .filter((value): value is number => typeof value === "number")
+    )
+  );
+
+  const responsibleAdmins = approvedAdminIds.length
+    ? await prisma.user.findMany({
+        where: { id: { in: approvedAdminIds } },
+        select: { id: true, username: true },
+      })
+    : [];
+
+  const responsibleAdminMap = new Map(
+    responsibleAdmins.map((admin) => [admin.id, admin.username])
+  );
+
+  const enrichedOrders = orders.map((order) => ({
+    ...order,
+    approvedByAdminName: order.approvedByAdminId
+      ? responsibleAdminMap.get(order.approvedByAdminId) || null
+      : null,
+  }));
+
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
     <AdminOrdersView
-      orders={orders}
+      orders={enrichedOrders}
       totalCount={totalCount}
       totalPages={totalPages}
       page={page}
+      currentAdminId={currentAdmin.id}
     />
   );
 }

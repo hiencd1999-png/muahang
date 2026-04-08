@@ -3,9 +3,11 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 import { revalidatePath } from "next/cache";
+import { createAuditLog } from "@/lib/audit";
 
-const notesSchema = z.object({
-  notes: z.string().min(1).max(500),
+const orderUpdateSchema = z.object({
+  spcCookie: z.string().trim().max(4000).optional().or(z.literal("")),
+  trackingNo: z.string().trim().max(120).optional().or(z.literal("")),
 });
 
 export async function PATCH(
@@ -21,28 +23,62 @@ export async function PATCH(
   const { id } = await params;
   const orderId = id ? parseInt(id) : null;
   const body = await request.json();
-  const parsed = notesSchema.safeParse(body);
+  const parsed = orderUpdateSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Ghi chú không hợp lệ." }, { status: 400 });
+    return NextResponse.json({ error: "Thông tin đơn hàng không hợp lệ." }, { status: 400 });
   }
 
   if (!orderId) {
     return NextResponse.json({ error: "Order ID không hợp lệ." }, { status: 400 });
   }
 
-  // Log the admin's action
-  await prisma.auditLog.create({
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+  });
+
+  if (!order) {
+    return NextResponse.json({ error: "Đơn hàng không tồn tại." }, { status: 404 });
+  }
+
+  const approvedByAdminId = (order as any).approvedByAdminId as number | null | undefined;
+
+  if (approvedByAdminId && approvedByAdminId !== result.user.id) {
+    return NextResponse.json(
+      { error: "Bạn chỉ có thể chỉnh sửa các đơn do mình duyệt." },
+      { status: 403 }
+    );
+  }
+
+  if (!approvedByAdminId && order.status === "PENDING") {
+    return NextResponse.json(
+      { error: "Hãy duyệt đơn trước khi chỉnh sửa thông tin." },
+      { status: 400 }
+    );
+  }
+
+  await prisma.order.update({
+    where: { id: orderId },
     data: {
-      adminId: result.user.id,
-      action: "UPDATE_ORDER_NOTES",
-      targetType: "Order",
-      targetId: orderId,
-      details: JSON.stringify({ notes: parsed.data.notes.substring(0, 100) }),
+      approvedByAdminId: approvedByAdminId ?? result.user.id,
+      spcCookie: parsed.data.spcCookie?.trim() || "",
+      trackingNo: parsed.data.trackingNo?.trim() || "",
+    },
+  });
+
+  await createAuditLog({
+    actorId: result.user.id,
+    action: "ADMIN_UPDATE_ORDER_LOGISTICS",
+    targetType: "ORDER",
+    targetId: orderId,
+    details: {
+      hasTrackingNo: Boolean(parsed.data.trackingNo?.trim()),
+      hasSpcCookie: Boolean(parsed.data.spcCookie?.trim()),
     },
   });
 
   revalidatePath("/admin/orders");
+  revalidatePath("/dashboard/orders");
 
   return NextResponse.json({ success: true });
 }

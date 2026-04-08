@@ -43,34 +43,36 @@ export function Modal({
   const sizeClasses = {
     small: "max-w-sm",
     medium: "max-w-2xl",
-    large: "max-w-4xl",
+    large: "max-w-6xl",
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        ref={modalRef}
-        className={`bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto ${sizeClasses[size]} w-full mx-4 animate-rise`}
-      >
-        {title && (
-          <div className="flex items-center justify-between border-b dark:border-gray-800 p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              {title}
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            >
-              <X size={24} className="text-gray-500 dark:text-gray-400" />
-            </button>
-          </div>
-        )}
-        <div className="p-6">{children}</div>
+      <div className="min-h-screen px-3 py-4 sm:px-6 sm:py-8 lg:px-8 flex items-center justify-center">
+        <div
+          ref={modalRef}
+          className={`bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-h-[94vh] overflow-y-auto w-full ${sizeClasses[size]} animate-rise`}
+        >
+          {title && (
+            <div className="flex items-center justify-between border-b dark:border-gray-800 p-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                {title}
+              </h2>
+              <button
+                onClick={onClose}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <X size={24} className="text-gray-500 dark:text-gray-400" />
+              </button>
+            </div>
+          )}
+          <div className="p-6">{children}</div>
+        </div>
       </div>
     </div>
   );

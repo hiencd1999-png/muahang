@@ -78,10 +78,10 @@ export function AdminLogsView({
         <div className="flex items-center justify-between gap-4 mb-4">
           <div>
             <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
-              Nhật ký hoạt động Admin
+              Nhật ký hoạt động hệ thống
             </h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-gray-400">
-              Ghi lại tất cả các thao tác hàng loạt của admin
+              Ghi lại các thao tác quan trọng của user và admin
             </p>
           </div>
           <button
@@ -194,7 +194,7 @@ export function AdminLogsView({
                 <thead className="text-slate-500 dark:text-gray-400">
                   <tr className="border-b border-slate-200 dark:border-gray-700">
                     <th className="pb-3 px-4 font-semibold">Thời gian</th>
-                    <th className="pb-3 px-4 font-semibold">Admin</th>
+                    <th className="pb-3 px-4 font-semibold">Người thực hiện</th>
                     <th className="pb-3 px-4 font-semibold">Thao tác</th>
                     <th className="pb-3 px-4 font-semibold">Loại mục tiêu</th>
                     <th className="pb-3 px-4 font-semibold">Chi tiết</th>

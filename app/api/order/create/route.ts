@@ -1,17 +1,18 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { calculateOrderTotal, isValidShopeeLink } from "@/lib/order";
+import { buildCanonicalShopeeLink, calculateOrderTotal, isValidShopeeLink, parseShopeeProductLink } from "@/lib/order";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 import { createNotification } from "@/lib/notifications";
 
 const schema = z.object({
   productLink: z.string().trim().min(1),
+  resolvedLink: z.string().trim().optional(),
   productName: z.string().trim().min(1),
   shopId: z.string().trim().min(1),
   quantity: z.number().int().min(1).max(100),
-  phone: z.string().trim().min(8),
+  phone: z.string().trim().min(1).optional(),
   address: z.string().trim().min(8),
   variant: z.string().trim().optional(),
   note: z.string().trim().optional(),
@@ -34,6 +35,12 @@ export async function POST(request: Request) {
   if (!isValidShopeeLink(parsed.data.productLink)) {
     return NextResponse.json({ error: 'Link sản phẩm phải chứa "shopee".' }, { status: 400 });
   }
+
+  const linkCandidate = (parsed.data.resolvedLink || parsed.data.productLink).trim();
+  const parsedLink = parseShopeeProductLink(linkCandidate);
+  const canonicalProductLink = parsedLink.shopId && parsedLink.itemId
+    ? buildCanonicalShopeeLink(parsedLink.shopId, parsedLink.itemId)
+    : linkCandidate;
 
   const total = calculateOrderTotal(parsed.data.quantity);
 
@@ -58,13 +65,14 @@ export async function POST(request: Request) {
     const order = await tx.order.create({
       data: {
         userId: result.user.id,
-        productLink: parsed.data.productLink,
+        productLink: canonicalProductLink,
         productName: parsed.data.productName,
         shopId: parsed.data.shopId,
         variant: parsed.data.variant,
         quantity: parsed.data.quantity,
-        phone: parsed.data.phone,
+        phone: parsed.data.phone?.trim() || "Không cung cấp",
         address: parsed.data.address,
+        note: parsed.data.note,
         total,
         status: "PENDING",
       },

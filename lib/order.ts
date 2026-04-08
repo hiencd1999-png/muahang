@@ -16,11 +16,15 @@ interface ParsedShopeeLink {
 }
 
 const LINK_PATTERNS = [
-  /shopee\.vn\/[^^\/]+\/(\d+)\.(\d+)/i,
+  /shopee\.vn\/[^\/]+\/(\d+)\.(\d+)/i,
   /shopee\.vn\/product\/(\d+)\/(\d+)/i,
-  /shopee\.vn\/[^^\/]+\/(\d+)\/(\d+)/i,
+  /shopee\.vn\/[^\/]+\/(\d+)\/(\d+)/i,
   /shopee\.vn\/.*?-i\.(\d+)\.(\d+)/i,
 ];
+
+export function buildCanonicalShopeeLink(shopId: string, itemId: string) {
+  return `https://shopee.vn/product/${shopId}/${itemId}`;
+}
 
 function extractShopAndItemIds(url: string) {
   for (const pattern of LINK_PATTERNS) {
