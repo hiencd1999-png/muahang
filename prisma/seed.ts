@@ -15,6 +15,7 @@ async function main() {
   await prisma.user.upsert({
     where: { username: "admin" },
     update: {
+      fullName: "Quản trị viên",
       passwordHash: adminHash,
       email: "admin@datdon.local",
       phone: "0900000001",
@@ -22,6 +23,7 @@ async function main() {
       balance: 5_000_000,
     },
     create: {
+      fullName: "Quản trị viên",
       username: "admin",
       email: "admin@datdon.local",
       phone: "0900000001",
@@ -41,6 +43,7 @@ async function main() {
   await prisma.user.upsert({
     where: { username: "testuser" },
     update: {
+      fullName: "Người dùng test",
       passwordHash: testHash,
       email: "testuser@datdon.local",
       phone: "0900000002",
@@ -48,6 +51,7 @@ async function main() {
       balance: 500_000,
     },
     create: {
+      fullName: "Người dùng test",
       username: "testuser",
       email: "testuser@datdon.local",
       phone: "0900000002",

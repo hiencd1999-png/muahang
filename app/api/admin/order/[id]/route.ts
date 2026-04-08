@@ -23,6 +23,7 @@ export async function GET(
     include: {
       user: {
         select: {
+          fullName: true,
           username: true,
           email: true,
           phone: true,

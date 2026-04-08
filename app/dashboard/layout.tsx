@@ -15,7 +15,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <header className="panel relative z-40 mb-6 flex flex-col gap-5 rounded-[2rem] p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-gray-900 border dark:border-gray-800">
         <div className="flex-1">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500 dark:text-gray-400">User dashboard</p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white sm:text-3xl">Xin chào, {user.username}</h1>
+          <h1 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white sm:text-3xl">Xin chào, {user.fullName || user.username}</h1>
           <div className="mt-3 inline-block rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900 dark:to-orange-900 border border-amber-200 dark:border-amber-800 px-4 py-2">
             <p className="text-xs text-amber-700 dark:text-amber-200 font-medium">Số dư</p>
             <p className="text-lg font-bold text-amber-900 dark:text-amber-50">{formatCurrency(user.balance)}</p>

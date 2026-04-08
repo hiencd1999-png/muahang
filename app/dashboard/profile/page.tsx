@@ -4,5 +4,13 @@ import { ProfileForm } from "@/components/dashboard/profile-form";
 export default async function ProfilePage() {
   const user = await requireUser();
 
-  return <ProfileForm username={user.username} balance={user.balance} email={user.email} phone={user.phone} />;
+  return (
+    <ProfileForm
+      fullName={user.fullName || user.username}
+      username={user.username}
+      balance={user.balance}
+      email={user.email}
+      phone={user.phone}
+    />
+  );
 }

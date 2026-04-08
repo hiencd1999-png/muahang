@@ -5,7 +5,7 @@ import { createSessionToken, SESSION_COOKIE, verifyPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
-  username: z.string().trim().min(3),
+  identifier: z.string().trim().min(1),
   password: z.string().min(1),
 });
 
@@ -17,18 +17,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Thông tin đăng nhập không hợp lệ." }, { status: 400 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { username: parsed.data.username },
+  const identifier = parsed.data.identifier.trim();
+
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { username: identifier },
+        { email: identifier.toLowerCase() },
+        { phone: identifier },
+      ],
+    },
   });
 
   if (!user) {
-    return NextResponse.json({ error: "Sai username hoặc password." }, { status: 401 });
+    return NextResponse.json({ error: "Sai thông tin đăng nhập hoặc mật khẩu." }, { status: 401 });
   }
 
   const valid = await verifyPassword(parsed.data.password, user.passwordHash);
 
   if (!valid) {
-    return NextResponse.json({ error: "Sai username hoặc password." }, { status: 401 });
+    return NextResponse.json({ error: "Sai thông tin đăng nhập hoặc mật khẩu." }, { status: 401 });
   }
 
   const token = await createSessionToken({

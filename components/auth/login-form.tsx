@@ -55,13 +55,14 @@ export function LoginForm() {
 
       <div className="space-y-5">
         <label className="block space-y-2 text-sm font-medium text-slate-700">
-          <span>Username</span>
+          <span>Tài khoản đăng nhập</span>
           <input
-            name="username"
+            name="identifier"
             required
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
-            placeholder="nhap username"
+            placeholder="Nhập username, email hoặc số điện thoại"
           />
+          <p className="text-xs text-slate-500">Bạn có thể dùng username, email hoặc số điện thoại để đăng nhập</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700">

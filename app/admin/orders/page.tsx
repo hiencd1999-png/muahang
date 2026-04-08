@@ -30,6 +30,7 @@ export default async function AdminOrdersPage({
   const queryWhere = query
     ? {
         OR: [
+          { user: { fullName: { contains: query } } },
           { user: { username: { contains: query } } },
           { productLink: { contains: query } },
         ],

@@ -20,7 +20,7 @@ interface Order {
   quantity: number;
   total: number;
   status: string;
-  user: { username: string };
+  user: { username: string; fullName?: string | null };
   createdAt: Date;
 }
 
@@ -123,7 +123,7 @@ export function AdminOrdersView({
           <form onSubmit={handleSearch} className="grid gap-3 sm:grid-cols-[1.2fr_0.8fr_0.7fr_0.5fr]">
             <input
               name="q"
-              placeholder="Tìm username hoặc link..."
+              placeholder="Tìm tên, username hoặc link..."
               defaultValue={currentQuery}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500"
             />
@@ -229,7 +229,7 @@ export function AdminOrdersView({
                     />
                   </td>
                   <td className="px-4 py-4 font-semibold text-slate-900 whitespace-nowrap">#{order.id}</td>
-                  <td className="px-4 py-4 text-slate-700 text-sm whitespace-nowrap">{order.user.username}</td>
+                  <td className="px-4 py-4 text-slate-700 text-sm whitespace-nowrap">{order.user.fullName || order.user.username}</td>
                   <td className="px-4 py-4 text-slate-700 max-w-[260px] truncate text-sm">{order.productName || order.productLink}</td>
                   <td className="px-4 py-4 text-slate-700 whitespace-nowrap">{order.shopId || "-"}</td>
                   <td className="px-4 py-4 text-slate-700">{order.quantity}</td>
@@ -276,7 +276,7 @@ export function AdminOrdersView({
                 <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
                   <div className="rounded-2xl bg-slate-50 p-3">
                     <p className="text-xs text-slate-500">Khách hàng</p>
-                    <p className="mt-1 font-medium text-slate-900">{order.user.username}</p>
+                    <p className="mt-1 font-medium text-slate-900">{order.user.fullName || order.user.username}</p>
                   </div>
                   <div className="rounded-2xl bg-slate-50 p-3">
                     <p className="text-xs text-slate-500">Shop ID</p>

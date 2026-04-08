@@ -28,6 +28,7 @@ interface Order {
 
 interface UserInfo {
   username: string;
+  fullName?: string;
   email: string;
   phone: string;
 }
@@ -267,7 +268,7 @@ export function OrderDetailModalContent({
                 Tên user:
               </span>
               <span className="text-gray-900 dark:text-white">
-                {user.username}
+                {user.fullName || user.username}
               </span>
             </div>
             <div className="flex items-start gap-2">

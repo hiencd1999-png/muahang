@@ -5,7 +5,19 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/shared/toast";
 import { formatCurrency } from "@/lib/format";
 
-export function ProfileForm({ username, balance, email, phone }: { username: string; balance: number; email: string; phone: string }) {
+export function ProfileForm({
+  fullName,
+  username,
+  balance,
+  email,
+  phone,
+}: {
+  fullName: string;
+  username: string;
+  balance: number;
+  email: string;
+  phone: string;
+}) {
   const router = useRouter();
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -72,10 +84,16 @@ export function ProfileForm({ username, balance, email, phone }: { username: str
             </div>
           </div>
 
+          <div className="rounded-2xl bg-white/80 p-5">
+            <p className="text-sm text-slate-500">Tên người dùng</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900">{fullName}</p>
+          </div>
+
           {/* Username (Read-only) */}
           <div className="rounded-2xl bg-white/80 p-5">
             <p className="text-sm text-slate-500">Username</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{username}</p>
+            <p className="mt-1 text-lg font-semibold text-slate-700">{username}</p>
+            <p className="mt-1 text-xs text-slate-500">Dùng để đăng nhập và không thể thay đổi</p>
           </div>
 
           {/* Email (Read-only) */}
@@ -92,7 +110,7 @@ export function ProfileForm({ username, balance, email, phone }: { username: str
 
           <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
             <p className="text-sm text-blue-700">
-              💡 <strong>Lưu ý:</strong> Username, email và số điện thoại không thể thay đổi sau khi đăng ký.
+              💡 <strong>Lưu ý:</strong> Tên người dùng hiển thị theo thông tin lúc đăng ký. Username, email và số điện thoại hiện không thể thay đổi sau khi đăng ký.
             </p>
           </div>
         </div>

@@ -3,29 +3,38 @@ import { z } from "zod";
 import { hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Vietnamese phone number: 10 digits starting with 0, or +84
-const phoneRegex = /^(0|\+84)[0-9]{8,10}$/;
+const fullNameRegex = /^[A-Za-zÀ-ỹ]+\s[A-Za-zÀ-ỹ\s]+$/;
+const usernameRegex = /^(?!\d)[a-z0-9_]{4,20}$/;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/;
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
 const schema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(1, "Không được để trống")
+    .max(60, "Tên người dùng tối đa 60 ký tự")
+    .refine((value) => value.trim().split(/\s+/).length >= 2, "Phải có ít nhất 2 từ")
+    .regex(fullNameRegex, "Chỉ được chứa chữ cái"),
   username: z
     .string()
     .trim()
-    .min(3, "Username phải có ít nhất 3 ký tự")
-    .max(30, "Username tối đa 30 ký tự")
-    .regex(/^[a-zA-Z0-9_.-]+$/, "Username chỉ được chứa chữ, số, dấu chấm, gạch ngang và gạch dưới"),
+    .min(1, "Không được để trống")
+    .regex(usernameRegex, "4-20 ký tự, chữ thường, số, _, không bắt đầu bằng số"),
   email: z
     .string()
     .trim()
-    .email("Email không hợp lệ"),
+    .toLowerCase()
+    .regex(emailRegex, "Email không hợp lệ"),
   phone: z
     .string()
     .trim()
-    .regex(phoneRegex, "Số điện thoại không hợp lệ (ví dụ: 0912345678 hoặc +84912345678)"),
+    .regex(phoneRegex, "SĐT không hợp lệ"),
   password: z
     .string()
-    .min(6, "Mật khẩu phải có ít nhất 6 ký tự")
-    .regex(/[A-Z]/, "Mật khẩu phải có ít nhất 1 chữ cái viết hoa")
-    .regex(/[0-9]/, "Mật khẩu phải có ít nhất 1 chữ số"),
+    .min(1, "Không được để trống")
+    .regex(passwordRegex, "Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt"),
 });
 
 export async function POST(request: Request) {
@@ -73,6 +82,7 @@ export async function POST(request: Request) {
   try {
     await prisma.user.create({
       data: {
+        fullName: parsed.data.fullName,
         username: parsed.data.username,
         email: parsed.data.email,
         phone: parsed.data.phone,

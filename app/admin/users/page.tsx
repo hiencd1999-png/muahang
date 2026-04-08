@@ -19,13 +19,27 @@ export default async function AdminUsersPage({
 
   const [users, totalCount] = await Promise.all([
     prisma.user.findMany({
-      where: query ? { username: { contains: query } } : {},
+      where: query
+        ? {
+            OR: [
+              { fullName: { contains: query } },
+              { username: { contains: query } },
+            ],
+          }
+        : {},
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * ITEMS_PER_PAGE,
       take: ITEMS_PER_PAGE,
     }),
     prisma.user.count({
-      where: query ? { username: { contains: query } } : {},
+      where: query
+        ? {
+            OR: [
+              { fullName: { contains: query } },
+              { username: { contains: query } },
+            ],
+          }
+        : {},
     }),
   ]);
 
@@ -39,7 +53,7 @@ export default async function AdminUsersPage({
           <input
             name="q"
             defaultValue={query}
-            placeholder="Tìm username..."
+            placeholder="Tìm tên hoặc username..."
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-500 sm:w-64"
           />
           <button
@@ -58,7 +72,7 @@ export default async function AdminUsersPage({
             <thead className="text-slate-500">
               <tr>
                 <th className="pb-3">ID</th>
-                <th className="pb-3">Username</th>
+                <th className="pb-3">Người dùng</th>
                 <th className="pb-3">Role</th>
                 <th className="pb-3">Balance</th>
                 <th className="pb-3">Action</th>
@@ -68,7 +82,12 @@ export default async function AdminUsersPage({
               {users.map((user) => (
                 <tr key={user.id} className="border-t border-slate-200/70 align-top">
                   <td className="py-4 font-medium text-slate-900">{user.id}</td>
-                  <td className="py-4 text-slate-700">{user.username}</td>
+                  <td className="py-4 text-slate-700">
+                    <div className="space-y-1">
+                      <p className="font-medium text-slate-900">{user.fullName || user.username}</p>
+                      <p className="text-xs text-slate-500">@{user.username}</p>
+                    </div>
+                  </td>
                   <td className="py-4 text-slate-600">{user.role}</td>
                   <td className="py-4 text-slate-700">{formatCurrency(user.balance)}</td>
                   <td className="py-4"><UserBalanceControls userId={user.id} /></td>
@@ -88,7 +107,8 @@ export default async function AdminUsersPage({
                     <span className="font-medium text-slate-900">ID: {user.id}</span>
                     <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{user.role}</span>
                   </div>
-                  <p className="mt-1 text-sm text-slate-700">{user.username}</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">{user.fullName || user.username}</p>
+                  <p className="mt-1 text-xs text-slate-500">@{user.username}</p>
                   <p className="mt-1 text-sm text-slate-600">{formatCurrency(user.balance)}</p>
                 </div>
                 <div className="ml-4">

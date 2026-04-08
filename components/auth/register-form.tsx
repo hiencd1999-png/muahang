@@ -15,6 +15,7 @@ export function RegisterForm() {
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
+    const fullName = String(formData.get("fullName") ?? "").trim();
     const username = String(formData.get("username") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();
     const phone = String(formData.get("phone") ?? "").trim();
@@ -22,14 +23,26 @@ export function RegisterForm() {
     const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
     // Client-side validation
+    if (fullName.length < 2) {
+      addToast("error", "Tên người dùng phải có ít nhất 2 ký tự");
+      setLoading(false);
+      return;
+    }
+
     if (password !== confirmPassword) {
       addToast("error", "Mật khẩu nhập lại không khớp");
       setLoading(false);
       return;
     }
 
-    if (password.length < 6) {
-      addToast("error", "Mật khẩu phải có ít nhất 6 ký tự");
+    if (password.length < 8) {
+      addToast("error", "Mật khẩu phải có ít nhất 8 ký tự");
+      setLoading(false);
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      addToast("error", "Mật khẩu phải có ít nhất 1 chữ cái viết thường");
       setLoading(false);
       return;
     }
@@ -46,11 +59,17 @@ export function RegisterForm() {
       return;
     }
 
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      addToast("error", "Mật khẩu phải có ít nhất 1 ký tự đặc biệt");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, phone, password }),
+        body: JSON.stringify({ fullName, username, email, phone, password }),
       });
 
       const data = await response.json();
@@ -85,6 +104,19 @@ export function RegisterForm() {
       </div>
 
       <div className="space-y-5">
+        <label className="block space-y-2 text-sm font-medium text-slate-700">
+          <span>Tên người dùng</span>
+          <input
+            name="fullName"
+            required
+            minLength={2}
+            maxLength={60}
+            placeholder="Nguyễn Văn A"
+            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-teal-500"
+          />
+          <p className="text-xs text-slate-500">Tên này sẽ được hiển thị trên dashboard và profile</p>
+        </label>
+
         <label className="block space-y-2 text-sm font-medium text-slate-700">
           <span>Username</span>
           <input
@@ -128,11 +160,11 @@ export function RegisterForm() {
             name="password"
             type="password"
             required
-            minLength={6}
-            placeholder="Ít nhất 6 ký tự (có số và chữ hoa)"
+            minLength={8}
+            placeholder="Ít nhất 8 ký tự"
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-teal-500"
           />
-          <p className="text-xs text-slate-500">Phải có ít nhất 1 chữ hoa và 1 chữ số</p>
+          <p className="text-xs text-slate-500">Phải có chữ thường, chữ hoa, chữ số và ký tự đặc biệt</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700">
@@ -141,7 +173,7 @@ export function RegisterForm() {
             name="confirmPassword"
             type="password"
             required
-            minLength={6}
+            minLength={8}
             placeholder="Xác nhận mật khẩu"
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-teal-500"
           />
