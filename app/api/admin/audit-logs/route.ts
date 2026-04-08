@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
+import { isSpAdminRole } from "@/lib/roles";
 
 export async function GET(request: NextRequest) {
-  await requireUser("ADMIN");
+  const currentAdmin = await requireUser("ADMIN");
+  const canViewAllLogs = isSpAdminRole(currentAdmin.role);
 
   const searchParams = request.nextUrl.searchParams;
-  const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const limit = 20;
   const adminId = searchParams.get("adminId");
   const action = searchParams.get("action");
@@ -14,10 +16,9 @@ export async function GET(request: NextRequest) {
   const endDate = searchParams.get("endDate");
 
   try {
-    // Build where clause for filtering
-    const where: any = {};
+    const where: any = canViewAllLogs ? {} : { adminId: currentAdmin.id };
 
-    if (adminId) {
+    if (canViewAllLogs && adminId) {
       where.adminId = parseInt(adminId);
     }
 
@@ -50,16 +51,19 @@ export async function GET(request: NextRequest) {
 
     // Get unique actions and admins for filter options
     const actions = await prisma.auditLog.findMany({
+      where: canViewAllLogs ? {} : { adminId: currentAdmin.id },
       distinct: ["action"],
       select: { action: true },
       orderBy: { action: "asc" },
     });
 
-    const admins = await prisma.auditLog.findMany({
-      distinct: ["adminId"],
-      select: { admin: { select: { id: true, username: true } } },
-      orderBy: { admin: { username: "asc" } },
-    });
+    const admins = canViewAllLogs
+      ? await prisma.auditLog.findMany({
+          distinct: ["adminId"],
+          select: { admin: { select: { id: true, username: true } } },
+          orderBy: { admin: { username: "asc" } },
+        })
+      : [];
 
     return NextResponse.json({
       logs,
@@ -71,6 +75,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Fetch audit logs error:", error);
-    return NextResponse.json({ error: "Failed to fetch audit logs" }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tải nhật ký hoạt động." }, { status: 500 });
   }
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/shared/toast";
+import { getPostLoginRedirect } from "@/lib/roles";
 
 export function LoginForm() {
   const router = useRouter();
@@ -38,7 +39,7 @@ export function LoginForm() {
     }
 
     addToast("success", "Đăng nhập thành công!");
-    window.location.href = data.user.role === "ADMIN" ? "/admin" : "/dashboard";
+    window.location.href = getPostLoginRedirect(data.user.role);
   }
 
   return (

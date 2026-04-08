@@ -59,12 +59,14 @@ export function OrderActions({
   orderId,
   status,
   currentAdminId,
+  canManageAllOrders,
   approvedByAdminId,
   approvedByAdminName,
 }: {
   orderId: number;
   status: string;
   currentAdminId: number;
+  canManageAllOrders: boolean;
   approvedByAdminId: number | null;
   approvedByAdminName: string | null;
 }) {
@@ -81,7 +83,7 @@ export function OrderActions({
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelLoading, setIsCancelLoading] = useState(false);
   const isOwnedByAnotherAdmin =
-    approvedByAdminId !== null && approvedByAdminId !== currentAdminId;
+    !canManageAllOrders && approvedByAdminId !== null && approvedByAdminId !== currentAdminId;
   const ownershipMessage = approvedByAdminName
     ? `Đơn này đang do admin ${approvedByAdminName} phụ trách.`
     : "Đơn này chưa có admin phụ trách.";
@@ -283,6 +285,7 @@ export function OrderActions({
             user={orderData.user}
             isAdmin={true}
             currentAdminId={currentAdminId}
+            canManageAllOrders={canManageAllOrders}
             responsibleAdmin={orderData.approvedByAdmin || null}
             onClose={() => setIsModalOpen(false)}
           />

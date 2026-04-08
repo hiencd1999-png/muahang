@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, CreditCard, LayoutDashboard, ShieldCheck, ShoppingBag } from "lucide-react";
-import { getSession } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
+import { getPostLoginRedirect } from "@/lib/roles";
 
 const flowSteps = [
   "Đăng ký / đăng nhập",
@@ -26,10 +27,10 @@ const siteMap = [
 ];
 
 export default async function Home() {
-  const session = await getSession();
+  const user = await getCurrentUser();
 
-  if (session) {
-    redirect(session.role === "ADMIN" ? "/admin" : "/dashboard");
+  if (user) {
+    redirect(getPostLoginRedirect(user.role));
   }
 
   return (

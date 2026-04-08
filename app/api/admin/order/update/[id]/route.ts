@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
+import { isSpAdminRole } from "@/lib/roles";
 
 const orderUpdateSchema = z.object({
   spcCookie: z.string().trim().max(4000).optional().or(z.literal("")),
@@ -41,9 +42,10 @@ export async function PATCH(
     return NextResponse.json({ error: "Đơn hàng không tồn tại." }, { status: 404 });
   }
 
+  const canManageAllOrders = isSpAdminRole(result.user.role);
   const approvedByAdminId = (order as any).approvedByAdminId as number | null | undefined;
 
-  if (approvedByAdminId && approvedByAdminId !== result.user.id) {
+  if (!canManageAllOrders && approvedByAdminId && approvedByAdminId !== result.user.id) {
     return NextResponse.json(
       { error: "Bạn chỉ có thể chỉnh sửa các đơn do mình duyệt." },
       { status: 403 }

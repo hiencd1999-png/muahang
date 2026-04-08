@@ -5,6 +5,7 @@ import { StatusPill } from "@/components/shared/status-pill";
 import { OrderActions } from "@/components/admin/order-actions";
 import { Pagination } from "@/components/shared/pagination";
 import { AdminOrdersView } from "@/components/admin/orders-view";
+import { isSpAdminRole } from "@/lib/roles";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -14,18 +15,21 @@ export default async function AdminOrdersPage({
   searchParams: Promise<{ q?: string; status?: string; page?: string }>;
 }) {
   const currentAdmin = await requireUser("ADMIN");
+  const canManageAllOrders = isSpAdminRole(currentAdmin.role);
 
   const params = await searchParams;
   const query = params.q || "";
   const statusFilter = params.status || "";
   const page = Math.max(1, parseInt(params.page || "1"));
 
-  const visibilityWhere = {
-    OR: [
-      { status: "PENDING" as const },
-      { approvedByAdminId: currentAdmin.id },
-    ],
-  };
+  const visibilityWhere = canManageAllOrders
+    ? {}
+    : {
+        OR: [
+          { status: "PENDING" as const },
+          { approvedByAdminId: currentAdmin.id },
+        ],
+      };
 
   const queryWhere = query
     ? {
@@ -91,6 +95,7 @@ export default async function AdminOrdersPage({
       totalPages={totalPages}
       page={page}
       currentAdminId={currentAdmin.id}
+      canManageAllOrders={canManageAllOrders}
     />
   );
 }

@@ -1,7 +1,20 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { SESSION_COOKIE, type UserRole, verifySessionToken } from "@/lib/auth";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isAdminRole, type UserRole } from "@/lib/roles";
+
+function hasRequiredRole(userRole: string, requiredRole?: UserRole) {
+  if (!requiredRole) {
+    return true;
+  }
+
+  if (requiredRole === "ADMIN") {
+    return isAdminRole(userRole);
+  }
+
+  return userRole === requiredRole;
+}
 
 export async function getSession() {
   const cookieStore = await cookies();
@@ -37,7 +50,7 @@ export async function requireUser(requiredRole?: UserRole) {
     redirect("/login");
   }
 
-  if (requiredRole && user.role !== requiredRole) {
+  if (!hasRequiredRole(user.role, requiredRole)) {
     redirect("/dashboard");
   }
 
@@ -51,7 +64,7 @@ export async function requireApiUser(requiredRole?: UserRole) {
     return { error: "Unauthorized", status: 401 } as const;
   }
 
-  if (requiredRole && user.role !== requiredRole) {
+  if (!hasRequiredRole(user.role, requiredRole)) {
     return { error: "Forbidden", status: 403 } as const;
   }
 

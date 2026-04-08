@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
-import { getSession } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
+import { getPostLoginRedirect } from "@/lib/roles";
 
 export default async function LoginPage() {
-  const session = await getSession();
+  const user = await getCurrentUser();
 
-  if (session) {
-    redirect(session.role === "ADMIN" ? "/admin" : "/dashboard");
+  if (user) {
+    redirect(getPostLoginRedirect(user.role));
   }
 
   return (

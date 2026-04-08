@@ -38,6 +38,7 @@ interface OrderDetailModalContentProps {
   user?: UserInfo;
   isAdmin?: boolean;
   currentAdminId?: number;
+  canManageAllOrders?: boolean;
   responsibleAdmin?: { id: number; username: string; fullName?: string } | null;
   onClose?: () => void;
 }
@@ -47,6 +48,7 @@ export function OrderDetailModalContent({
   user,
   isAdmin = false,
   currentAdminId,
+  canManageAllOrders = false,
   responsibleAdmin,
   onClose,
 }: OrderDetailModalContentProps) {
@@ -93,13 +95,14 @@ export function OrderDetailModalContent({
   const cleanNote = order.note?.trim();
   const isLockedForAnotherAdmin =
     isAdmin &&
+    !canManageAllOrders &&
     responsibleAdmin &&
     typeof currentAdminId === "number" &&
     responsibleAdmin.id !== currentAdminId;
   const responsibleAdminName = responsibleAdmin?.fullName || responsibleAdmin?.username;
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6 overflow-x-hidden">
       {/* Order Header */}
       <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
         <div className="flex items-start justify-between">
@@ -324,36 +327,39 @@ export function OrderDetailModalContent({
 
       {/* Admin Notes */}
       {isAdmin && (
-        <div>
+        <div className="min-w-0 max-w-full">
           <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">
             Cập nhật logistics đơn hàng
           </h3>
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex flex-col gap-3">
-              <label className="space-y-1 text-sm text-slate-700 dark:text-slate-200">
+          <div className="min-w-0 max-w-full overflow-x-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex min-w-0 max-w-full flex-col gap-3 overflow-x-hidden">
+              <label className="block min-w-0 max-w-full space-y-1 text-sm text-slate-700 dark:text-slate-200">
                 <span>Cookie SPC_ST</span>
                 <textarea
                   value={adminForm.spcCookie}
                   onChange={(e) => setAdminForm((prev) => ({ ...prev, spcCookie: e.target.value }))}
                   disabled={Boolean(isLockedForAnotherAdmin)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 bg-white font-mono text-xs dark:border-gray-700 dark:bg-gray-800"
+                  className="block w-full min-w-0 max-w-full resize-y overflow-x-auto whitespace-pre-wrap [overflow-wrap:anywhere] rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs break-all dark:border-gray-700 dark:bg-gray-800"
                   rows={3}
                   placeholder="SPC_ST=..."
                 />
               </label>
-              <label className="space-y-1 text-sm text-slate-700 dark:text-slate-200">
+              <label className="block min-w-0 max-w-full space-y-1 text-sm text-slate-700 dark:text-slate-200">
                 <span>Mã vận đơn</span>
                 <input
+                  type="text"
                   value={adminForm.trackingNo}
                   onChange={(e) => setAdminForm((prev) => ({ ...prev, trackingNo: e.target.value }))}
                   disabled={Boolean(isLockedForAnotherAdmin)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 bg-white dark:border-gray-700 dark:bg-gray-800"
+                  className="block w-full min-w-0 max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
                 />
               </label>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {isLockedForAnotherAdmin
                   ? "Bạn không thể chỉnh sửa vì đơn này đang thuộc admin khác."
-                  : "Admin chỉ được cập nhật Cookie SPC_ST và Mã vận đơn cho đơn mình phụ trách."}
+                  : canManageAllOrders
+                    ? "SPAdmin có thể cập nhật Cookie SPC_ST và Mã vận đơn cho mọi đơn hàng."
+                    : "Admin chỉ được cập nhật Cookie SPC_ST và Mã vận đơn cho đơn mình phụ trách."}
               </p>
               <button
                 onClick={handleSaveOrderInfo}

@@ -6,10 +6,13 @@ const prisma = new PrismaClient();
 async function main() {
   // Passwords must contain: 1 uppercase letter + 1 digit minimum
   // Admin creds: admin / Admin123
+  // SPAdmin creds: spadmin / Spadmin123
   const adminPassword = "Admin123";
+  const spadminPassword = "Spadmin123";
   const testPassword = "Test123";
 
   const adminHash = await bcrypt.hash(adminPassword, 10);
+  const spadminHash = await bcrypt.hash(spadminPassword, 10);
   const testHash = await bcrypt.hash(testPassword, 10);
 
   await prisma.user.upsert({
@@ -63,6 +66,34 @@ async function main() {
           amount: 500_000,
           type: TransactionType.ADMIN_ADJUSTMENT,
           note: "Test user balance",
+        },
+      },
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { username: "spadmin" },
+    update: {
+      fullName: "Super admin",
+      passwordHash: spadminHash,
+      email: "spadmin@datdon.local",
+      phone: "0900000003",
+      role: Role.SPADMIN,
+      balance: 10_000_000,
+    },
+    create: {
+      fullName: "Super admin",
+      username: "spadmin",
+      email: "spadmin@datdon.local",
+      phone: "0900000003",
+      passwordHash: spadminHash,
+      role: Role.SPADMIN,
+      balance: 10_000_000,
+      transactions: {
+        create: {
+          amount: 10_000_000,
+          type: TransactionType.ADMIN_ADJUSTMENT,
+          note: "Initial spadmin balance",
         },
       },
     },

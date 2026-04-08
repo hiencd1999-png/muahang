@@ -61,11 +61,7 @@ export async function proxy(request: NextRequest) {
   }
 
   try {
-    const session = await verifySessionToken(token);
-
-    if (pathname.startsWith("/admin") && session.role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
+    await verifySessionToken(token);
 
     return NextResponse.next();
   } catch {

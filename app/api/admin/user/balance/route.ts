@@ -33,8 +33,9 @@ export async function PUT(request: Request) {
   }
 
   const signedAmount = parsed.data.mode === "add" ? parsed.data.amount : -parsed.data.amount;
+  const nextBalance = targetUser.balance + signedAmount;
 
-  if (targetUser.balance + signedAmount < 0) {
+  if (nextBalance < 0) {
     return NextResponse.json({ error: "Không thể trừ vượt quá số dư hiện tại." }, { status: 400 });
   }
 
@@ -48,15 +49,32 @@ export async function PUT(request: Request) {
         userId: targetUser.id,
         amount: signedAmount,
         type: "ADMIN_ADJUSTMENT",
-        note: `Admin ${parsed.data.mode} balance`,
+        note: `Điều chỉnh số dư bởi ${result.user.username}: ${signedAmount > 0 ? "+" : ""}${signedAmount} VND`,
+      },
+    }),
+    prisma.auditLog.create({
+      data: {
+        adminId: result.user.id,
+        action: "ADMIN_ADJUST_USER_BALANCE",
+        targetType: "USER",
+        targetId: targetUser.id,
+        details: JSON.stringify({
+          username: targetUser.username,
+          mode: parsed.data.mode,
+          amountChange: signedAmount,
+          previousBalance: targetUser.balance,
+          nextBalance,
+        }),
       },
     }),
   ]);
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/transactions");
+  revalidatePath("/admin/logs");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/deposit");
+  revalidatePath("/dashboard/transactions");
 
   return NextResponse.json({ success: true });
 }

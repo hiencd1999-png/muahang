@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/format";
 import { requireUser } from "@/lib/session";
-import { UserBalanceControls } from "@/components/admin/user-balance-controls";
+import { UserManagementControls } from "@/components/admin/user-balance-controls";
 import { Pagination } from "@/components/shared/pagination";
+import { isSpAdminRole } from "@/lib/roles";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -11,7 +12,8 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  await requireUser("ADMIN");
+  const currentAdmin = await requireUser("ADMIN");
+  const canManageRoles = isSpAdminRole(currentAdmin.role);
 
   const params = await searchParams;
   const query = params.q || "";
@@ -90,7 +92,19 @@ export default async function AdminUsersPage({
                   </td>
                   <td className="py-4 text-slate-600">{user.role}</td>
                   <td className="py-4 text-slate-700">{formatCurrency(user.balance)}</td>
-                  <td className="py-4"><UserBalanceControls userId={user.id} /></td>
+                  <td className="py-4 w-[180px]">
+                    <UserManagementControls
+                      userId={user.id}
+                      username={user.username}
+                      currentRole={user.role}
+                      currentBalance={user.balance}
+                      displayName={user.fullName || user.username}
+                      email={user.email}
+                      phone={user.phone}
+                      canManageRoles={canManageRoles}
+                      canEditUser={canManageRoles || user.role === "USER"}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -101,8 +115,8 @@ export default async function AdminUsersPage({
         <div className="lg:hidden space-y-4">
           {users.map((user) => (
             <div key={user.id} className="rounded-xl border border-slate-200/70 bg-white/70 p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex flex-col gap-4">
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-slate-900">ID: {user.id}</span>
                     <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{user.role}</span>
@@ -111,8 +125,18 @@ export default async function AdminUsersPage({
                   <p className="mt-1 text-xs text-slate-500">@{user.username}</p>
                   <p className="mt-1 text-sm text-slate-600">{formatCurrency(user.balance)}</p>
                 </div>
-                <div className="ml-4">
-                  <UserBalanceControls userId={user.id} />
+                <div className="w-full">
+                  <UserManagementControls
+                    userId={user.id}
+                    username={user.username}
+                    currentRole={user.role}
+                    currentBalance={user.balance}
+                    displayName={user.fullName || user.username}
+                    email={user.email}
+                    phone={user.phone}
+                    canManageRoles={canManageRoles}
+                    canEditUser={canManageRoles || user.role === "USER"}
+                  />
                 </div>
               </div>
             </div>

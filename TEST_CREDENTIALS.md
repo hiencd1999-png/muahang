@@ -12,6 +12,16 @@ The following test accounts are created when you run `npm run db:seed`:
 
 **Access:** `/admin` (admin panel)
 
+## SPAdmin Account
+- **Username:** `spadmin`
+- **Password:** `Spadmin123`
+- **Email:** `spadmin@datdon.local`
+- **Phone:** `0900000003`
+- **Role:** SPADMIN
+- **Balance:** 10,000,000 VND
+
+**Access:** `/admin` (full admin access, can view and act on all orders)
+
 ## Test User Account
 - **Username:** `testuser`
 - **Password:** `Test123`

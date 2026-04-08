@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
 import { jwtVerify, SignJWT } from "jose";
+import type { UserRole } from "@/lib/roles";
 
 export const SESSION_COOKIE = "datdon_session";
-export type UserRole = "USER" | "ADMIN";
 
 export type SessionPayload = {
   sub: string;

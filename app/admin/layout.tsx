@@ -4,9 +4,19 @@ import { NavLink } from "@/components/shared/nav-link";
 import { LogoutButton } from "@/components/shared/logout-button";
 import { MobileNav } from "@/components/shared/mobile-nav";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { isSpAdminRole } from "@/lib/roles";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  await requireUser("ADMIN");
+  const currentAdmin = await requireUser("ADMIN");
+  const canViewTransactions = isSpAdminRole(currentAdmin.role);
+
+  const navLinks = [
+    { href: "/admin", label: "Tổng quan" },
+    { href: "/admin/users", label: "Quản lý user" },
+    { href: "/admin/orders", label: "Quản lý đơn" },
+    ...(canViewTransactions ? [{ href: "/admin/transactions", label: "Giao dịch hệ thống" }] : []),
+    { href: "/admin/logs", label: "Nhật ký hoạt động" },
+  ];
 
   return (
     <main className="shell flex-1 py-6 sm:py-8">
@@ -27,19 +37,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="panel rounded-[2rem] p-4 lg:block">
           <div className="hidden gap-2 lg:grid">
-            <NavLink href="/admin" label="Tổng quan" />
-            <NavLink href="/admin/users" label="Quản lý user" />
-            <NavLink href="/admin/orders" label="Quản lý đơn" />
-            <NavLink href="/admin/transactions" label="Transactions" />
-            <NavLink href="/admin/logs" label="Nhật ký hoạt động" />
+            {navLinks.map((link) => (
+              <NavLink key={link.href} href={link.href} label={link.label} />
+            ))}
           </div>
-          <MobileNav links={[
-            { href: "/admin", label: "Tổng quan" },
-            { href: "/admin/users", label: "Quản lý user" },
-            { href: "/admin/orders", label: "Quản lý đơn" },
-            { href: "/admin/transactions", label: "Transactions" },
-            { href: "/admin/logs", label: "Nhật ký hoạt động" },
-          ]} />
+          <MobileNav links={navLinks} />
         </aside>
         <section className="min-w-0 space-y-6">{children}</section>
       </div>

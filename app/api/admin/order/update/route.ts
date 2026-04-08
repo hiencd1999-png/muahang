@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 import { createNotification } from "@/lib/notifications";
 import { createAuditLog } from "@/lib/audit";
+import { isSpAdminRole } from "@/lib/roles";
 
 const schema = z.object({
   orderId: z.number().int().positive(),
@@ -50,7 +51,9 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Chuyển trạng thái không hợp lệ." }, { status: 400 });
   }
 
-  if (order.approvedByAdminId && order.approvedByAdminId !== result.user.id) {
+  const canManageAllOrders = isSpAdminRole(result.user.role);
+
+  if (!canManageAllOrders && order.approvedByAdminId && order.approvedByAdminId !== result.user.id) {
     return NextResponse.json(
       { error: "Bạn chỉ có thể xử lý các đơn do mình đã duyệt." },
       { status: 403 }

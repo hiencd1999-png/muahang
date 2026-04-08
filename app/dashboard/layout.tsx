@@ -6,6 +6,7 @@ import { MobileNav } from "@/components/shared/mobile-nav";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { formatCurrency } from "@/lib/format";
+import { isAdminRole } from "@/lib/roles";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
@@ -24,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="flex flex-wrap items-center gap-3">
           <NotificationBell />
           <ThemeToggle />
-          {user.role === "ADMIN" ? (
+          {isAdminRole(user.role) ? (
             <Link
               href="/admin"
               className="rounded-full border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 sm:px-4"
@@ -43,6 +44,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <NavLink href="/dashboard/deposit" label="Nạp tiền" />
             <NavLink href="/dashboard/create-order" label="Tạo đơn" />
             <NavLink href="/dashboard/orders" label="Lịch sử đơn" />
+            <NavLink href="/dashboard/transactions" label="Lịch sử giao dịch" />
             <NavLink href="/dashboard/profile" label="Profile" />
           </div>
           <MobileNav links={[
@@ -50,6 +52,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             { href: "/dashboard/deposit", label: "Nạp tiền" },
             { href: "/dashboard/create-order", label: "Tạo đơn" },
             { href: "/dashboard/orders", label: "Lịch sử đơn" },
+            { href: "/dashboard/transactions", label: "Lịch sử giao dịch" },
             { href: "/dashboard/profile", label: "Profile" },
           ]} />
         </aside>

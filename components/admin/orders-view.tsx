@@ -30,12 +30,14 @@ export function AdminOrdersView({
   totalPages,
   page,
   currentAdminId,
+  canManageAllOrders,
 }: {
   orders: Order[];
   totalCount: number;
   totalPages: number;
   page: number;
   currentAdminId: number;
+  canManageAllOrders: boolean;
 }) {
   const { addToast } = useToast();
   const router = useRouter();
@@ -248,6 +250,7 @@ export function AdminOrdersView({
                       orderId={order.id}
                       status={order.status}
                       currentAdminId={currentAdminId}
+                      canManageAllOrders={canManageAllOrders}
                       approvedByAdminId={order.approvedByAdminId}
                       approvedByAdminName={order.approvedByAdminName}
                     />
@@ -318,6 +321,7 @@ export function AdminOrdersView({
                       orderId={order.id}
                       status={order.status}
                       currentAdminId={currentAdminId}
+                      canManageAllOrders={canManageAllOrders}
                       approvedByAdminId={order.approvedByAdminId}
                       approvedByAdminName={order.approvedByAdminName}
                     />
