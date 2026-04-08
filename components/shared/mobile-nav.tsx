@@ -18,7 +18,7 @@ export function MobileNav({ links }: { links: { href: string; label: string }[] 
         </svg>
       </button>
       {open && (
-        <div className="mt-2 grid gap-2">
+        <div className="mt-2 grid gap-2" onClick={() => setOpen(false)}>
           {links.map((link) => (
             <NavLink key={link.href} href={link.href} label={link.label} />
           ))}

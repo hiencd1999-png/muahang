@@ -1,6 +1,7 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { hashPassword } from "@/lib/auth";
+import { createSessionToken, hashPassword, SESSION_COOKIE } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const fullNameRegex = /^[A-Za-zÀ-ỹ]+\s[A-Za-zÀ-ỹ\s]+$/;
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
   const passwordHash = await hashPassword(parsed.data.password);
 
   try {
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         fullName: parsed.data.fullName,
         username: parsed.data.username,
@@ -92,7 +93,30 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ success: true });
+    // Tự động tạo session để đăng nhập luôn
+    const token = await createSessionToken({
+      sub: String(user.id),
+      username: user.username,
+      role: user.role,
+    });
+
+    const cookieStore = await cookies();
+    cookieStore.set(SESSION_COOKIE, token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return NextResponse.json({ 
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      }
+    });
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(

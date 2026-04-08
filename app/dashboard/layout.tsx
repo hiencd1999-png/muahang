@@ -13,27 +13,38 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <main className="shell flex-1 py-6 sm:py-8">
-      <header className="panel relative z-40 mb-6 flex flex-col gap-5 rounded-[2rem] p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-gray-900 border dark:border-gray-800">
-        <div className="flex-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500 dark:text-gray-400">User dashboard</p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white sm:text-3xl">Xin chào, {user.fullName || user.username}</h1>
-          <div className="mt-3 inline-block rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900 dark:to-orange-900 border border-amber-200 dark:border-amber-800 px-4 py-2">
-            <p className="text-xs text-amber-700 dark:text-amber-200 font-medium">Số dư</p>
-            <p className="text-lg font-bold text-amber-900 dark:text-amber-50">{formatCurrency(user.balance)}</p>
+      <header className="panel relative z-40 mb-6 rounded-[2rem] p-5 sm:p-6 bg-white dark:bg-gray-900 border dark:border-gray-800">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 dark:text-gray-500 mb-1">User dashboard</p>
+            <h1 className="text-2xl font-bold text-slate-950 dark:text-white sm:text-3xl truncate">Xin chào, {user.fullName || user.username}</h1>
+            
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="inline-flex flex-col rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200/60 dark:border-amber-800/40 px-5 py-3 shadow-sm">
+                <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Số dư hiện tại</p>
+                <p className="text-xl font-black text-amber-900 dark:text-amber-50 mt-1">{formatCurrency(user.balance)}</p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <NotificationBell />
+                <ThemeToggle />
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <NotificationBell />
-          <ThemeToggle />
-          {isAdminRole(user.role) ? (
-            <Link
-              href="/admin"
-              className="rounded-full border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 sm:px-4"
-            >
-              Vào admin
-            </Link>
-          ) : null}
-          <LogoutButton />
+
+          <div className="flex items-center gap-3 border-t border-slate-100 dark:border-gray-800 pt-5 lg:border-0 lg:pt-0">
+            {isAdminRole(user.role) ? (
+              <Link
+                href="/admin"
+                className="flex-1 text-center rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-bold text-amber-900 transition hover:bg-amber-100 sm:flex-none"
+              >
+                Vào admin
+              </Link>
+            ) : null}
+            <div className="flex-1 lg:flex-none">
+              <LogoutButton />
+            </div>
+          </div>
         </div>
       </header>
 

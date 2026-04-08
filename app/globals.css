@@ -1,47 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6efe3;
-  --foreground: #1e293b;
-  --muted: #6b7280;
-  --card: rgba(255, 252, 246, 0.82);
-  --card-strong: #fff7eb;
-  --line: rgba(148, 163, 184, 0.28);
-  --primary: #d97706;
-  --primary-deep: #9a3412;
-  --accent: #0f766e;
-  --danger: #b91c1c;
-  --shadow: 0 24px 70px rgba(148, 86, 22, 0.14);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f1f5f9;
-    --muted: #94a3b8;
-    --card: rgba(15, 23, 42, 0.8);
-    --card-strong: #1e293b;
-    --line: rgba(148, 163, 184, 0.15);
-    --primary: #f59e0b;
-    --primary-deep: #d97706;
-    --accent: #14b8a6;
-    --danger: #ef4444;
-    --shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
-  }
+  --background: #fafaf9;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --card: rgba(255, 255, 255, 0.7);
+  --card-strong: #ffffff;
+  --line: rgba(226, 232, 240, 0.8);
+  --primary: #f59e0b;
+  --primary-deep: #d97706;
+  --accent: #0d9488;
+  --danger: #e11d48;
+  --shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
 }
 
 html.dark {
-  --background: #0f172a;
-  --foreground: #f1f5f9;
+  --background: #020617;
+  --foreground: #f8fafc;
   --muted: #94a3b8;
-  --card: rgba(15, 23, 42, 0.8);
+  --card: rgba(15, 23, 42, 0.6);
   --card-strong: #1e293b;
-  --line: rgba(148, 163, 184, 0.15);
-  --primary: #f59e0b;
-  --primary-deep: #d97706;
-  --accent: #14b8a6;
-  --danger: #ef4444;
-  --shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+  --line: rgba(51, 65, 85, 0.5);
+  --primary: #fbbf24;
+  --primary-deep: #f59e0b;
+  --accent: #2dd4bf;
+  --danger: #fb7185;
+  --shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
 }
 
 @theme inline {
@@ -65,18 +49,20 @@ body {
   color: var(--foreground);
   font-family: var(--font-sora), sans-serif;
   background-image:
-    radial-gradient(circle at top left, rgba(217, 119, 6, 0.18), transparent 32%),
-    radial-gradient(circle at top right, rgba(15, 118, 110, 0.16), transparent 22%),
-    linear-gradient(180deg, #fffaf0 0%, #f6efe3 44%, #f4ecde 100%);
+    radial-gradient(circle at top left, rgba(245, 158, 11, 0.05), transparent 40%),
+    radial-gradient(circle at top right, rgba(13, 148, 136, 0.05), transparent 40%),
+    linear-gradient(to bottom, #ffffff 0%, #fafaf9 100%);
+  background-attachment: fixed;
 }
 
 html.dark body {
   background: var(--background);
   color: var(--foreground);
   background-image:
-    radial-gradient(circle at top left, rgba(245, 158, 11, 0.08), transparent 32%),
-    radial-gradient(circle at top right, rgba(20, 184, 166, 0.06), transparent 22%),
-    linear-gradient(180deg, #0f172a 0%, #1a1f2e 44%, #151d2d 100%);
+    radial-gradient(circle at top left, rgba(251, 191, 36, 0.03), transparent 40%),
+    radial-gradient(circle at top right, rgba(45, 212, 191, 0.03), transparent 40%),
+    linear-gradient(to bottom, #020617 0%, #0f172a 100%);
+  background-attachment: fixed;
 }
 
 a {

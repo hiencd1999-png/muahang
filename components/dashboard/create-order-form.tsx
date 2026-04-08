@@ -25,9 +25,13 @@ interface OrderDraftItem {
   isAnalyzing: boolean;
 }
 
+function generateId() {
+  return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+}
+
 function createEmptyOrderItem(): OrderDraftItem {
   return {
-    id: crypto.randomUUID(),
+    id: generateId(),
     productLink: "",
     resolvedLink: "",
     productName: "",
@@ -346,27 +350,6 @@ export function CreateOrderForm({
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-slate-900">Thêm link sản phẩm</p>
-                <p className="mt-1 text-xs text-slate-500">Nhấn nút thêm để tạo Sản phẩm 2, 3... rồi phân tích từng link riêng.</p>
-              </div>
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                {orderItems.length} link
-              </span>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={addOrderItem}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300"
-              >
-                Thêm link sản phẩm
-              </button>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
                 <p className="text-sm font-semibold text-slate-900">Thiết lập đơn chung</p>
                 <p className="mt-1 text-xs text-slate-500">Voucher chọn một lần cho toàn bộ link. Số lượng nhập riêng ở từng sản phẩm.</p>
               </div>
@@ -400,7 +383,6 @@ export function CreateOrderForm({
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Sản phẩm {index + 1}</p>
-                    <p className="mt-1 text-xs text-slate-500">Mỗi link giữ phân loại riêng nhưng vẫn thuộc cùng một đơn.</p>
                   </div>
                   <button
                     type="button"
@@ -515,6 +497,17 @@ export function CreateOrderForm({
               </section>
             ))}
           </div>
+
+          <button
+            type="button"
+            onClick={addOrderItem}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Thêm link sản phẩm
+          </button>
 
           <label className="space-y-2 text-sm font-medium text-slate-700">
             <span>Ghi chú SĐT</span>

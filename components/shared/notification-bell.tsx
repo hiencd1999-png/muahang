@@ -104,54 +104,86 @@ export function NotificationBell() {
         )}
       </button>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 max-h-96 bg-white border border-slate-200 rounded-lg shadow-xl z-[9999] overflow-hidden flex flex-col">
-          <div className="bg-slate-50 border-b border-slate-200 p-4">
-            <h3 className="font-semibold text-slate-900">Thông báo</h3>
-          </div>
-
-          <div className="flex-1 overflow-y-auto divide-y divide-slate-200">
-            {notifications.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-600">
-                Chưa có thông báo nào
-              </div>
-            ) : (
-              notifications.map((notif) => (
-                <div
-                  key={notif.id}
-                  className={`p-4 hover:bg-slate-50 cursor-pointer transition ${
-                    !notif.read ? "bg-blue-50" : ""
-                  }`}
-                  onClick={() => handleNotificationClick(notif)}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm text-slate-900">{notif.title}</p>
-                        {!notif.read && (
-                          <span className="inline-block h-2 w-2 rounded-full bg-blue-600"></span>
-                        )}
-                      </div>
-                      <p className="mt-1 text-xs text-slate-600 line-clamp-2">{notif.message}</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {formatDate(new Date(notif.createdAt))}
-                      </p>
-                    </div>
-                  </div>
+      {isOpen && typeof document !== "undefined" && (
+        <>
+          {require("react-dom").createPortal(
+            <>
+              {/* Backdrop - Phủ toàn màn hình */}
+              <div 
+                className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[9998]"
+                onClick={() => setIsOpen(false)}
+              />
+              
+              {/* Notification Panel - Căn giữa tuyệt đối trên Mobile */}
+              <div 
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] max-w-[420px] max-h-[85vh] bg-white shadow-2xl z-[9999] animate-rise rounded-[2.5rem] border border-slate-200 overflow-hidden flex flex-col sm:w-[400px] sm:max-h-[600px]"
+              >
+                <div className="flex items-center justify-between bg-slate-50 border-b border-slate-200 p-5 sm:p-6">
+                  <h3 className="font-black text-slate-900 text-xl tracking-tight">Thông báo</h3>
+                  <button 
+                    onClick={() => setIsOpen(false)}
+                    className="p-2.5 hover:bg-slate-200 rounded-full transition-colors"
+                  >
+                    <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-              ))
-            )}
-          </div>
 
-          <div className="border-t border-slate-200 p-3 bg-slate-50 text-center">
-            <a
-              href="/dashboard/notifications"
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700"
-            >
-              Xem tất cả thông báo
-            </a>
-          </div>
-        </div>
+                <div className="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 sm:p-3">
+                  {notifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                        <svg className="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                      </div>
+                      <p className="text-slate-900 font-bold text-lg">Hệ thống sạch sẽ!</p>
+                      <p className="text-sm text-slate-500 mt-2 leading-relaxed">Bạn không có thông báo nào chưa đọc lúc này.</p>
+                    </div>
+                  ) : (
+                    notifications.map((notif) => (
+                      <div
+                        key={notif.id}
+                        className={`p-5 rounded-3xl hover:bg-slate-50 cursor-pointer transition-all mb-1 ${
+                          !notif.read ? "bg-amber-50/70" : ""
+                        }`}
+                        onClick={() => handleNotificationClick(notif)}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className={`mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 shadow-sm ${!notif.read ? "bg-amber-600 animate-pulse" : "bg-slate-200"}`}></div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-extrabold text-base text-slate-950 leading-snug mb-1.5">{notif.title}</p>
+                            <p className="text-sm text-slate-600 line-clamp-3 leading-relaxed">{notif.message}</p>
+                            <div className="flex items-center justify-between mt-3">
+                              <span className="text-[10px] font-bold text-slate-400 border border-slate-100 px-2 py-0.5 rounded-lg whitespace-nowrap">
+                                {formatDate(new Date(notif.createdAt))}
+                              </span>
+                              {!notif.read && (
+                                <span className="text-[10px] font-black text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full uppercase tracking-widest shadow-sm">Mới</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="border-t border-slate-200 p-5 bg-slate-50/50">
+                  <a
+                    href="/dashboard/notifications"
+                    className="flex items-center justify-center w-full py-4 bg-slate-950 text-white rounded-2xl text-base font-black shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-[0.98]"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Tất cả thông báo
+                  </a>
+                </div>
+              </div>
+            </>,
+            document.body
+          )}
+        </>
       )}
     </div>
   );

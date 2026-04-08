@@ -51,7 +51,10 @@ function ToastContainer() {
   const { toasts, removeToast } = useToast();
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div 
+      className="fixed top-4 left-4 right-4 z-[9999] flex flex-col items-center gap-2 pointer-events-none sm:left-auto sm:right-4 sm:items-end"
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+    >
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />
       ))}
@@ -61,17 +64,19 @@ function ToastContainer() {
 
 function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) => void }) {
   const bgColor = {
-    success: "bg-emerald-600",
-    error: "bg-rose-600",
-    info: "bg-sky-600",
+    success: "bg-emerald-600 shadow-emerald-500/20",
+    error: "bg-rose-600 shadow-rose-500/20",
+    info: "bg-sky-600 shadow-sky-500/20",
   }[toast.type];
 
   return (
-    <div className={`${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between max-w-sm`}>
-      <span className="text-sm">{toast.message}</span>
+    <div className={`${bgColor} pointer-events-auto animate-rise text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between w-full max-w-[calc(100vw-32px)] sm:max-w-sm border border-white/10`}>
+      <div className="flex items-center gap-3 min-w-0">
+        <span className="text-sm font-medium truncate">{toast.message}</span>
+      </div>
       <button
         onClick={() => onRemove(toast.id)}
-        className="ml-4 text-white/80 hover:text-white"
+        className="ml-4 flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition"
       >
         ×
       </button>
