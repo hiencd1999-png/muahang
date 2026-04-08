@@ -5,6 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/shared/toast";
 
+const fullNameRegex = /^[A-Za-zÀ-ỹ]+\s[A-Za-zÀ-ỹ\s]+$/;
+const usernameRegex = /^(?!\d)[a-z0-9_]{4,20}$/;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/;
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
 export function RegisterForm() {
   const router = useRouter();
   const { addToast } = useToast();
@@ -23,44 +29,74 @@ export function RegisterForm() {
     const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
     // Client-side validation
-    if (fullName.length < 2) {
-      addToast("error", "Tên người dùng phải có ít nhất 2 ký tự");
+    if (!fullName) {
+      addToast("error", "Không được để trống");
+      setLoading(false);
+      return;
+    }
+
+    if (fullName.split(/\s+/).length < 2) {
+      addToast("error", "Phải có ít nhất 2 từ");
+      setLoading(false);
+      return;
+    }
+
+    if (!fullNameRegex.test(fullName)) {
+      addToast("error", "Chỉ được chứa chữ cái");
+      setLoading(false);
+      return;
+    }
+
+    if (!username) {
+      addToast("error", "Không được để trống");
+      setLoading(false);
+      return;
+    }
+
+    if (!usernameRegex.test(username)) {
+      addToast("error", "4-20 ký tự, chữ thường, số, _, không bắt đầu bằng số");
+      setLoading(false);
+      return;
+    }
+
+    if (!email) {
+      addToast("error", "Không được để trống");
+      setLoading(false);
+      return;
+    }
+
+    if (!emailRegex.test(email)) {
+      addToast("error", "Email không hợp lệ");
+      setLoading(false);
+      return;
+    }
+
+    if (!phone) {
+      addToast("error", "Không được để trống");
+      setLoading(false);
+      return;
+    }
+
+    if (!phoneRegex.test(phone)) {
+      addToast("error", "SĐT không hợp lệ");
+      setLoading(false);
+      return;
+    }
+
+    if (!password) {
+      addToast("error", "Không được để trống");
+      setLoading(false);
+      return;
+    }
+
+    if (!passwordRegex.test(password)) {
+      addToast("error", "Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt");
       setLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       addToast("error", "Mật khẩu nhập lại không khớp");
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 8) {
-      addToast("error", "Mật khẩu phải có ít nhất 8 ký tự");
-      setLoading(false);
-      return;
-    }
-
-    if (!/[a-z]/.test(password)) {
-      addToast("error", "Mật khẩu phải có ít nhất 1 chữ cái viết thường");
-      setLoading(false);
-      return;
-    }
-
-    if (!/[A-Z]/.test(password)) {
-      addToast("error", "Mật khẩu phải có ít nhất 1 chữ cái viết hoa");
-      setLoading(false);
-      return;
-    }
-
-    if (!/[0-9]/.test(password)) {
-      addToast("error", "Mật khẩu phải có ít nhất 1 chữ số");
-      setLoading(false);
-      return;
-    }
-
-    if (!/[^A-Za-z0-9]/.test(password)) {
-      addToast("error", "Mật khẩu phải có ít nhất 1 ký tự đặc biệt");
       setLoading(false);
       return;
     }
@@ -109,12 +145,14 @@ export function RegisterForm() {
           <input
             name="fullName"
             required
-            minLength={2}
+            minLength={3}
             maxLength={60}
             placeholder="Nguyễn Văn A"
+            pattern="^[A-Za-zÀ-ỹ]+\s[A-Za-zÀ-ỹ\s]+$"
+            title="Không được để trống, phải có ít nhất 2 từ và chỉ chứa chữ cái"
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-teal-500"
           />
-          <p className="text-xs text-slate-500">Tên này sẽ được hiển thị trên dashboard và profile</p>
+          <p className="text-xs text-slate-500">Không để trống, tối thiểu 2 từ và chỉ chứa chữ cái</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700">
@@ -122,12 +160,14 @@ export function RegisterForm() {
           <input
             name="username"
             required
-            minLength={3}
-            maxLength={30}
-            placeholder="datdon_user (3-30 ký tự)"
+            minLength={4}
+            maxLength={20}
+            placeholder="datdon_user"
+            pattern="^(?!\d)[a-z0-9_]{4,20}$"
+            title="4-20 ký tự, chữ thường, số, _, không bắt đầu bằng số"
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-teal-500"
           />
-          <p className="text-xs text-slate-500">Chỉ được chứa chữ, số, dấu chấm, gạch ngang</p>
+          <p className="text-xs text-slate-500">4-20 ký tự, chữ thường, số, _, không bắt đầu bằng số</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700">
@@ -137,6 +177,7 @@ export function RegisterForm() {
             type="email"
             required
             placeholder="you@example.com"
+            title="Email phải đúng định dạng hợp lệ và không chứa khoảng trắng"
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-teal-500"
           />
           <p className="text-xs text-slate-500">Email phải hợp lệ và duy nhất</p>
@@ -148,10 +189,13 @@ export function RegisterForm() {
             name="phone"
             type="tel"
             required
-            placeholder="0912345678 hoặc +84912345678"
+            inputMode="numeric"
+            pattern="^(03|05|07|08|09)[0-9]{8}$"
+            placeholder="0912345678"
+            title="SĐT Việt Nam gồm 10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09"
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-teal-500"
           />
-          <p className="text-xs text-slate-500">Số điện thoại Việt Nam (bắt đầu bằng 0 hoặc +84)</p>
+          <p className="text-xs text-slate-500">10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700">
@@ -162,9 +206,10 @@ export function RegisterForm() {
             required
             minLength={8}
             placeholder="Ít nhất 8 ký tự"
+            title="Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt"
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-teal-500"
           />
-          <p className="text-xs text-slate-500">Phải có chữ thường, chữ hoa, chữ số và ký tự đặc biệt</p>
+          <p className="text-xs text-slate-500">Ít nhất 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700">
@@ -175,6 +220,7 @@ export function RegisterForm() {
             required
             minLength={8}
             placeholder="Xác nhận mật khẩu"
+            title="Phải trùng với mật khẩu đã nhập"
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-teal-500"
           />
         </label>

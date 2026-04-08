@@ -25,6 +25,11 @@ interface OrderData {
   createdAt: Date;
   updatedAt: Date;
   userId: number;
+  approvedByAdmin?: {
+    id: number;
+    username: string;
+    fullName?: string;
+  } | null;
 }
 
 export function UserOrderActions({ orderId, status }: { orderId: number; status: string }) {
@@ -71,6 +76,13 @@ export function UserOrderActions({ orderId, status }: { orderId: number; status:
       createdAt: new Date(order.createdAt),
       updatedAt: new Date(order.updatedAt),
       userId: order.userId,
+      approvedByAdmin: order.approvedByAdmin
+        ? {
+            id: order.approvedByAdmin.id,
+            username: order.approvedByAdmin.username,
+            fullName: order.approvedByAdmin.fullName,
+          }
+        : null,
     };
   }
 
@@ -234,6 +246,7 @@ export function UserOrderActions({ orderId, status }: { orderId: number; status:
           <OrderDetailModalContent
             order={orderData}
             isAdmin={false}
+            responsibleAdmin={orderData.approvedByAdmin || null}
             onClose={() => setIsModalOpen(false)}
           />
         </Modal>

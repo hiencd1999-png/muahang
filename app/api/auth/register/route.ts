@@ -26,10 +26,12 @@ const schema = z.object({
     .string()
     .trim()
     .toLowerCase()
+    .min(1, "Không được để trống")
     .regex(emailRegex, "Email không hợp lệ"),
   phone: z
     .string()
     .trim()
+    .min(1, "Không được để trống")
     .regex(phoneRegex, "SĐT không hợp lệ"),
   password: z
     .string()

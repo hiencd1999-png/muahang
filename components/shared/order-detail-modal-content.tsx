@@ -38,7 +38,7 @@ interface OrderDetailModalContentProps {
   user?: UserInfo;
   isAdmin?: boolean;
   currentAdminId?: number;
-  responsibleAdmin?: { id: number; username: string } | null;
+  responsibleAdmin?: { id: number; username: string; fullName?: string } | null;
   onClose?: () => void;
 }
 
@@ -96,6 +96,7 @@ export function OrderDetailModalContent({
     responsibleAdmin &&
     typeof currentAdminId === "number" &&
     responsibleAdmin.id !== currentAdminId;
+  const responsibleAdminName = responsibleAdmin?.fullName || responsibleAdmin?.username;
 
   return (
     <div className="space-y-6">
@@ -299,7 +300,7 @@ export function OrderDetailModalContent({
         </div>
       )}
 
-      {isAdmin ? (
+      {responsibleAdmin || isAdmin ? (
         <div>
           <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">
             Admin phụ trách
@@ -308,12 +309,14 @@ export function OrderDetailModalContent({
             <p className="font-medium">
               {responsibleAdmin
                 ? typeof currentAdminId === "number" && responsibleAdmin.id === currentAdminId
-                  ? `${responsibleAdmin.username} (Bạn)`
-                  : responsibleAdmin.username
+                  ? `${responsibleAdminName} (Bạn)`
+                  : responsibleAdminName
                 : "Chưa có admin phụ trách"}
             </p>
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Đơn sẽ thuộc quyền xử lý của admin đầu tiên duyệt đơn này.
+              {isAdmin
+                ? "Đơn sẽ thuộc quyền xử lý của admin đầu tiên duyệt đơn này."
+                : "Tên admin sẽ hiển thị sau khi đơn được admin tiếp nhận xử lý."}
             </p>
           </div>
         </div>
