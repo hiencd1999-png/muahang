@@ -33,7 +33,6 @@ export function CreateOrderForm({
   const [analysisMessage, setAnalysisMessage] = useState("");
   const [quantity, setQuantity] = useState(2);
   const [note, setNote] = useState("");
-  const [addressPhone, setAddressPhone] = useState("");
   const [spcCookieForAddress, setSpcCookieForAddress] = useState("");
   const [address, setAddress] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
@@ -117,7 +116,7 @@ export function CreateOrderForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           address: normalizedAddress,
-          phone: addressPhone.trim() || note.trim(),
+          phone: note.trim(),
           note: note.trim(),
           spcCookie: spcCookieForAddress.trim(),
         }),
@@ -213,7 +212,6 @@ export function CreateOrderForm({
     setAnalysisError("");
     setQuantity(2);
     setNote("");
-    setAddressPhone("");
     setSpcCookieForAddress("");
     setAddress("");
     setAddressSuggestions([]);
@@ -358,16 +356,6 @@ export function CreateOrderForm({
               placeholder="Ví dụ: 098xxxxxxx - gọi giờ hành chính"
             />
             <p className="text-xs text-slate-500">Ghi chú SĐT sẽ được thêm trực tiếp vào phần địa chỉ giao hàng.</p>
-          </label>
-
-          <label className="space-y-2 text-sm font-medium text-slate-700">
-            <span>Số điện thoại nhận hàng (phục vụ phân tích địa chỉ)</span>
-            <input
-              value={addressPhone}
-              onChange={(event) => setAddressPhone(event.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
-              placeholder="Ví dụ: 098xxxxxxx"
-            />
           </label>
 
           <label className="space-y-2 text-sm font-medium text-slate-700">
