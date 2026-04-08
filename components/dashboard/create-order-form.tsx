@@ -17,6 +17,7 @@ interface OrderDraftItem {
   resolvedLink: string;
   productName: string;
   shopId: string;
+  quantity: number;
   variantOptions: string[];
   selectedVariant: string;
   analysisError: string;
@@ -31,6 +32,7 @@ function createEmptyOrderItem(): OrderDraftItem {
     resolvedLink: "",
     productName: "",
     shopId: "",
+    quantity: 1,
     variantOptions: [],
     selectedVariant: "",
     analysisError: "",
@@ -57,7 +59,6 @@ export function CreateOrderForm({
 
   const [orderItems, setOrderItems] = useState<OrderDraftItem[]>([createEmptyOrderItem()]);
   const [selectedVoucherCode, setSelectedVoucherCode] = useState(initialVoucherCode);
-  const [quantity, setQuantity] = useState(2);
   const [note, setNote] = useState("");
   const [address, setAddress] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
@@ -70,14 +71,19 @@ export function CreateOrderForm({
     [activeVoucherConfigs, selectedVoucherCode]
   );
 
-  const total = useMemo(
-    () => calculateVoucherOrderTotal(selectedVoucher?.unitPrice ?? 0, quantity),
-    [selectedVoucher, quantity]
-  );
-
   const nonEmptyItems = useMemo(
     () => orderItems.filter((item) => !isEmptyDraftItem(item)),
     [orderItems]
+  );
+
+  const totalQuantity = useMemo(
+    () => nonEmptyItems.reduce((sum, item) => sum + Math.max(1, item.quantity || 1), 0),
+    [nonEmptyItems]
+  );
+
+  const total = useMemo(
+    () => calculateVoucherOrderTotal(selectedVoucher?.unitPrice ?? 0, totalQuantity),
+    [selectedVoucher, totalQuantity]
   );
 
   const activeVoucherCount = activeVoucherConfigs.length;
@@ -270,6 +276,11 @@ export function CreateOrderForm({
         addToast("error", `Dòng ${index + 1} chưa nhập phân loại sản phẩm.`);
         return;
       }
+
+      if (!Number.isFinite(item.quantity) || item.quantity < 1) {
+        addToast("error", `Dòng ${index + 1} cần số lượng hợp lệ (>= 1).`);
+        return;
+      }
     }
 
     const normalizedAddress = note.trim()
@@ -285,9 +296,9 @@ export function CreateOrderForm({
         productName: item.productName.trim(),
         shopId: item.shopId.trim(),
         variant: item.selectedVariant.trim(),
+        quantity: Math.max(1, Number(item.quantity) || 1),
       })),
       voucherCode: selectedVoucher.code,
-      quantity: Math.max(1, quantity),
       phone: note.trim() || "Không cung cấp",
       address: normalizedAddress,
       note: note.trim(),
@@ -310,7 +321,6 @@ export function CreateOrderForm({
       addToast("success", "Đã tạo đơn hàng thành công.");
       setOrderItems([createEmptyOrderItem()]);
       setSelectedVoucherCode(initialVoucherCode);
-      setQuantity(2);
       setNote("");
       setAddress("");
       setAddressSuggestions([]);
@@ -358,13 +368,13 @@ export function CreateOrderForm({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-slate-900">Thiết lập đơn chung</p>
-                <p className="mt-1 text-xs text-slate-500">Voucher và số lượng chỉ chọn một lần cho toàn bộ link.</p>
+                <p className="mt-1 text-xs text-slate-500">Voucher chọn một lần cho toàn bộ link. Số lượng nhập riêng ở từng sản phẩm.</p>
               </div>
               <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
                 Đang mở: {activeVoucherCount}/{voucherConfigs.length}
               </span>
             </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid gap-4">
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 <span>Loại voucher</span>
                 <select
@@ -380,17 +390,6 @@ export function CreateOrderForm({
                     </option>
                   ))}
                 </select>
-              </label>
-
-              <label className="space-y-2 text-sm font-medium text-slate-700">
-                <span>Số lượng</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={quantity}
-                  onChange={(event) => setQuantity(Math.max(1, Number(event.target.value) || 1))}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
-                />
               </label>
             </div>
           </div>
@@ -436,6 +435,20 @@ export function CreateOrderForm({
                       {item.isAnalyzing ? "Đang phân tích..." : "Phân tích link"}
                     </button>
                     {item.analysisError ? <p className="text-sm text-rose-600">{item.analysisError}</p> : null}
+                  </label>
+
+                  <label className="space-y-2 text-sm font-medium text-slate-700 lg:col-span-2">
+                    <span>Số lượng sản phẩm này</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={item.quantity}
+                      onChange={(event) => updateOrderItem(item.id, (current) => ({
+                        ...current,
+                        quantity: Math.max(1, Number(event.target.value) || 1),
+                      }))}
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+                    />
                   </label>
 
                   {item.productName ? (
@@ -573,8 +586,8 @@ export function CreateOrderForm({
             <p className="mt-1 text-2xl font-semibold text-slate-900">{nonEmptyItems.length}</p>
           </div>
           <div className="rounded-2xl bg-white/80 p-4">
-            <p className="text-sm text-slate-500">Số lượng đơn</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{quantity}</p>
+            <p className="text-sm text-slate-500">Tổng số lượng sản phẩm</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900">{totalQuantity}</p>
           </div>
           <div className="rounded-2xl bg-amber-50 p-4">
             <p className="text-sm text-amber-700">Tổng tiền đơn</p>

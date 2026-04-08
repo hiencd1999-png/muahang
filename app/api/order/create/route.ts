@@ -14,11 +14,12 @@ const batchItemShape = {
   productName: z.string().trim().min(1),
   shopId: z.string().trim().min(1),
   variant: z.string().trim().min(1),
+  quantity: z.number().int().min(1).max(100).optional(),
 };
 
 const sharedShape = {
   voucherCode: z.string().trim().min(2).max(60),
-  quantity: z.number().int().min(1).max(100),
+  quantity: z.number().int().min(1).max(100).optional(),
   phone: z.string().trim().min(1).optional(),
   address: z.string().trim().min(8),
   note: z.string().trim().optional(),
@@ -39,19 +40,33 @@ const legacySchema = z.object({
   variant: z.string().trim().min(1),
 });
 
-type NormalizedOrderRequest = z.infer<typeof batchSchema>;
+type NormalizedOrderRequest = {
+  voucherCode: string;
+  phone?: string;
+  address: string;
+  note?: string;
+  items: Array<z.infer<typeof batchItemSchema> & { quantity: number }>;
+};
 
 type PreparedItem = {
   canonicalProductLink: string;
   productName: string;
   shopId: string;
   variant: string;
+  quantity: number;
 };
 
 function normalizeOrderRequest(body: unknown): NormalizedOrderRequest | null {
   const batchParsed = batchSchema.safeParse(body);
   if (batchParsed.success) {
-    return batchParsed.data;
+    const fallbackQuantity = batchParsed.data.quantity ?? 1;
+    return {
+      ...batchParsed.data,
+      items: batchParsed.data.items.map((item) => ({
+        ...item,
+        quantity: item.quantity ?? fallbackQuantity,
+      })),
+    };
   }
 
   const legacyParsed = legacySchema.safeParse(body);
@@ -69,10 +84,10 @@ function normalizeOrderRequest(body: unknown): NormalizedOrderRequest | null {
         productName,
         shopId,
         variant,
+        quantity: quantity ?? 1,
       },
     ],
     voucherCode,
-    quantity,
     phone,
     address,
     note,
@@ -88,7 +103,7 @@ function mergeOrderNote(note: string | undefined, items: PreparedItem[]) {
 
   if (items.length > 1) {
     const detailLines = items.map(
-      (item, index) => `${index + 1}. ${item.canonicalProductLink} | Phân loại: ${item.variant}`
+      (item, index) => `${index + 1}. ${item.canonicalProductLink} | Phân loại: ${item.variant} | SL: ${item.quantity}`
     );
     parts.push(`Chi tiết link:\n${detailLines.join("\n")}`);
   }
@@ -142,10 +157,13 @@ export async function POST(request: Request) {
         productName: item.productName,
         shopId: item.shopId,
         variant: item.variant,
+        quantity: item.quantity,
       };
     });
 
-    const total = calculateVoucherOrderTotal(selectedVoucher.unitPrice, parsed.quantity);
+    const totalQuantity = preparedItems.reduce((sum, item) => sum + item.quantity, 0);
+    // Tổng tiền chỉ tính giá của 1 đơn, không nhân số lượng
+    const total = selectedVoucher.unitPrice;
 
     if (result.user.balance < total) {
       return NextResponse.json({ error: "Số dư không đủ để tạo đơn." }, { status: 400 });
@@ -153,7 +171,7 @@ export async function POST(request: Request) {
 
     const primaryItem = preparedItems[0];
     const mergedNote = mergeOrderNote(parsed.note, preparedItems);
-    const mergedVariant = preparedItems.map((item, index) => `${index + 1}. ${item.variant}`).join(" | ");
+    const mergedVariant = preparedItems.map((item, index) => `${index + 1}. ${item.variant} (SL ${item.quantity})`).join(" | ");
 
     const newOrder = await prisma.$transaction(async (tx) => {
       await tx.user.update({
@@ -168,7 +186,7 @@ export async function POST(request: Request) {
           productName: preparedItems.length === 1 ? primaryItem.productName : `Đơn gộp ${preparedItems.length} link Shopee`,
           shopId: preparedItems.length === 1 ? primaryItem.shopId : null,
           variant: mergedVariant,
-          quantity: parsed.quantity,
+          quantity: totalQuantity,
           phone: parsed.phone?.trim() || "Không cung cấp",
           address: parsed.address,
           note: mergedNote,
@@ -180,7 +198,12 @@ export async function POST(request: Request) {
         },
       });
 
-      const orderNoteParts = ["Tạo đơn Shopee", `Voucher: ${selectedVoucher.label}`, `Số link: ${preparedItems.length}`];
+      const orderNoteParts = [
+        "Tạo đơn Shopee",
+        `Voucher: ${selectedVoucher.label}`,
+        `Số link: ${preparedItems.length}`,
+        `Tổng SL: ${totalQuantity}`,
+      ];
       await tx.transaction.create({
         data: {
           userId: result.user.id,

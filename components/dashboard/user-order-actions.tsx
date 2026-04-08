@@ -35,7 +35,7 @@ interface OrderData {
   } | null;
 }
 
-export function UserOrderActions({ orderId, status }: { orderId: number; status: string }) {
+export function UserOrderActions({ orderId, status, buttonClassName }: { orderId: number; status: string; buttonClassName?: string }) {
   const router = useRouter();
   const { addToast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -207,12 +207,14 @@ export function UserOrderActions({ orderId, status }: { orderId: number; status:
 
   return (
     <>
-      <div className="flex items-center gap-2 whitespace-nowrap overflow-x-auto">
+      <div className="flex flex-row gap-2 flex-nowrap items-center">
         <button
           type="button"
           onClick={handleViewDetails}
           disabled={isLoadingDetails}
-          className="rounded-xl bg-amber-600 hover:bg-amber-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors inline-flex items-center gap-1.5"
+          className={
+            `rounded-xl bg-amber-600 hover:bg-amber-700 font-semibold text-white disabled:opacity-60 transition-colors inline-flex items-center gap-1.5 ${buttonClassName ?? 'px-3 py-2 text-xs'}`
+          }
           title="Xem chi tiết"
         >
           {isLoadingDetails ? "..." : <><Eye size={14} /> Chi tiết</>}
@@ -222,7 +224,9 @@ export function UserOrderActions({ orderId, status }: { orderId: number; status:
             type="button"
             onClick={handleOpenEditModal}
             disabled={isLoadingDetails || isCanceling}
-            className="rounded-xl bg-slate-700 hover:bg-slate-800 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors inline-flex items-center gap-1.5"
+            className={
+              `rounded-xl bg-slate-700 hover:bg-slate-800 font-semibold text-white disabled:opacity-60 transition-colors inline-flex items-center gap-1.5 ${buttonClassName ?? 'px-3 py-2 text-xs'}`
+            }
             title="Sửa thông tin đơn"
           >
             <Pencil size={13} /> Sửa đơn
@@ -233,7 +237,9 @@ export function UserOrderActions({ orderId, status }: { orderId: number; status:
             type="button"
             onClick={handleUserCancel}
             disabled={isCanceling || isLoadingDetails}
-            className="rounded-xl bg-rose-600 hover:bg-rose-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
+            className={
+              `rounded-xl bg-rose-600 hover:bg-rose-700 font-semibold text-white disabled:opacity-60 transition-colors ${buttonClassName ?? 'px-3 py-2 text-xs'}`
+            }
             title="Hủy đơn"
           >
             {isCanceling ? "..." : "Hủy đơn"}

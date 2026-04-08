@@ -5,7 +5,7 @@ import { formatCurrency } from "@/lib/format";
 import { getVoucherLabel } from "@/lib/voucher";
 import { OrderTimeline } from "./order-timeline";
 import { useToast } from "./toast";
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { Mail, Phone, Clock } from "lucide-react";
 
 interface Order {
   id: number;
@@ -112,10 +112,10 @@ export function OrderDetailModalContent({
   const responsibleAdminName = responsibleAdmin?.fullName || responsibleAdmin?.username;
 
   return (
-    <div className="min-w-0 space-y-6 overflow-x-hidden">
+    <div className="min-w-0 max-w-full space-y-6 overflow-x-hidden">
       {/* Order Header */}
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
-        <div className="flex items-start justify-between">
+      <div className="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4 dark:border-amber-800 dark:from-amber-900/20 dark:to-orange-900/20">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
               Mã đơn hàng
@@ -124,7 +124,7 @@ export function OrderDetailModalContent({
               #{order.id}
             </p>
           </div>
-          <div className="text-right">
+          <div className="sm:text-right">
             <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
               Trạng thái
             </p>
@@ -163,8 +163,8 @@ export function OrderDetailModalContent({
       </div>
 
       {/* Order Details */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="min-w-0 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
           <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
             Tổng tiền
           </p>
@@ -172,7 +172,7 @@ export function OrderDetailModalContent({
             {formatCurrency(order.total)}
           </p>
         </div>
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+        <div className="min-w-0 rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
           <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
             Số lượng
           </p>
@@ -180,11 +180,11 @@ export function OrderDetailModalContent({
             {order.quantity}
           </p>
         </div>
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+        <div className="min-w-0 rounded-xl bg-gray-50 p-4 dark:bg-gray-800 sm:col-span-2 xl:col-span-1">
           <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
             Voucher
           </p>
-          <p className="mt-1 text-lg font-bold text-gray-900 dark:text-white">
+          <p className="mt-1 break-words text-lg font-bold text-gray-900 dark:text-white">
             {voucherLabel}
           </p>
           {typeof order.unitPrice === "number" ? (
@@ -208,86 +208,111 @@ export function OrderDetailModalContent({
       </div>
 
       {/* Product & Delivery Information */}
-      <div className="space-y-4 text-sm">
-        <div>
-          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Thông tin sản phẩm</h3>
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
-            <div className="space-y-4">
+      <div className="grid gap-4 text-sm lg:grid-cols-2">
+        <div className="min-w-0">
+          <h3 className="mb-3 text-sm font-bold text-gray-900 dark:text-white">Thông tin sản phẩm</h3>
+          <div className="min-w-0 space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
+            <div>
+              <p className="font-medium text-gray-600 dark:text-gray-400">Tên sản phẩm</p>
+              <p className="mt-1 break-words font-semibold">{order.productName}</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 font-medium">Tên sản phẩm</p>
-                <p className="mt-1 font-semibold">{order.productName}</p>
+                <p className="font-medium text-gray-600 dark:text-gray-400">Loại voucher</p>
+                <p className="mt-1 break-words">{voucherLabel}</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 font-medium">Shop ID</p>
-                  <p className="mt-1">{order.shopId || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 font-medium">Phân loại</p>
-                  <p className="mt-1">{order.variant || "Mặc định"}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 font-medium">Loại voucher</p>
-                  <p className="mt-1">{voucherLabel}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 font-medium">Giá áp dụng</p>
-                  <p className="mt-1">{typeof order.unitPrice === "number" ? formatCurrency(order.unitPrice) : "-"}</p>
-                </div>
-              </div>
-              {order.trackingNo ? (
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 font-medium">Mã vận đơn</p>
-                  <p className="mt-1">{order.trackingNo}</p>
-                </div>
-              ) : null}
               <div>
-                <p className="text-gray-600 dark:text-gray-400 font-medium">Link Shopee sau phân tích</p>
-                <a
-                  href={order.productLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 block text-sm text-amber-600 dark:text-amber-400 hover:underline break-words"
-                >
-                  {order.productLink}
-                </a>
+                <p className="font-medium text-gray-600 dark:text-gray-400">Giá áp dụng</p>
+                <p className="mt-1">{typeof order.unitPrice === "number" ? formatCurrency(order.unitPrice) : "-"}</p>
+              </div>
+            </div>
+            {order.trackingNo ? (
+              <div>
+                <p className="font-medium text-gray-600 dark:text-gray-400">Mã vận đơn</p>
+                <p className="mt-1 break-all">{order.trackingNo}</p>
+              </div>
+            ) : null}
+            <div>
+              <p className="font-medium text-gray-600 dark:text-gray-400">Danh sách link Shopee sau phân tích</p>
+              <div className="mt-2 space-y-1">
+                {(() => {
+                  // Tách các link, phân loại, số lượng từ order.variant và order.note
+                  // Ưu tiên lấy từ order.note nếu có dòng "Chi tiết link:" (theo logic API)
+                  const detailLines: string[] = [];
+                  if (order.note && order.note.includes('Chi tiết link:')) {
+                    const match = order.note.match(/Chi tiết link:\n([\s\S]*)/);
+                    if (match) {
+                      detailLines.push(...match[1].split('\n').map(l => l.trim()).filter(Boolean));
+                    }
+                  }
+                  // Nếu không có detailLines, fallback lấy từ variant (dạng "1. Phân loại (SL x)")
+                  if (detailLines.length === 0 && order.variant) {
+                    detailLines.push(...order.variant.split('|').map(l => l.trim()).filter(Boolean));
+                  }
+                  // Nếu vẫn không có, chỉ hiện 1 link
+                  if (detailLines.length === 0) {
+                    detailLines.push(`${order.productLink} | Phân loại: ${order.variant || 'Mặc định'} | SL: ${order.quantity}`);
+                  }
+                  return detailLines.map((line, idx) => {
+                    // Tìm link, phân loại, số lượng trong từng dòng
+                    // Dòng chuẩn: "1. https://... | Phân loại: ... | SL: ..."
+                    // Nếu không đúng chuẩn thì vẫn render nguyên dòng
+                    const parts = line.split('|').map(s => s.trim());
+                    let link = '', variant = '', qty = '';
+                    if (parts.length >= 3) {
+                      // Có đủ 3 phần
+                      link = parts[0].replace(/^\d+\.\s*/, '');
+                      variant = parts[1].replace(/^Phân loại:?\s*/, '');
+                      qty = parts[2].replace(/^SL:?\s*/, '');
+                    } else {
+                      link = line;
+                    }
+                    return (
+                      <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                        <span className="font-mono text-xs text-slate-800 dark:text-slate-200">
+                          {`${idx + 1}. `}
+                          <a href={link} target="_blank" rel="noopener noreferrer" className="text-amber-700 hover:underline break-all">
+                            {link}
+                          </a>
+                        </span>
+                        {variant && (
+                          <span className="text-xs text-slate-600 dark:text-slate-300">| Phân loại: {variant}</span>
+                        )}
+                        {qty && (
+                          <span className="text-xs text-slate-600 dark:text-slate-300">| SL: {qty}</span>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>
         </div>
 
-        <div>
-          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Thông tin giao hàng</h3>
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
-            <div className="space-y-4">
-              <div>
-                <p className="text-gray-600 dark:text-gray-400 font-medium">Số điện thoại</p>
-                <a href={`tel:${order.phone}`} className="mt-1 block text-amber-600 dark:text-amber-400 hover:underline">
-                  {order.phone}
-                </a>
+        <div className="min-w-0">
+          <h3 className="mb-3 text-sm font-bold text-gray-900 dark:text-white">Thông tin giao hàng</h3>
+          <div className="min-w-0 space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
+            <div>
+              <p className="font-medium text-gray-600 dark:text-gray-400">Số điện thoại</p>
+              <a href={`tel:${order.phone}`} className="mt-1 block break-words text-amber-600 hover:underline dark:text-amber-400">
+                {order.phone}
+              </a>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600 dark:text-gray-400">Địa chỉ</p>
+              <p className="mt-1 whitespace-pre-wrap break-words">{order.address}</p>
+            </div>
+            {/* Ẩn ghi chú khỏi dashboard user, chỉ admin xem được */}
+            {order.status === "CANCELED" && cancelReason ? (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-900 dark:bg-rose-950/40">
+                <p className="font-medium text-rose-700 dark:text-rose-300">Lý do hủy đơn</p>
+                <p className="mt-1 break-words text-rose-900 dark:text-rose-200">{cancelReason}</p>
               </div>
-              <div>
-                <p className="text-gray-600 dark:text-gray-400 font-medium">Địa chỉ</p>
-                <p className="mt-1 whitespace-pre-wrap">{order.address}</p>
-              </div>
-              {cleanNote ? (
-                <div>
-                  <p className="text-gray-600 dark:text-gray-400 font-medium">Ghi chú</p>
-                  <p className="mt-1 whitespace-pre-wrap">{cleanNote}</p>
-                </div>
-              ) : null}
-              {order.status === "CANCELED" && cancelReason ? (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-900 dark:bg-rose-950/40">
-                  <p className="text-rose-700 dark:text-rose-300 font-medium">Lý do hủy đơn</p>
-                  <p className="mt-1 text-rose-900 dark:text-rose-200">{cancelReason}</p>
-                </div>
-              ) : null}
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <Clock size={16} />
-                <span>Ngày tạo: {formattedDate}</span>
-              </div>
+            ) : null}
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <Clock size={16} />
+              <span>Ngày tạo: {formattedDate}</span>
             </div>
           </div>
         </div>

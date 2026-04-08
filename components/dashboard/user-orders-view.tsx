@@ -191,13 +191,12 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
         </div>
       ) : null}
 
-      <div className="mt-5">
-        {/* Desktop Table */}
-        <div className="hidden lg:block overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-          <table className="min-w-full text-left text-sm">
+      <div className="mt-5 space-y-4">
+        <div className="hidden lg:block rounded-[1.5rem] border border-slate-200 bg-white shadow-sm overflow-x-auto">
+          <table className="min-w-[900px] table-fixed text-left text-sm">
             <thead className="text-slate-500 border-b border-slate-200/70">
               <tr>
-                <th className="pb-3 pl-4 w-10">
+                <th className="w-10 pb-3 pl-4">
                   <input
                     type="checkbox"
                     checked={orders.length > 0 && selectedIds.length === orders.length}
@@ -205,14 +204,12 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                     className="rounded"
                   />
                 </th>
-                <th className="pb-3 pl-0">ID</th>
-                <th className="pb-3">Sản phẩm</th>
-                <th className="pb-3">Shop ID</th>
-                <th className="pb-3">SL</th>
-                <th className="pb-3">Tổng tiền</th>
-                <th className="pb-3">Trạng thái</th>
-                <th className="pb-3">Ngày</th>
-                <th className="pb-3">Hành động</th>
+                <th className="w-20 pb-3 pl-0">ID</th>
+                <th className="w-[40%] pb-3">Sản phẩm</th>
+                <th className="w-[14%] pb-3">Tổng tiền</th>
+                <th className="w-[14%] pb-3">Trạng thái</th>
+                <th className="w-[14%] pb-3">Ngày</th>
+                <th className="w-[220px] pb-3">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200/70">
@@ -233,17 +230,17 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                     />
                   </td>
                   <td className="py-4 pl-0 font-medium text-slate-900 whitespace-nowrap">#{order.id}</td>
-                  <td className="py-4 text-sm text-slate-600 max-w-[250px]">
-                    <p className="truncate">{order.productName || order.productLink}</p>
+                  <td className="py-4 pr-3 text-sm text-slate-600">
+                    <p className="line-clamp-2 break-words">{order.productName || order.productLink}</p>
                     <p className="mt-1 text-xs text-amber-700">{order.voucherLabel || "Chưa có voucher"}</p>
                   </td>
-                  <td className="py-4 text-slate-600 whitespace-nowrap">{order.shopId || "-"}</td>
-                  <td className="py-4 text-slate-700">{order.quantity}</td>
-                  <td className="py-4 text-slate-700 font-semibold">{formatCurrency(order.total)}</td>
+                  <td className="py-4 pr-3 text-slate-700 font-semibold">{formatCurrency(order.total)}</td>
                   <td className="py-4"><StatusPill status={order.status} /></td>
-                  <td className="py-4 text-slate-600 text-xs whitespace-nowrap">{formatDate(order.createdAt)}</td>
-                  <td className="py-4">
-                    <UserOrderActions orderId={order.id} status={order.status} />
+                  <td className="py-4 pr-3 text-xs text-slate-600">{formatDate(order.createdAt)}</td>
+                  <td className="py-4 align-middle">
+                    <div className="flex flex-row gap-2 flex-nowrap items-center h-full min-h-[40px]">
+                      <UserOrderActions orderId={order.id} status={order.status} buttonClassName="min-w-[90px] h-10 px-3 py-2 text-xs" />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -251,43 +248,57 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
           </table>
         </div>
 
-        {/* Mobile Cards */}
         <div className="lg:hidden space-y-4">
           {orders.map((order) => (
             <div
               key={order.id}
               data-order-id={order.id}
-              className={`rounded-xl border p-4 transition ${
+              className={`rounded-2xl border p-4 transition ${
                 focusedOrderId === order.id
                   ? "border-amber-300 bg-amber-50/80"
                   : "border-slate-200/70 bg-white/70"
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-semibold text-slate-900">#{order.id}</span>
-                    <StatusPill status={order.status} />
-                  </div>
-                  <p className="text-sm text-slate-600 truncate mb-2">{order.productName || order.productLink}</p>
-                  <p className="mb-2 text-xs font-medium text-amber-700">{order.voucherLabel || "Chưa có voucher"}</p>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 mb-3">
-                    <div>Shop ID: {order.shopId || "-"}</div>
-                    <div>SL: {order.quantity}</div>
-                    <div className="col-span-2">Tổng: {formatCurrency(order.total)}</div>
-                    <div className="col-span-2 text-slate-500">{formatDate(order.createdAt)}</div>
-                  </div>
-                  <label className="mb-3 inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(order.id)}
-                      onChange={() => toggleSelect(order.id)}
-                      className="rounded"
-                    />
-                    Chọn đơn này
-                  </label>
-                  <UserOrderActions orderId={order.id} status={order.status} />
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-900">#{order.id}</span>
+                  <StatusPill status={order.status} />
                 </div>
+                <label className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(order.id)}
+                    onChange={() => toggleSelect(order.id)}
+                    className="rounded"
+                  />
+                  Chọn
+                </label>
+              </div>
+
+              <p className="mt-3 text-sm text-slate-700 break-words">{order.productName || order.productLink}</p>
+              <p className="mt-1 text-xs font-medium text-amber-700">{order.voucherLabel || "Chưa có voucher"}</p>
+
+              <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 text-xs text-slate-700">
+                <div>
+                  <p className="text-slate-500">Shop ID</p>
+                  <p className="mt-1 break-words">{order.shopId || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500">Số lượng</p>
+                  <p className="mt-1">{order.quantity}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500">Tổng tiền</p>
+                  <p className="mt-1 font-semibold">{formatCurrency(order.total)}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500">Ngày tạo</p>
+                  <p className="mt-1">{formatDate(order.createdAt)}</p>
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <UserOrderActions orderId={order.id} status={order.status} />
               </div>
             </div>
           ))}
