@@ -64,6 +64,43 @@ export function OrderDetailModalContent({
   const [isSavingOrderInfo, setIsSavingOrderInfo] = useState(false);
   const { addToast } = useToast();
 
+  const [shopeeTracking, setShopeeTracking] = useState<any[] | null>(null);
+  const [isFetchingTracking, setIsFetchingTracking] = useState(false);
+  const [trackingFetchError, setTrackingFetchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!order.spcCookie) return;
+    
+    let isMounted = true;
+    const fetchTracking = async () => {
+      if (isMounted && !shopeeTracking) setIsFetchingTracking(true);
+      try {
+        const res = await fetch(`/api/shopee/tracking-sync?orderId=${order.id}`);
+        const data = await res.json();
+        if (isMounted) {
+          if (res.ok && data.tracking) {
+            setShopeeTracking(data.tracking);
+            setTrackingFetchError(null);
+          } else {
+            setTrackingFetchError(data.error || "Lỗi khi lấy thông tin tracking");
+          }
+        }
+      } catch (err) {
+        if (isMounted) setTrackingFetchError("Hệ thống lỗi khi fetch tracking.");
+      } finally {
+        if (isMounted) setIsFetchingTracking(false);
+      }
+    };
+
+    fetchTracking();
+    const intervalId = setInterval(fetchTracking, 5 * 60 * 1000); // 5 minutes
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [order.spcCookie, order.id]);
+
   useEffect(() => {
     setAdminForm({
       spcCookie: order.spcCookie || "",
@@ -208,7 +245,7 @@ export function OrderDetailModalContent({
       </div>
 
       {/* Product & Delivery Information */}
-      <div className="grid gap-4 text-sm lg:grid-cols-2">
+      <div className="flex flex-col gap-6 text-sm">
         <div className="min-w-0">
           <h3 className="mb-3 text-sm font-bold text-gray-900 dark:text-white">Thông tin sản phẩm</h3>
           <div className="min-w-0 space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
@@ -318,9 +355,67 @@ export function OrderDetailModalContent({
         </div>
       </div>
 
+      {/* Shopee Tracking */}
+      {order.spcCookie && (
+        <div className="min-w-0 max-w-full overflow-hidden">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+              Thông tin vận chuyển Shopee
+            </h3>
+            {isFetchingTracking && <span className="text-xs text-blue-500 animate-pulse">Đang đồng bộ...</span>}
+          </div>
+          {trackingFetchError && (
+            <p className="text-xs italic text-red-500 mb-2">{trackingFetchError}</p>
+          )}
+          {!shopeeTracking && !isFetchingTracking && !trackingFetchError && (
+            <p className="text-xs text-gray-500">Chưa có thông tin tracking.</p>
+          )}
+          {shopeeTracking && shopeeTracking.length === 0 && (
+            <p className="text-xs text-gray-500">Cookie không tìm thấy đơn hàng nào.</p>
+          )}
+          {shopeeTracking && shopeeTracking.length > 0 && (
+            <div className="space-y-4">
+              {shopeeTracking.map((trk, idx) => (
+                <div key={idx} className="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-900/50 dark:bg-blue-900/20 text-sm break-words overflow-hidden">
+                  <div className="grid gap-2 mb-4">
+                    <p><strong>Order ID:</strong> <span className="font-mono text-blue-700 dark:text-blue-400">{trk.order_id}</span></p>
+                    <p><strong>Mã VĐ:</strong> <span className="font-mono">{trk.tracking_number || "Chưa có"}</span></p>
+                    <p><strong>Trạng thái:</strong> {trk.description}</p>
+                    <p><strong>Người nhận:</strong> {trk.shipping_name} {trk.shipping_phone ? `| ${trk.shipping_phone}` : ""}</p>
+                    <p><strong>Địa chỉ:</strong> {trk.shipping_address}</p>
+                    <p><strong>Sản phẩm:</strong> <span className="italic">{trk.name}</span></p>
+                    {trk.model_name && <p><strong>Mẫu:</strong> <span className="text-gray-600">{trk.model_name}</span></p>}
+                    {(trk.driver_name || trk.driver_phone) && (
+                      <p><strong>Tài xế:</strong> {trk.driver_name} {trk.driver_phone ? `| ${trk.driver_phone}` : ""}</p>
+                    )}
+                    {trk.logistics?.carrier_name && (
+                      <p><strong>ĐVVC:</strong> {trk.logistics.carrier_name}</p>
+                    )}
+                  </div>
+                  {trk.logistics?.history?.length > 0 && (
+                    <div className="mt-4 border-t border-blue-200 dark:border-blue-800 pt-3">
+                      <p className="font-semibold text-xs mb-2 text-slate-700 dark:text-slate-300">Lịch sử giao hàng (Mới nhất):</p>
+                      <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                        {trk.logistics.history.map((h: any, hIdx: number) => (
+                          <div key={hIdx} className="text-xs text-slate-600 dark:text-slate-400 pl-3 border-l-2 border-slate-300 dark:border-slate-700 pb-2">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">{h.ctime_text}</span>
+                            <p className="mt-0.5">{h.description}</p>
+                            {h.driver_name && <span className="block mt-0.5 opacity-80">Tài xế: {h.driver_name} - {h.driver_phone}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Customer Information */}
       {user && (
-        <div>
+        <div className="min-w-0 max-w-full">
           <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">
             Thông tin khách hàng
           </h3>

@@ -10,7 +10,6 @@ const updateOrderSchema = z.object({
   phone: z.string().trim().min(8),
   address: z.string().trim().min(8),
   variant: z.string().trim().min(1).max(120),
-  note: z.string().trim().max(500).optional(),
 });
 
 export async function PATCH(
@@ -58,7 +57,6 @@ export async function PATCH(
       phone: parsed.data.phone,
       address: parsed.data.address,
       variant: parsed.data.variant,
-      note: parsed.data.note,
     },
   });
 

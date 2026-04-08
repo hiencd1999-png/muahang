@@ -46,7 +46,6 @@ export function UserOrderActions({ orderId, status, buttonClassName }: { orderId
     phone: "",
     address: "",
     variant: "",
-    note: "",
   });
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
@@ -134,7 +133,6 @@ export function UserOrderActions({ orderId, status, buttonClassName }: { orderId
         phone: mapped.phone,
         address: mapped.address,
         variant: mapped.variant || "",
-        note: mapped.note || "",
       });
       setIsEditModalOpen(true);
     } catch (error) {
@@ -159,7 +157,6 @@ export function UserOrderActions({ orderId, status, buttonClassName }: { orderId
           phone: editForm.phone,
           address: editForm.address,
           variant: editForm.variant,
-          note: editForm.note || undefined,
         }),
       });
 
@@ -300,16 +297,6 @@ export function UserOrderActions({ orderId, status, buttonClassName }: { orderId
                 value={editForm.address}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, address: e.target.value }))}
                 rows={3}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2"
-              />
-            </label>
-
-            <label className="block space-y-1 text-sm font-medium text-slate-700">
-              <span>Ghi chú</span>
-              <textarea
-                value={editForm.note}
-                onChange={(e) => setEditForm((prev) => ({ ...prev, note: e.target.value }))}
-                rows={2}
                 className="w-full rounded-xl border border-slate-300 px-3 py-2"
               />
             </label>
