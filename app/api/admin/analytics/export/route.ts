@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
+  const isSpAdmin = result.user.role === "SPADMIN";
   const searchParams = request.nextUrl.searchParams;
   const startParam = searchParams.get("from");
   const endParam = searchParams.get("to");
@@ -18,20 +19,28 @@ export async function GET(request: NextRequest) {
   const startDate = new Date(`${startParam}T00:00:00`);
   const endDate = new Date(`${endParam}T23:59:59.999`);
 
-  const ordersInMonth = await prisma.order.findMany({
-    where: {
-      createdAt: {
-        gte: startDate,
-        lt: endDate,
-      },
+  const orderWhereCondition: any = {
+    createdAt: {
+      gte: startDate,
+      lt: endDate,
     },
+  };
+
+  if (!isSpAdmin) {
+    orderWhereCondition.approvedByAdminId = result.user.id;
+  }
+
+  const ordersInMonth = await prisma.order.findMany({
+    where: orderWhereCondition,
     include: {
       user: { select: { username: true } },
     }
   });
 
   const admins = await prisma.user.findMany({
-    where: { role: { in: ["ADMIN", "SPADMIN"] } },
+    where: isSpAdmin 
+      ? { role: { in: ["ADMIN", "SPADMIN"] } }
+      : { id: result.user.id },
     select: { id: true, username: true, fullName: true },
   });
 
@@ -63,7 +72,7 @@ export async function GET(request: NextRequest) {
       adminComm += Math.floor(o.total * 0.95);
     });
 
-    return {
+    const statRow: any = {
       "Tên Admin": admin.fullName || admin.username,
       "Tài khoản Admin": admin.username,
       "Đơn nhận phân công": adminOrders.length,
@@ -71,8 +80,13 @@ export async function GET(request: NextRequest) {
       "Đơn bị huỷ bỏ": canceledAdminOrders.length,
       "Tổng doanh thu (VNĐ)": adminRev,
       "Hoa hồng Admin 95% (VNĐ)": adminComm,
-      "Lợi nhuận hệ thống SPAdmin 5% (VNĐ)": adminRev - adminComm
     };
+
+    if (isSpAdmin) {
+      statRow["Lợi nhuận hệ thống SPAdmin 5% (VNĐ)"] = adminRev - adminComm;
+    }
+
+    return statRow;
   }).sort((a, b) => b["Tổng doanh thu (VNĐ)"] - a["Tổng doanh thu (VNĐ)"]);
 
   // Create workbook
@@ -86,9 +100,18 @@ export async function GET(request: NextRequest) {
     { "Chỉ số": "Đơn thành công", "Giá trị": deliveredOrders.length },
     { "Chỉ số": "Đơn huỷ", "Giá trị": canceledOrders.length },
     { "Chỉ số": "Doanh thu thành công (VNĐ)", "Giá trị": totalRevenue },
-    { "Chỉ số": "Tổng hoa hồng Admin (VNĐ)", "Giá trị": totalAdminCommission },
-    { "Chỉ số": "Tổng Lợi nhuận SPAdmin (VNĐ)", "Giá trị": totalSystemProfit },
   ];
+  
+  if (isSpAdmin) {
+    generalStats.push(
+      { "Chỉ số": "Tổng hoa hồng Admin (VNĐ)", "Giá trị": totalAdminCommission },
+      { "Chỉ số": "Tổng Lợi nhuận SPAdmin (VNĐ)", "Giá trị": totalSystemProfit }
+    );
+  } else {
+    generalStats.push(
+      { "Chỉ số": "Tổng Hoa hồng Nhận được (95%)", "Giá trị": totalAdminCommission }
+    );
+  }
   const wsGeneral = xlsx.utils.json_to_sheet(generalStats);
   xlsx.utils.book_append_sheet(wb, wsGeneral, "Tổng quan");
 
@@ -108,7 +131,7 @@ export async function GET(request: NextRequest) {
           profit = o.total - commission;
       }
 
-      return {
+      const orderRow: any = {
           "Mã Đơn": o.id,
           "Ngày tạo": o.createdAt.toLocaleString("vi-VN"),
           "Khách hàng": o.user?.username || "",
@@ -116,10 +139,16 @@ export async function GET(request: NextRequest) {
           "Trạng thái": o.status,
           "Giá trị đơn (VNĐ)": o.total,
           "Hoa hồng 95% (VNĐ)": commission,
-          "Lợi nhuận SPAdmin 5% (VNĐ)": profit,
-          "Voucher áp dụng": o.voucherLabel || "",
-          "Mã vận đơn": o.trackingNo || "",
+      };
+
+      if (isSpAdmin) {
+          orderRow["Lợi nhuận SPAdmin 5% (VNĐ)"] = profit;
       }
+
+      orderRow["Voucher áp dụng"] = o.voucherLabel || "";
+      orderRow["Mã vận đơn"] = o.trackingNo || "";
+
+      return orderRow;
   });
 
   if (orderDetails.length > 0) {

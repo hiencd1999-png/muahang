@@ -5,8 +5,8 @@ import { formatCurrency } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 export default async function AnalyticsPage(props: { searchParams: Promise<{ from?: string; to?: string }> }) {
-  await requireUser("ADMIN");
-
+  const userObj = await requireUser("ADMIN");
+  const isSpAdmin = userObj.role === "SPADMIN";
   const searchParams = await props.searchParams;
 
   // Xử lý bộ lọc thời gian (Mặc định là tư đầu tháng đến hiện tại)
@@ -20,14 +20,21 @@ export default async function AnalyticsPage(props: { searchParams: Promise<{ fro
   const startDate = new Date(`${startParam}T00:00:00`);
   const endDate = new Date(`${endParam}T23:59:59.999`);
 
+  const orderWhereCondition: any = {
+    createdAt: {
+      gte: startDate,
+      lt: endDate,
+    },
+  };
+
+  // ADMIN thường chỉ xem đơn của mình
+  if (!isSpAdmin) {
+    orderWhereCondition.approvedByAdminId = userObj.id;
+  }
+
   // 1. Phân tích số lượng đơn & trạng thái
   const ordersInMonth = await prisma.order.findMany({
-    where: {
-      createdAt: {
-        gte: startDate,
-        lt: endDate,
-      },
-    },
+    where: orderWhereCondition,
     select: {
       status: true,
       total: true,
@@ -56,7 +63,9 @@ export default async function AnalyticsPage(props: { searchParams: Promise<{ fro
   // 2. Doanh thu từng Admin
   // Lấy danh sách admin
   const admins = await prisma.user.findMany({
-    where: { role: { in: ["ADMIN", "SPADMIN"] } },
+    where: isSpAdmin 
+      ? { role: { in: ["ADMIN", "SPADMIN"] } }
+      : { id: userObj.id },
     select: { id: true, username: true, fullName: true },
   });
 
@@ -168,9 +177,13 @@ export default async function AnalyticsPage(props: { searchParams: Promise<{ fro
         </div>
 
         <div className="panel p-5 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/40 dark:to-blue-900/10 border border-indigo-200 dark:border-indigo-800/60 mt-4 sm:mt-0 col-span-2 md:col-span-4 lg:col-span-1">
-          <p className="text-xs uppercase tracking-wider font-bold text-indigo-700 dark:text-indigo-500">Lợi nhuận SPAdmin (5%)</p>
+          <p className="text-xs uppercase tracking-wider font-bold text-indigo-700 dark:text-indigo-500">
+            {isSpAdmin ? "Lợi nhuận SPAdmin (5%)" : "Hoa hồng kiếm được (95%)"}
+          </p>
           <div className="mt-2 flex items-baseline">
-            <span className="text-xl sm:text-2xl font-black text-indigo-900 dark:text-indigo-100">{formatCurrency(totalSystemProfit)}</span>
+            <span className="text-xl sm:text-2xl font-black text-indigo-900 dark:text-indigo-100">
+              {formatCurrency(isSpAdmin ? totalSystemProfit : totalAdminCommission)}
+            </span>
           </div>
         </div>
       </div>
@@ -190,7 +203,9 @@ export default async function AnalyticsPage(props: { searchParams: Promise<{ fro
                 <th className="px-6 py-4 text-center">Bị huỷ</th>
                 <th className="px-6 py-4 text-right">Tổng doanh thu đem về</th>
                 <th className="px-6 py-4 text-right">Hoa hồng tạm tính (95%)</th>
-                <th className="px-6 py-4 text-right">Sinh lời SPAdmin (5%)</th>
+                {isSpAdmin && (
+                  <th className="px-6 py-4 text-right">Sinh lời SPAdmin (5%)</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -224,9 +239,11 @@ export default async function AnalyticsPage(props: { searchParams: Promise<{ fro
                   <td className="px-6 py-4 text-right font-black text-amber-600 dark:text-amber-500">
                     {formatCurrency(stat.commission)}
                   </td>
-                  <td className="px-6 py-4 text-right font-black text-indigo-600 dark:text-indigo-500">
-                    {formatCurrency(stat.systemProfit)}
-                  </td>
+                  {isSpAdmin && (
+                    <td className="px-6 py-4 text-right font-black text-indigo-600 dark:text-indigo-500">
+                      {formatCurrency(stat.systemProfit)}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
