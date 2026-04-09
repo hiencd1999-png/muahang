@@ -65,10 +65,17 @@ async function syncGroup(orders: any[], proxies: any[]) {
                         prisma.transaction.create({ data: { userId: order.approvedByAdminId, amount: commission, type: "ADMIN_ADJUSTMENT", note: `Hoa hồng xử lý đơn giao thành công #${order.id} (95% của ${order.total.toLocaleString("vi-VN")}đ)` } }),
                         prisma.notification.create({ data: { userId: order.approvedByAdminId, type: "BALANCE_CHANGED", title: "Hoa hồng hoàn thành đơn", message: `Bạn được cộng ${commission.toLocaleString("vi-VN")}đ từ đơn #${order.id}.`, link: `/admin/orders?orderId=${order.id}` } })
                     ]);
+                } else if (updates.status === "CANCELED" && order.status !== "CANCELED" && order.status !== "DELIVERED") {
+                    await prisma.$transaction([
+                        prisma.order.update({ where: { id: order.id }, data: updates }),
+                        prisma.user.update({ where: { id: order.userId }, data: { balance: { increment: order.total } } }),
+                        prisma.transaction.create({ data: { userId: order.userId, amount: order.total, type: "ORDER_REFUND", note: `Hoàn tiền tự động vì API Tracking Shopee trả về Đã huỷ - Order #${order.id}` } }),
+                        prisma.notification.create({ data: { userId: order.userId, type: "ORDER_CANCELED", title: "Đơn hàng bị huỷ bởi Shopee", message: `Đơn #${order.id} của bạn vừa bị huỷ trên Shopee. Hệ thống đã hoàn trả ${order.total.toLocaleString("vi-VN")}đ vào ví của bạn.`, link: `/dashboard/orders?orderId=${order.id}` } })
+                    ]);
                 } else {
                     await prisma.order.update({ where: { id: order.id }, data: updates });
                 }
-                console.log(`📦 [AutoSyncWorker] Đơn #${order.id}: ${order.status} -> ${newStatus}. ${updates.status === 'DELIVERED' ? '💰 CỘNG TIỀN CHO ADMIN!' : ''}`);
+                console.log(`📦 [AutoSyncWorker] Đơn #${order.id}: ${order.status} -> ${newStatus}. ${updates.status === 'DELIVERED' ? '💰 CỘNG TIỀN CHO ADMIN!' : updates.status === 'CANCELED' ? '🔄 ĐÃ HOÀN TIỀN CHO USER!' : ''}`);
             }
         } catch (e) {
             const msg = e instanceof Error ? e.message : "Error";

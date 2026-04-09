@@ -83,7 +83,7 @@ export async function PUT(request: Request) {
     );
   }
 
-  const shouldRefund = parsed.data.status === "CANCELED" && (order.status === "PENDING" || order.status === "PROCESSING");
+  const shouldRefund = parsed.data.status === "CANCELED" && order.status !== "CANCELED" && order.status !== "DELIVERED";
 
   const updateData: Record<string, any> = { 
     status: parsed.data.status,

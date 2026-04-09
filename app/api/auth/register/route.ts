@@ -37,6 +37,7 @@ const schema = z.object({
   password: z
     .string()
     .min(1, "Không được để trống")
+    .max(100, "Mật khẩu quá dài")
     .regex(passwordRegex, "Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt"),
 });
 

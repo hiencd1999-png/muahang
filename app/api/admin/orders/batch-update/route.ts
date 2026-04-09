@@ -26,10 +26,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Process each order update
-    const results = await Promise.all(
+    const results = (await Promise.all(
       orders.map(async (order) => {
+        // Không cho phép đổi trạng thái của đơn hàng đã Đóng (Giao vòng cuối hoặc Đã huỷ) 
+        // để tránh lỗi nghiệp vụ hoàn tiền kép
+        if (["CANCELED", "DELIVERED"].includes(order.status)) {
+            return null;
+        }
+
         // Handle refunds when canceling
-        if (status === "CANCELED" && ["PENDING", "PROCESSING"].includes(order.status)) {
+        if (status === "CANCELED" && !["CANCELED", "DELIVERED"].includes(order.status)) {
           // Create refund transaction
           const updatedOrder = await prisma.order.update({
             where: { id: order.id },
@@ -114,7 +120,7 @@ export async function POST(request: NextRequest) {
           },
         });
       })
-    );
+    )).filter(Boolean);
 
     // Log the action
     await prisma.auditLog.create({

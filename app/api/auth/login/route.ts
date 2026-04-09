@@ -5,8 +5,8 @@ import { createSessionToken, SESSION_COOKIE, verifyPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
-  identifier: z.string().trim().min(1),
-  password: z.string().min(1),
+  identifier: z.string().trim().min(1).max(100, "Định danh quá dài"),
+  password: z.string().min(1).max(100, "Mật khẩu quá dài"),
 });
 
 export async function POST(request: Request) {
@@ -30,6 +30,8 @@ export async function POST(request: Request) {
   });
 
   if (!user) {
+    // Fake hash block để tạo delay giống thật chặn Timing Attack enumeration
+    await verifyPassword(parsed.data.password, "$2b$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     return NextResponse.json({ error: "Sai thông tin đăng nhập hoặc mật khẩu." }, { status: 401 });
   }
 
