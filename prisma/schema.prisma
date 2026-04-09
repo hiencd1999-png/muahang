@@ -134,6 +134,8 @@ model Transaction {
   type      TransactionType
   note      String
   createdAt DateTime        @default(now())
+  
+  @@index([userId, createdAt])
 }
 
 model AuditLog {
@@ -267,4 +269,8 @@ model Ledger {
   debit           Int            @default(0) // Số tiền ghi nợ
   credit          Int            @default(0) // Số tiền ghi có
   note            String?
+  createdAt       DateTime       @default(now())
+
+  @@index([userId, createdAt])
+  @@index([systemAccountId, createdAt])
 }

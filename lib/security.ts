@@ -38,7 +38,7 @@ export function verifyRateLimit(ip: string, limit: number, windowMs: number = 60
  * Yêu cầu Client gửi kèm `X-Idempotency-Key` (UUID4) trên Headers khi gọi các API trừ tiền.
  * @returns true nếu hợp lệ, false nếu key đã được xử lý
  */
-export function verifyIdempotency(key: string, lockWindowMs: number = 2 * 60 * 1000): boolean {
+export function verifyIdempotency(key: string, lockWindowMs: number = 24 * 60 * 60 * 1000): boolean {
     if (!key) return false;
     
     const now = Date.now();

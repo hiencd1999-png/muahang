@@ -7,7 +7,7 @@ export default async function DepositPage() {
   const user = await requireUser();
 
   const transactions = await prisma.transaction.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, type: "DEPOSIT" },
     orderBy: { createdAt: "desc" },
     take: 10,
   });
@@ -17,7 +17,7 @@ export default async function DepositPage() {
       <DepositForm />
       <section className="panel rounded-[1.75rem] p-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Lịch sử giao dịch</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Lịch sử nạp tiền</p>
           <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(user.balance)}</p>
         </div>
         <div className="mt-5 space-y-3">

@@ -587,7 +587,14 @@ export function DepositForm() {
             </div>
 
             <div className="mt-6 flex justify-center">
-               <button onClick={() => setUsdtOrder(null)} className="text-sm font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 underline underline-offset-4 transition">
+               <button onClick={async () => {
+                  try {
+                     const orderId = usdtOrder.orderId || usdtOrder.id;
+                     await fetch(`/api/top-up/usdt/${orderId}/cancel`, { method: "POST" });
+                     setUsdtOrder(null);
+                     addToast("success", "Đã hủy lệnh nạp tiền USDT thành công.");
+                  } catch(e) {}
+               }} className="text-sm font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 underline underline-offset-4 transition">
                   Huỷ bỏ hoặc tạo lại lệnh khác
                </button>
             </div>

@@ -9,7 +9,9 @@ Khác biệt hoàn toàn với các app ví điện tử sơ khai sử dụng bi
 
 * **System Accounts:** Các tài nguyên tiền được chốt vào các Quỹ Trung Tâm (VD: `SYSTEM_REVENUE` chứa phế hoa hồng, `SYSTEM_ESCROW` chứa cọc đóng băng, `ADMIN_LIQUIDITY_POOL` kho tiền tối cao).
 * **Ledger Lines:** Bất kỳ 1 VND nào sinh ra cũng đều nằm trên Sổ Kế Toán, đảm bảo vĩnh viễn Định luật bảo toàn: `TỔNG NỢ (Debit) = TỔNG CÓ (Credit)`.
-* **Reconciliation Engine (Máy Nắn Lỗ Hổng):** Có 1 API ngầm `/api/admin/reconciliation` chuyên cộng dồn toàn bộ Transaction lịch sử và đọ chéo với cấu trúc Mutable Cache Balance của User để cảnh báo nếu có 1 đồng bạc lạm phát hay thất thoát sinh ra do bug phần mềm. Không còn nỗi lo Tiền Ảo rác.
+* **Reconciliation Engine (Máy Nắn Lỗ Hổng):** 
+  * Cung cấp Check-API thủ công cho Dashboard SPAdmin: `/api/admin/reconciliation`.
+  * Trang bị Cỗ máy tự động nguyên khối (Autonomous Cron Job) `cron/reconciliation.ts` chạy xuyên đêm lúc 2:00 Sáng để cào toàn bộ DB, so khớp Nợ/Có. Nếu sinh ra lạm phát (Drift), tự ghi lại vào Sổ Đen Bất Biến `reconciliation_reports.log` (Append-Only) để chuẩn bị gọi điện báo thức CTO. Tốc độ kiểm toán đạt cực đỉnh nhờ thiết lập B-Tree `@@index([userId, createdAt])` sẵn từ rễ DB.
 
 ---
 
@@ -17,7 +19,7 @@ Khác biệt hoàn toàn với các app ví điện tử sơ khai sử dụng bi
 An ninh mạng được thắt chặt bằng 3 lưới chắn lõi ở `lib/security.ts`:
 
 1. **Anti-DDoS / Rate Limiting Memory Cache:** Quét dọn liên tục bằng Map, khống chế số lượng Request trên 1 dải IP độc bản, triệt tiêu bot Spam phá nghẽn CSDL.
-2. **Idempotency Key (Chống Replay Attack):** Moị lệnh Trừ Tiền hay Nạp Xèng từ Client đều đính kèm 1 dấu vân tay `UUID4` ở Header `X-Idempotency-Key` (Lock trong 2 Phút). Bấm F5 hay Auto Click Enter nghìn lần cũng chỉ có 1 Lệnh qua lọt Cửa DB.
+2. **Idempotency Key (Chống Replay Attack Mức Doanh Nghiệp):** Moị lệnh Trừ Tiền hay Nạp Xèng từ Client đều đính kèm 1 dấu vân tay `UUID4` ở Header `X-Idempotency-Key` (Tuổi thọ 24 Giờ liên tục). Bấm F5 hay Network Delay dẫn đến Retry nghìn lần cũng chỉ lọt Cửa đúng 1 lệnh suy nhất.
 3. **Canvas Image Sanitization:** Trình duyệt tự tải mảnh gạch (Image Complain) vào thẻ HTML Canvas và nén thành 70% Base64 JPEG. Mã độc (XSS/SVG Scripts) hoặc Exif Virus sẽ bị hủy diệt 100% trước khi tới Server.
 
 ---
@@ -36,10 +38,14 @@ Quy trình nạp này sử dụng phương thức Peer-to-Peer (P2P) từ User t
   * Nếu Admin Bác Bỏ (`Reject`).
   * Nếu Ngâm quá 30 Phút (`Expired`). 
   * -> Server tự lôi trong Escrow hoàn y nguyên quỹ cho Admin.
+* **Sweeper Worker (Cỗ Máy Rọn Rác Tự Động)**:
+  * Trang bị kịch bản `cron/deposit-sweeper.ts` quét song song với tiến trình Runtime. Cỗ máy này chuyên đi nhặt những đơn "Chết Rũ" lơ lửng không ai ngó tới để ép buộc Hoàn Trả Tiền Cọc, đảm bảo 100% tiền Escrow không bao giờ kẹt vĩnh viễn dù Server có sập.
+* **ACID Transaction & Kế Hoạch Bù Trừ (Saga/Rollback)**:
+  * Không dùng Distributed Saga cồng kềnh. Mọi hành vi tạo lệnh bóp Cọc Escrow được cuốn lô chặt bằng `prisma.$transaction`. Nếu đang tạo Order mà lỗi ổ cứng hoặc đứt cáp -> Engine DB lập tức phóng tia `ROLLBACK` khôi phục Cọc Escrow về mốc ban đầu. Tiền bạc sẽ không bao giờ đứng bơ vơ.
 * **Xử lý tranh chấp - Khiếu nại (Complain System)**:
-  * Từ lúc trạng thái sang `TRANSFERRED`, hệ thống đếm ngược 15 Phút Delay. Qua 15 phút, User mới được lên ảnh bằng chứng.
+  * Từ lúc trạng thái sang `TRANSFERRED`, đếm ngược 15 Phút Delay trước khi mờ cổng up Bằng Chứng. 
 * **Duyệt Cấp Số Dư (`Approve`)**:
-  * Chốt hạ đơn! Lấy tiền trong Escrow vứt cho User. Quá trình nhẹ tựa lông hồng vì Tiền của Admin đã bị khóa từ đầu. Ảnh Bằng Chứng cũng Tự tiêu hủy luôn vào cõi hư vô, trả lại ổ cứng xanh sạch đẹp.
+  * Chốt đơn! Quá trình giải ngân nhẹ tựa lông hồng vì Tiền Admin đã chặn từ đầu. Ảnh bằng chứng sau Duyệt Tự Tiêu Hủy cứu rỗi Disk Space.
 
 ---
 
