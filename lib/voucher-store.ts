@@ -18,10 +18,7 @@ export async function ensureVoucherPricingConfigs() {
     DEFAULT_VOUCHER_PRICING.map((voucher) =>
       prisma.voucherPricing.upsert({
         where: { code: voucher.code },
-        update: {
-          label: voucher.label,
-          unitPrice: voucher.unitPrice,
-        },
+        update: {}, // Không cho phép đè từ mã nguồn, để cho DB (Admin) quyết định
         create: {
           code: voucher.code,
           label: voucher.label,

@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
             },
           }),
         ]);
-      } else if (updates.status === "CANCELED" && order.status !== "CANCELED" && order.status !== "DELIVERED") {
+      } else if (updates.status === "CANCELED") {
         await prisma.$transaction([
           prisma.order.update({
             where: { id: orderId },
