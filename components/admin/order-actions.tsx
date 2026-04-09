@@ -280,9 +280,9 @@ export function OrderActions({
           <button
             type="button"
             onClick={() => updateStatus("PROCESSING")}
-            disabled={loading !== "" || isOwnedByAnotherAdmin}
+            disabled={loading !== "" || isOwnedByAnotherAdmin || (approvedByAdminId !== null && approvedByAdminId !== currentAdminId)}
             className="shrink-0 rounded-xl bg-sky-600 hover:bg-sky-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
-            title={isOwnedByAnotherAdmin ? ownershipMessage : "Duyệt đơn"}
+            title={(approvedByAdminId !== null && approvedByAdminId !== currentAdminId) ? "Đơn đã được Booking cho người khác. Không thể tranh." : isOwnedByAnotherAdmin ? ownershipMessage : "Duyệt đơn"}
           >
             {loading === "PROCESSING" ? "..." : "Duyệt"}
           </button>

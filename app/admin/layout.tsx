@@ -19,6 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     ...(canManageVouchers ? [{ href: "/admin/vouchers", label: "Cấu hình voucher" }] : []),
     ...(canManageProxies ? [{ href: "/admin/proxies", label: "Proxy hệ thống" }] : []),
     ...(canViewTransactions ? [{ href: "/admin/transactions", label: "Giao dịch hệ thống" }] : []),
+    { href: "/admin/analytics", label: "Phân tích - Thống kê" },
     { href: "/admin/logs", label: "Nhật ký hoạt động" },
   ];
 

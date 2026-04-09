@@ -55,7 +55,7 @@ export function LoginForm() {
           Dang nhap
         </span>
         <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Truy cập hệ thống đặt đơn.</h1>
-        <p className="text-sm leading-7 text-slate-600 dark:text-slate-400">
+        <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
           Nhập tài khoản để quản lý số dư, tạo đơn Shopee và theo dõi trạng thái xử lý.
         </p>
       </div>
@@ -66,10 +66,10 @@ export function LoginForm() {
           <input
             name="identifier"
             required
-            className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+            className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
             placeholder="Nhập username, email hoặc số điện thoại"
           />
-          <p className="text-xs text-slate-500 dark:text-slate-500">Bạn có thể dùng username, email hoặc số điện thoại để đăng nhập</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Bạn có thể dùng username, email hoặc số điện thoại để đăng nhập</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -79,7 +79,7 @@ export function LoginForm() {
               name="password"
               type={showPassword ? "text" : "password"}
               required
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
               placeholder="nhap password"
             />
             <button

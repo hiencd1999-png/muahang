@@ -79,24 +79,24 @@ export default async function TransactionsPage({
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">
+        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Tổng nạp tiền
           </p>
           <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
             +{formatCurrency(totalDeposit)}
           </p>
         </div>
-        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">
+        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Tổng đã chi
           </p>
           <p className="mt-2 text-2xl font-black text-rose-600 dark:text-rose-400">
             -{formatCurrency(totalSpent)}
           </p>
         </div>
-        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm col-span-2 sm:col-span-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">
+        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm col-span-2 sm:col-span-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
             Tổng hoàn tiền
           </p>
           <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400">
@@ -109,14 +109,14 @@ export default async function TransactionsPage({
       <section className="panel rounded-[1.75rem] p-4 sm:p-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-400">
               Lịch sử giao dịch
             </p>
-            <p className="mt-1 text-sm font-bold text-slate-600 dark:text-slate-400">
+            <p className="mt-1 text-sm font-bold text-slate-600 dark:text-slate-300">
               {totalCount} giao dịch
             </p>
           </div>
-          <span className="rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 px-4 py-2 text-xs font-black text-slate-900 dark:text-white shadow-sm">
+          <span className="rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-700/80 px-4 py-2 text-xs font-black text-slate-900 dark:text-white shadow-sm">
             Số dư: {formatCurrency(user.balance)}
           </span>
         </div>
@@ -178,7 +178,7 @@ export default async function TransactionsPage({
               {transactions.map((tx) => (
                 <div
                   key={tx.id}
-                  className="flex items-start gap-4 rounded-3xl bg-slate-50/50 dark:bg-slate-950/40 p-5 border border-slate-100 dark:border-slate-800 shadow-sm"
+                  className="flex items-start gap-4 rounded-3xl bg-slate-50/50 dark:bg-slate-950/40 p-5 border border-slate-100 dark:border-slate-700/80 shadow-sm"
                 >
                   <TypeIcon type={tx.type} amount={tx.amount} />
                   <div className="flex-1 min-w-0">

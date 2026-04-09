@@ -10,7 +10,7 @@ export function MobileNav({ links }: { links: { href: string; label: string }[] 
     <div className="lg:hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200/70 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 transition active:scale-[0.98]"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200/70 dark:border-slate-700/80 bg-white/50 dark:bg-slate-900/80 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 transition active:scale-[0.98]"
       >
         <span>Menu</span>
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

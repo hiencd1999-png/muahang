@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <main className="shell flex-1 py-6 sm:py-8">
-      <header className="panel relative z-40 mb-6 rounded-[2rem] p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      <header className="panel relative z-40 mb-6 rounded-[2rem] p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 dark:text-slate-100 mb-1 opacity-80">User dashboard</p>
@@ -32,7 +32,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </div>
           </div>
 
-          <div className="flex items-center gap-3 border-t border-slate-100 dark:border-slate-800 pt-5 lg:border-0 lg:pt-0">
+          <div className="flex items-center gap-3 border-t border-slate-100 dark:border-slate-700/80 pt-5 lg:border-0 lg:pt-0">
             {isAdminRole(user.role) ? (
               <Link
                 href="/admin"

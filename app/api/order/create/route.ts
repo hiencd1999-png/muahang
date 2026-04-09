@@ -23,6 +23,7 @@ const sharedShape = {
   phone: z.string().trim().min(1).optional(),
   address: z.string().trim().min(8),
   note: z.string().trim().optional(),
+  requestedAdminId: z.number().int().optional(),
 };
 
 const batchItemSchema = z.object(batchItemShape);
@@ -46,6 +47,7 @@ type NormalizedOrderRequest = {
   address: string;
   note?: string;
   items: Array<z.infer<typeof batchItemSchema> & { quantity: number }>;
+  requestedAdminId?: number;
 };
 
 type PreparedItem = {
@@ -66,6 +68,7 @@ function normalizeOrderRequest(body: unknown): NormalizedOrderRequest | null {
         ...item,
         quantity: item.quantity ?? fallbackQuantity,
       })),
+      requestedAdminId: batchParsed.data.requestedAdminId
     };
   }
 
@@ -91,6 +94,7 @@ function normalizeOrderRequest(body: unknown): NormalizedOrderRequest | null {
     phone,
     address,
     note,
+    requestedAdminId: legacyParsed.data.requestedAdminId
   };
 }
 
@@ -195,6 +199,7 @@ export async function POST(request: Request) {
           unitPrice: selectedVoucher.unitPrice,
           total,
           status: "PENDING",
+          approvedByAdminId: parsed.requestedAdminId || null,
         },
       });
 

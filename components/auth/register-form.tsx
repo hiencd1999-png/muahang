@@ -138,11 +138,11 @@ export function RegisterForm() {
   return (
     <form method="POST" onSubmit={handleSubmit} className="panel animate-rise w-full rounded-[2rem] p-8 sm:p-10">
       <div className="mb-8 space-y-3">
-        <span className="inline-flex rounded-full bg-teal-100 dark:bg-teal-900/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-teal-800 dark:text-teal-300">
+        <span className="inline-flex rounded-full bg-amber-100 dark:bg-amber-900/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-amber-800 dark:text-amber-300">
           Tạo tài khoản
         </span>
         <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Đăng ký người dùng mới.</h1>
-        <p className="text-sm leading-7 text-slate-600 dark:text-slate-400">
+        <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
           Nhập thông tin cá nhân và mật khẩu để tạo tài khoản mới.
         </p>
       </div>
@@ -158,9 +158,9 @@ export function RegisterForm() {
             placeholder="Nguyễn Văn A"
             pattern="^[A-Za-zÀ-ỹ]+\s[A-Za-zÀ-ỹ\s]+$"
             title="Không được để trống, phải có ít nhất 2 từ và chỉ chứa chữ cái"
-            className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-teal-500"
+            className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
           />
-          <p className="text-xs text-slate-500 dark:text-slate-500">Không để trống, tối thiểu 2 từ và chỉ chứa chữ cái</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Không để trống, tối thiểu 2 từ và chỉ chứa chữ cái</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -173,9 +173,9 @@ export function RegisterForm() {
             placeholder="datdon_user"
             pattern="^(?!\d)[a-z0-9_]{4,20}$"
             title="4-20 ký tự, chữ thường, số, _, không bắt đầu bằng số"
-            className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-teal-500"
+            className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
           />
-          <p className="text-xs text-slate-500 dark:text-slate-500">4-20 ký tự, chữ thường, số, _, không bắt đầu bằng số</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">4-20 ký tự, chữ thường, số, _, không bắt đầu bằng số</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -186,9 +186,9 @@ export function RegisterForm() {
             required
             placeholder="you@example.com"
             title="Email phải đúng định dạng hợp lệ và không chứa khoảng trắng"
-            className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-teal-500"
+            className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
           />
-          <p className="text-xs text-slate-500 dark:text-slate-500">Email phải hợp lệ và duy nhất</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Email phải hợp lệ và duy nhất</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -201,9 +201,9 @@ export function RegisterForm() {
             pattern="^(03|05|07|08|09)[0-9]{8}$"
             placeholder="0912345678"
             title="SĐT Việt Nam gồm 10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09"
-            className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-teal-500"
+            className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
           />
-          <p className="text-xs text-slate-500 dark:text-slate-500">10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -216,7 +216,7 @@ export function RegisterForm() {
               minLength={8}
               placeholder="Ít nhất 8 ký tự"
               title="Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt"
-              className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-teal-500"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
             />
             <button
               type="button"
@@ -235,7 +235,7 @@ export function RegisterForm() {
               )}
             </button>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-500">Ít nhất 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Ít nhất 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt</p>
         </label>
 
         <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -248,7 +248,7 @@ export function RegisterForm() {
               minLength={8}
               placeholder="Xác nhận mật khẩu"
               title="Phải trùng với mật khẩu đã nhập"
-              className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-teal-500"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
             />
             <button
               type="button"
@@ -273,13 +273,13 @@ export function RegisterForm() {
       <button
         type="submit"
         disabled={loading}
-        className="mt-7 w-full rounded-2xl bg-teal-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-7 w-full rounded-2xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? "Đang tạo tài khoản..." : "Đăng ký"}
       </button>
 
-      <p className="mt-5 text-sm text-slate-600">
-        Đã có tài khoản? <Link href="/login" className="font-semibold text-teal-700">Đăng nhập</Link>
+      <p className="mt-5 text-sm text-slate-600 dark:text-slate-300">
+        Đã có tài khoản? <Link href="/login" className="font-semibold text-amber-600 dark:text-amber-500">Đăng nhập</Link>
       </p>
     </form>
   );

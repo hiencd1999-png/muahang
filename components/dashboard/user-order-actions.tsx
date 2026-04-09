@@ -312,35 +312,35 @@ export function UserOrderActions({ orderId, status, buttonClassName }: { orderId
           size="medium"
         >
           <div className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
               Bạn chỉ có thể chỉnh sửa thông tin đơn khi trạng thái là Chờ duyệt.
             </p>
 
-            <label className="block space-y-1 text-sm font-medium text-slate-700">
+            <label className="block space-y-1 text-sm font-medium text-slate-700 dark:text-slate-300">
               <span>Phân loại</span>
               <input
                 value={editForm.variant}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, variant: e.target.value }))}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-slate-900 dark:text-white outline-none focus:border-amber-500"
               />
             </label>
 
-            <label className="block space-y-1 text-sm font-medium text-slate-700">
+            <label className="block space-y-1 text-sm font-medium text-slate-700 dark:text-slate-300">
               <span>Số điện thoại</span>
               <input
                 value={editForm.phone}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-slate-900 dark:text-white outline-none focus:border-amber-500"
               />
             </label>
 
-            <label className="block space-y-1 text-sm font-medium text-slate-700">
+            <label className="block space-y-1 text-sm font-medium text-slate-700 dark:text-slate-300">
               <span>Địa chỉ</span>
               <textarea
                 value={editForm.address}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, address: e.target.value }))}
                 rows={3}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-slate-900 dark:text-white outline-none focus:border-amber-500"
               />
             </label>
 
@@ -348,7 +348,7 @@ export function UserOrderActions({ orderId, status, buttonClassName }: { orderId
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+                className="rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                 disabled={isSavingEdit}
               >
                 Hủy
@@ -356,7 +356,7 @@ export function UserOrderActions({ orderId, status, buttonClassName }: { orderId
               <button
                 type="button"
                 onClick={handleSaveEdit}
-                className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60 transition-colors hover:bg-amber-700"
                 disabled={isSavingEdit}
               >
                 {isSavingEdit ? "Đang lưu..." : "Lưu thay đổi"}

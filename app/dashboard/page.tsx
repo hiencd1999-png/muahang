@@ -53,7 +53,7 @@ export default async function DashboardPage() {
 
         <div className="mt-5 space-y-4">
           {recentOrders.map((order) => (
-            <div key={order.id} className="flex flex-col gap-3 rounded-2xl border border-slate-200/70 dark:border-slate-800 bg-white/50 dark:bg-slate-800/40 p-5 sm:flex-row sm:items-center shadow-sm">
+            <div key={order.id} className="flex flex-col gap-3 rounded-2xl border border-slate-200/70 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/40 p-5 sm:flex-row sm:items-center shadow-sm">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-slate-900 dark:text-slate-100">#{order.id}</span>
@@ -65,12 +65,12 @@ export default async function DashboardPage() {
                 )}
                 <p className="mt-2 text-xs font-bold text-amber-700 dark:text-amber-500">{order.voucherLabel || "Chưa có voucher"}</p>
               </div>
-              <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 sm:text-right bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-lg">
+              <div className="text-[10px] font-bold text-slate-400 dark:text-slate-400 sm:text-right bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-lg">
                 {formatDate(order.createdAt)}
               </div>
             </div>
           ))}
-          {recentOrders.length === 0 ? <p className="py-6 text-sm text-slate-500 dark:text-slate-400">Chưa có đơn nào.</p> : null}
+          {recentOrders.length === 0 ? <p className="py-6 text-sm text-slate-500 dark:text-slate-300">Chưa có đơn nào.</p> : null}
         </div>
       </section>
     </>

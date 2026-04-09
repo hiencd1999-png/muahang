@@ -148,18 +148,18 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-[2rem] border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-6 shadow-sm">
+      <div className="rounded-[2rem] border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-900/80 p-6 shadow-sm">
         <div>
           <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">Lịch sử đơn</h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Toàn bộ đơn của tài khoản hiện tại.</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Toàn bộ đơn của tài khoản hiện tại.</p>
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-800 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">Tổng đơn</p>
+          <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Tổng đơn</p>
             <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{orders.length}</p>
           </div>
-          <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-800 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-bold">Đơn gần nhất</p>
+          <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Đơn gần nhất</p>
             <p className="mt-4 text-2xl font-black text-slate-950 dark:text-white">
               {orders[0] ? `#${orders[0].id}` : "Chưa có"}
             </p>
@@ -201,9 +201,9 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
       ) : null}
 
       <div className="mt-5 space-y-4 min-w-0">
-        <div className="hidden lg:block rounded-[1.5rem] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-x-auto w-full">
+        <div className="hidden lg:block rounded-[1.5rem] border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-sm overflow-x-auto w-full">
           <table className="min-w-[1200px] text-center text-sm border-collapse">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-300">
               <tr>
                 <th className="px-4 py-3 w-10">
                   <input
@@ -227,7 +227,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                 <tr
                   key={order.id}
                   data-order-id={order.id}
-                  className={`border-t border-slate-100 dark:border-slate-800 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
+                  className={`border-t border-slate-100 dark:border-slate-700/80 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
                     focusedOrderId === order.id ? "bg-amber-100/40 dark:bg-amber-900/20" : ""
                   }`}
                 >
@@ -240,15 +240,15 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                     />
                   </td>
                   <td className="px-4 py-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">#{order.id}</td>
-                  <td className="px-4 py-4 text-sm text-slate-600">
+                  <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-300">
                     <div className="flex flex-col items-center">
-                      <p className="font-medium text-slate-900 whitespace-nowrap truncate max-w-[280px]">{getShortAddress(order.address)}</p>
+                      <p className="font-medium text-slate-900 dark:text-white whitespace-nowrap truncate max-w-[280px]">{getShortAddress(order.address)}</p>
                       {!order.productName?.includes("Đơn gộp") && (
-                        <p className="mt-1 truncate text-xs text-slate-500 max-w-[250px]">{order.productName || order.productLink}</p>
+                        <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-300 max-w-[250px]">{order.productName || order.productLink}</p>
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-slate-600 font-medium text-xs whitespace-nowrap truncate max-w-[150px]">
+                  <td className="px-4 py-4 text-slate-600 dark:text-slate-300 font-medium text-xs whitespace-nowrap truncate max-w-[150px]">
                     {order.variant || "-"}
                   </td>
                   <td className="px-4 py-4 text-slate-800 dark:text-slate-200 font-bold leading-tight">{formatCurrency(order.total)}</td>
@@ -257,7 +257,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                       <StatusPill status={order.status} />
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-500 whitespace-nowrap uppercase tracking-wider" suppressHydrationWarning>{formatDate(order.createdAt)}</td>
+                  <td className="px-4 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-300 whitespace-nowrap uppercase tracking-wider" suppressHydrationWarning>{formatDate(order.createdAt)}</td>
                   <td className="px-4 py-4">
                     <div className="flex justify-center">
                       <UserOrderActions orderId={order.id} status={order.status} buttonClassName="min-w-[90px] h-10 px-3 py-2 text-xs" />
@@ -277,7 +277,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
               className={`rounded-[2rem] border p-5 transition-all shadow-sm ${
                 focusedOrderId === order.id
                   ? "border-amber-300 dark:border-amber-800 bg-amber-50/80 dark:bg-amber-900/20"
-                  : "border-slate-200/70 dark:border-slate-800 bg-white/50 dark:bg-slate-900/60"
+                  : "border-slate-200/70 dark:border-slate-700/80 bg-white/50 dark:bg-slate-900/90"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
@@ -285,7 +285,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                   <span className="font-black text-slate-900 dark:text-white">#{order.id}</span>
                   <StatusPill status={order.status} />
                 </div>
-                <label className="inline-flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-800 p-2 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest cursor-pointer">
+                <label className="inline-flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-800 p-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest cursor-pointer">
                   <input
                     type="checkbox"
                     checked={selectedIds.includes(order.id)}
@@ -296,11 +296,11 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                 </label>
               </div>
 
-              <div className="mt-4 rounded-3xl bg-slate-50/50 dark:bg-slate-800/40 p-5 border border-slate-100 dark:border-slate-800">
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Địa chỉ giao hàng</p>
+              <div className="mt-4 rounded-3xl bg-slate-50/50 dark:bg-slate-800/40 p-5 border border-slate-100 dark:border-slate-700/80">
+                <p className="text-[10px] text-slate-400 dark:text-slate-300 font-bold uppercase tracking-wider">Địa chỉ giao hàng</p>
                 <p className="mt-2 font-bold text-slate-900 dark:text-slate-100 text-sm leading-snug">{getShortAddress(order.address)}</p>
                 {!order.productName?.includes("Đơn gộp") && (
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-500 line-clamp-1 italic">{order.productName || order.productLink}</p>
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-300 line-clamp-1 italic">{order.productName || order.productLink}</p>
                 )}
               </div>
 
@@ -309,8 +309,8 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                   <p className="text-[10px] text-amber-700 dark:text-amber-500 font-bold uppercase tracking-wider">Tổng tiền</p>
                   <p className="mt-1 text-amber-900 dark:text-amber-200 font-black text-lg">{formatCurrency(order.total)}</p>
                 </div>
-                <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-4 border border-slate-100 dark:border-slate-800">
-                  <p className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-wider">Ngày tạo</p>
+                <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-4 border border-slate-100 dark:border-slate-700/80">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider">Ngày tạo</p>
                   <p className="mt-1 font-bold text-slate-700 dark:text-slate-300 text-xs" suppressHydrationWarning>{formatDate(order.createdAt)}</p>
                 </div>
               </div>
@@ -328,7 +328,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
 
         {orders.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-sm text-slate-500">Chưa có đơn nào.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-300">Chưa có đơn nào.</p>
           </div>
         )}
       </div>

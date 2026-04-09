@@ -52,9 +52,11 @@ function isEmptyDraftItem(item: OrderDraftItem) {
 export function CreateOrderForm({
   balance,
   voucherConfigs,
+  admins,
 }: {
   balance: number;
   voucherConfigs: VoucherOption[];
+  admins: { id: number; displayName: string }[];
 }) {
   const router = useRouter();
   const { addToast } = useToast();
@@ -63,6 +65,7 @@ export function CreateOrderForm({
 
   const [orderItems, setOrderItems] = useState<OrderDraftItem[]>([createEmptyOrderItem()]);
   const [selectedVoucherCode, setSelectedVoucherCode] = useState(initialVoucherCode);
+  const [requestedAdminId, setRequestedAdminId] = useState("");
   const [note, setNote] = useState("");
   const [address, setAddress] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
@@ -306,6 +309,7 @@ export function CreateOrderForm({
       phone: note.trim() || "Không cung cấp",
       address: normalizedAddress,
       note: note.trim(),
+      requestedAdminId: requestedAdminId ? parseInt(requestedAdminId, 10) : undefined,
     };
 
     try {
@@ -325,6 +329,7 @@ export function CreateOrderForm({
       addToast("success", "Đã tạo đơn hàng thành công.");
       setOrderItems([createEmptyOrderItem()]);
       setSelectedVoucherCode(initialVoucherCode);
+      setRequestedAdminId("");
       setNote("");
       setAddress("");
       setAddressSuggestions([]);
@@ -344,22 +349,22 @@ export function CreateOrderForm({
         </div>
 
         <div className="mt-6 grid gap-5">
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-900/80 p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Thiết lập đơn chung</p>
               </div>
-              <span className="rounded-full bg-white dark:bg-slate-950 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 border dark:border-slate-800">
+              <span className="rounded-full bg-white dark:bg-slate-950 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 border dark:border-slate-700/80">
                 Đang mở: {activeVoucherCount}/{voucherConfigs.length}
               </span>
             </div>
-            <div className="mt-4 grid gap-4">
+            <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
               <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
                 <span>Loại voucher</span>
                 <select
                   value={selectedVoucherCode}
                   onChange={(event) => setSelectedVoucherCode(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
                   required
                 >
                   <option value="" className="dark:bg-slate-900">Chọn loại voucher</option>
@@ -370,12 +375,30 @@ export function CreateOrderForm({
                   ))}
                 </select>
               </label>
+
+              {admins && admins.length > 0 && (
+                <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <span>Chọn Admin phụ trách (Tuỳ chọn)</span>
+                  <select
+                    value={requestedAdminId}
+                    onChange={(event) => setRequestedAdminId(event.target.value)}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+                  >
+                    <option value="" className="dark:bg-slate-900">Bất kỳ ai (Hệ thống tự chọn)</option>
+                    {admins.map((admin) => (
+                      <option key={admin.id} value={admin.id.toString()} className="dark:bg-slate-900">
+                        {admin.displayName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
             </div>
           </div>
 
           <div className="space-y-4">
             {orderItems.map((item, index) => (
-              <section key={item.id} className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 p-5 shadow-sm">
+              <section key={item.id} className="rounded-3xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950/40 p-5 shadow-sm">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Sản phẩm {index + 1}</p>
@@ -401,7 +424,7 @@ export function CreateOrderForm({
                         analysisMessage: "",
                       }))}
                       rows={2}
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
                       placeholder="https://shopee.vn/..."
                     />
                     <button
@@ -425,7 +448,7 @@ export function CreateOrderForm({
                         ...current,
                         quantity: Math.max(1, Number(event.target.value) || 1),
                       }))}
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
                     />
                   </label>
 
@@ -433,14 +456,14 @@ export function CreateOrderForm({
                     <div className="lg:col-span-2 rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/10 p-4">
                       <p className="text-sm font-medium text-amber-900 dark:text-amber-400">Sản phẩm</p>
                       <p className="mt-1 text-base font-semibold text-slate-900 dark:text-slate-100">{item.productName}</p>
-                      <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
-                        <p className="text-xs font-medium text-slate-500 dark:text-slate-500">Shop ID</p>
+                      <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 p-3">
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Shop ID</p>
                         <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{item.shopId || "-"}</p>
                       </div>
 
                       {item.resolvedLink ? (
                         <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
-                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Link sau phân tích</p>
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-300">Link sau phân tích</p>
                           <a
                             href={item.resolvedLink}
                             target="_blank"
@@ -468,7 +491,7 @@ export function CreateOrderForm({
                         />
                         {item.variantOptions.length > 0 ? (
                           <div className="mt-3">
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Gợi ý phân loại (bấm để điền nhanh)</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-300">Gợi ý phân loại (bấm để điền nhanh)</p>
                             <div className="mt-2 flex flex-wrap gap-2">
                               {item.variantOptions.map((variant) => (
                                 <button
@@ -497,7 +520,7 @@ export function CreateOrderForm({
           <button
             type="button"
             onClick={addOrderItem}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 py-4 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:border-amber-300 dark:hover:border-amber-800 hover:text-amber-700 dark:hover:text-amber-500"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700/80 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300 transition hover:border-amber-300 dark:hover:border-amber-800 hover:text-amber-700 dark:hover:text-amber-500"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -510,10 +533,10 @@ export function CreateOrderForm({
             <input
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
               placeholder="Ví dụ: 098xxxxxxx - gọi giờ hành chính"
             />
-            <p className="text-xs text-slate-500 dark:text-slate-400">Ghi chú SĐT sẽ được thêm trực tiếp vào phần địa chỉ giao hàng.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-300">Ghi chú SĐT sẽ được thêm trực tiếp vào phần địa chỉ giao hàng.</p>
           </label>
 
           <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -523,7 +546,7 @@ export function CreateOrderForm({
               onChange={(event) => setAddress(event.target.value)}
               required
               rows={4}
-              className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
               placeholder="Hà Nội ..."
             />
             <button
@@ -537,9 +560,9 @@ export function CreateOrderForm({
           </label>
 
           {showAddressSuggestions && addressSuggestions.length > 0 ? (
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/40 p-4">
               <p className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Đề xuất địa chỉ</p>
-              <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              <p className="mb-3 text-xs text-slate-500 dark:text-slate-300">
                 Dữ liệu được phân tích trực tiếp từ Shopee API (autofill) để tăng khả năng add địa chỉ thành công.
               </p>
               <div className="space-y-2">
@@ -568,14 +591,14 @@ export function CreateOrderForm({
       </form>
 
       <aside className="panel rounded-[1.75rem] p-6 xl:sticky xl:top-6 xl:self-start">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Bảng tính nhanh</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-300">Bảng tính nhanh</p>
         <div className="mt-5 space-y-4">
           <div className="rounded-2xl bg-white/80 dark:bg-slate-800/80 p-4 border dark:border-slate-700">
-            <p className="text-sm text-slate-500 dark:text-slate-400">Số link đang nhập</p>
+            <p className="text-sm text-slate-500 dark:text-slate-300">Số link đang nhập</p>
             <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{nonEmptyItems.length}</p>
           </div>
           <div className="rounded-2xl bg-white/80 dark:bg-slate-800/80 p-4 border dark:border-slate-700">
-            <p className="text-sm text-slate-500 dark:text-slate-400">Tổng số lượng sản phẩm</p>
+            <p className="text-sm text-slate-500 dark:text-slate-300">Tổng số lượng sản phẩm</p>
             <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{totalQuantity}</p>
           </div>
           <div className="rounded-2xl bg-amber-50 dark:bg-amber-900/10 p-5 border border-amber-200 dark:border-amber-900/40">
@@ -583,9 +606,9 @@ export function CreateOrderForm({
             <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-200">{formatCurrency(total)}</p>
           </div>
           <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-4">
-            <p className="text-sm text-slate-500 dark:text-slate-400">Số dư hiện tại</p>
+            <p className="text-sm text-slate-500 dark:text-slate-300">Số dư hiện tại</p>
             <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(balance)}</p>
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
               {balance >= total ? "Số dư đủ để tạo đơn." : "Số dư chưa đủ, vui lòng nạp thêm tiền trước khi đặt đơn."}
             </p>
           </div>

@@ -92,7 +92,7 @@ export function NotificationBell() {
     <div className="relative z-50">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.98]"
+        className="relative rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.98]"
       >
         <svg className="h-5 w-5 text-slate-700 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -116,15 +116,15 @@ export function NotificationBell() {
               
               {/* Notification Panel - Căn giữa tuyệt đối trên Mobile */}
               <div 
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] max-w-[420px] max-h-[85vh] bg-white dark:bg-slate-950 shadow-2xl z-[9999] animate-rise rounded-[2.5rem] border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col sm:w-[400px] sm:max-h-[600px]"
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] max-w-[420px] max-h-[85vh] bg-white dark:bg-slate-950 shadow-2xl z-[9999] animate-rise rounded-[2.5rem] border border-slate-200 dark:border-slate-700/80 overflow-hidden flex flex-col sm:w-[400px] sm:max-h-[600px]"
               >
-                <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-5 sm:p-6">
+                <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700/80 p-5 sm:p-6">
                   <h3 className="font-black text-slate-900 dark:text-white text-xl tracking-tight">Thông báo</h3>
                   <button 
                     onClick={() => setIsOpen(false)}
                     className="p-2.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
                   >
-                    <svg className="w-6 h-6 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-slate-500 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -139,7 +139,7 @@ export function NotificationBell() {
                         </svg>
                       </div>
                       <p className="text-slate-900 dark:text-white font-bold text-lg">Hệ thống sạch sẽ!</p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">Bạn không có thông báo nào chưa đọc lúc này.</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-300 mt-2 leading-relaxed">Bạn không có thông báo nào chưa đọc lúc này.</p>
                     </div>
                   ) : (
                     notifications.map((notif) => (
@@ -154,9 +154,9 @@ export function NotificationBell() {
                           <div className={`mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 shadow-sm ${!notif.read ? "bg-amber-600 animate-pulse" : "bg-slate-200 dark:bg-slate-700"}`}></div>
                           <div className="flex-1 min-w-0">
                             <p className="font-extrabold text-base text-slate-950 dark:text-slate-100 leading-snug mb-1.5">{notif.title}</p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">{notif.message}</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">{notif.message}</p>
                             <div className="flex items-center justify-between mt-3">
-                              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 border border-slate-100 dark:border-slate-800 px-2 py-0.5 rounded-lg whitespace-nowrap">
+                              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 border border-slate-100 dark:border-slate-700/80 px-2 py-0.5 rounded-lg whitespace-nowrap">
                                 {formatDate(new Date(notif.createdAt))}
                               </span>
                               {!notif.read && (
@@ -170,7 +170,7 @@ export function NotificationBell() {
                   )}
                 </div>
 
-                <div className="border-t border-slate-200 dark:border-slate-800 p-5 bg-slate-50/50 dark:bg-slate-800/20">
+                <div className="border-t border-slate-200 dark:border-slate-700/80 p-5 bg-slate-50/50 dark:bg-slate-800/20">
                   <a
                     href="/dashboard/notifications"
                     className="flex items-center justify-center w-full py-4 bg-amber-600 dark:bg-amber-600 text-white rounded-2xl text-base font-black shadow-lg shadow-amber-200 dark:shadow-none hover:bg-amber-700 transition-all active:scale-[0.98]"

@@ -119,7 +119,7 @@ export function OrderDetailModalContent({
       isMounted = false;
       if (intervalId) clearInterval(intervalId);
     };
-  }, [order.spcCookie, order.id, order.status, shopeeTracking]);
+  }, [order.spcCookie, order.id, order.status]);
 
   useEffect(() => {
     setAdminForm({
@@ -229,23 +229,23 @@ export function OrderDetailModalContent({
             {formatCurrency(order.total)}
           </p>
         </div>
-        <div className="min-w-0 rounded-2xl bg-slate-50 p-5 border border-slate-100 dark:bg-slate-800/40 dark:border-slate-800 shadow-sm">
-          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">
+        <div className="min-w-0 rounded-2xl bg-slate-50 p-5 border border-slate-100 dark:bg-slate-800/40 dark:border-slate-700/80 shadow-sm">
+          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
             Số lượng
           </p>
           <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">
             {order.quantity}
           </p>
         </div>
-        <div className="min-w-0 rounded-2xl bg-slate-50 p-5 border border-slate-100 dark:bg-slate-800/40 dark:border-slate-800 shadow-sm sm:col-span-2 xl:col-span-1">
-          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">
+        <div className="min-w-0 rounded-2xl bg-slate-50 p-5 border border-slate-100 dark:bg-slate-800/40 dark:border-slate-700/80 shadow-sm sm:col-span-2 xl:col-span-1">
+          <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
             Voucher
           </p>
           <p className="mt-1 break-words text-lg font-black text-slate-900 dark:text-white">
             {voucherLabel}
           </p>
           {typeof order.unitPrice === "number" ? (
-            <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-500">
+            <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
               {formatCurrency(order.unitPrice)} / sản phẩm
             </p>
           ) : null}
@@ -271,18 +271,18 @@ export function OrderDetailModalContent({
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
             Thông tin sản phẩm
           </h3>
-          <div className="min-w-0 space-y-5 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-800/80 dark:bg-slate-950/40 p-6 shadow-inner">
+          <div className="min-w-0 space-y-5 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-700/80/80 dark:bg-slate-950/40 p-6 shadow-inner">
             <div>
-              <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">Tên sản phẩm</p>
+              <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Tên sản phẩm</p>
               <p className="mt-2 text-base break-words font-black text-slate-900 dark:text-white">{order.productName}</p>
             </div>
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">Loại voucher</p>
+                <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Loại voucher</p>
                 <p className="mt-1.5 font-bold text-slate-800 dark:text-slate-200">{voucherLabel}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">Giá áp dụng</p>
+                <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Giá áp dụng</p>
                 <p className="mt-1.5 font-black text-amber-700 dark:text-amber-500 text-lg">{typeof order.unitPrice === "number" ? formatCurrency(order.unitPrice) : "-"}</p>
               </div>
             </div>
@@ -355,15 +355,15 @@ export function OrderDetailModalContent({
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             Thông tin giao hàng
           </h3>
-          <div className="min-w-0 space-y-5 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-800/80 dark:bg-slate-950/40 p-6 shadow-inner">
+          <div className="min-w-0 space-y-5 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-700/80/80 dark:bg-slate-950/40 p-6 shadow-inner">
             <div>
-              <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">Số điện thoại</p>
+              <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Số điện thoại</p>
               <a href={`tel:${order.phone}`} className="mt-2 block font-black text-lg text-amber-700 hover:underline dark:text-amber-400 transition-colors">
                 {order.phone}
               </a>
             </div>
             <div>
-              <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500 tracking-wider">Địa chỉ chi tiết</p>
+              <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Địa chỉ chi tiết</p>
               <p className="mt-2 font-bold text-slate-800 dark:text-slate-100 leading-relaxed max-w-lg">{order.address}</p>
             </div>
             {/* Ẩn ghi chú khỏi dashboard user, chỉ admin xem được */}
@@ -423,7 +423,7 @@ export function OrderDetailModalContent({
                       <p className="font-semibold text-xs mb-2 text-slate-700 dark:text-slate-300">Lịch sử giao hàng (Mới nhất):</p>
                       <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
                         {trk.logistics.history.map((h: any, hIdx: number) => (
-                          <div key={hIdx} className="text-xs text-slate-600 dark:text-slate-400 pl-3 border-l-2 border-slate-300 dark:border-slate-700 pb-2">
+                          <div key={hIdx} className="text-xs text-slate-600 dark:text-slate-300 pl-3 border-l-2 border-slate-300 dark:border-slate-700 pb-2">
                             <span className="font-semibold text-slate-800 dark:text-slate-200">{h.ctime_text}</span>
                             <p className="mt-0.5">{h.description}</p>
                             {h.driver_name && <span className="block mt-0.5 opacity-80">Tài xế: {h.driver_name} - {h.driver_phone}</span>}
@@ -487,7 +487,7 @@ export function OrderDetailModalContent({
           <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">
             Admin phụ trách
           </h3>
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-900 dark:border-slate-700/80 dark:bg-slate-900 dark:text-white">
             <p className="font-medium">
               {responsibleAdmin
                 ? typeof currentAdminId === "number" && responsibleAdmin.id === currentAdminId
@@ -495,7 +495,7 @@ export function OrderDetailModalContent({
                   : responsibleAdminName
                 : "Chưa có admin phụ trách"}
             </p>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-300">
               {isAdmin
                 ? "Đơn sẽ thuộc quyền xử lý của admin đầu tiên duyệt đơn này."
                 : "Tên admin sẽ hiển thị sau khi đơn được admin tiếp nhận xử lý."}
@@ -510,7 +510,7 @@ export function OrderDetailModalContent({
           <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">
             Cập nhật logistics đơn hàng
           </h3>
-          <div className="min-w-0 max-w-full overflow-x-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="min-w-0 max-w-full overflow-x-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700/80 dark:bg-slate-900">
             <div className="flex min-w-0 max-w-full flex-col gap-3 overflow-x-hidden">
               <label className="block min-w-0 max-w-full space-y-1 text-sm text-slate-700 dark:text-slate-200">
                 <span>Cookie SPC_ST</span>
@@ -544,7 +544,7 @@ export function OrderDetailModalContent({
                   placeholder="Ghi chú nội bộ cho đơn hàng"
                 />
               </label>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-300">
                 {isLockedForAnotherAdmin
                   ? "Bạn không thể chỉnh sửa vì đơn này đang thuộc admin khác."
                   : isDeliveredOrder

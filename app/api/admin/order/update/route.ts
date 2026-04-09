@@ -62,6 +62,19 @@ export async function PUT(request: Request) {
     );
   }
 
+  // Chặn SPAdmin và các Admin khác cướp đơn đã được Booking đích danh
+  if (
+    order.status === "PENDING" &&
+    parsed.data.status === "PROCESSING" &&
+    order.approvedByAdminId && 
+    order.approvedByAdminId !== result.user.id
+  ) {
+    return NextResponse.json(
+      { error: "Đơn này đã được User Booking đích danh Admin khác. Bạn không thể cướp đơn." },
+      { status: 403 }
+    );
+  }
+
   // Validate cookie when transitioning to ORDER_PLACED
   if (parsed.data.status === "ORDER_PLACED") {
     if (!parsed.data.spcCookie || !parsed.data.spcCookie.trim()) {

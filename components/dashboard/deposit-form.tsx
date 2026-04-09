@@ -62,7 +62,7 @@ export function DepositForm() {
     <form onSubmit={handleSubmit} className="panel rounded-[1.75rem] p-6 shadow-sm">
       <div className="space-y-2">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Nạp tiền vào tài khoản</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">Nhập số tiền VND để cộng trực tiếp vào balance.</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">Nhập số tiền VND để cộng trực tiếp vào balance.</p>
       </div>
 
       {/* Preset buttons */}
@@ -91,7 +91,7 @@ export function DepositForm() {
           min={1000}
           step={1000}
           required
-          className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+          className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
           placeholder="100000"
         />
       </label>

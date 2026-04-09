@@ -64,8 +64,16 @@ export async function GET(request: NextRequest) {
     let newTrackingNo = order.trackingNo || "";
 
     if (results.length > 0) {
-      const allDelivered = results.every((r: any) => r.description === "Đã giao hàng" || r.description === "Hoàn thành");
-      const allCanceled = results.every((r: any) => r.description === "Đã hủy" || r.description === "Hủy bởi hệ thống");
+      const anyDelivered = results.some((r: any) => 
+        r.description === "Đã giao hàng" || 
+        r.description === "Hoàn thành" || 
+        r.description === "Giao hàng thành công"
+      );
+      const allCanceled = results.every((r: any) => 
+        r.description === "Đã hủy" || 
+        r.description === "Hủy bởi hệ thống" ||
+        r.description === "Đã huỷ"
+      );
 
       const allTrackingNumbers = results
         .map((r: any) => (r.tracking_number || "").trim())
@@ -76,7 +84,7 @@ export async function GET(request: NextRequest) {
         newTrackingNo = uniqueTrackings.join("\n");
       }
 
-      if (allDelivered) {
+      if (anyDelivered) {
         newStatus = "DELIVERED";
       } else if (allCanceled) {
         newStatus = "CANCELED";
@@ -92,10 +100,41 @@ export async function GET(request: NextRequest) {
     if (order.trackingNo !== newTrackingNo) updates.trackingNo = newTrackingNo;
 
     if (Object.keys(updates).length > 0) {
-      await prisma.order.update({
-        where: { id: orderId },
-        data: updates,
-      });
+      if (updates.status === "DELIVERED" && order.approvedByAdminId) {
+        const commission = Math.floor(order.total * 0.95);
+        await prisma.$transaction([
+          prisma.order.update({
+            where: { id: orderId },
+            data: updates,
+          }),
+          prisma.user.update({
+            where: { id: order.approvedByAdminId },
+            data: { balance: { increment: commission } },
+          }),
+          prisma.transaction.create({
+            data: {
+              userId: order.approvedByAdminId,
+              amount: commission,
+              type: "ADMIN_ADJUSTMENT",
+              note: `Hoa hồng xử lý đơn giao thành công #${order.id} (95% của ${order.total.toLocaleString("vi-VN")}đ)`,
+            },
+          }),
+          prisma.notification.create({
+            data: {
+              userId: order.approvedByAdminId,
+              type: "BALANCE_CHANGED",
+              title: "Hoa hồng hoàn thành đơn",
+              message: `Bạn được cộng ${commission.toLocaleString("vi-VN")}đ từ đơn #${order.id}.`,
+              link: `/admin/orders?orderId=${order.id}`,
+            },
+          }),
+        ]);
+      } else {
+        await prisma.order.update({
+          where: { id: orderId },
+          data: updates,
+        });
+      }
     }
 
     return NextResponse.json({ tracking: results, autoUpdatedStatus: newStatus });

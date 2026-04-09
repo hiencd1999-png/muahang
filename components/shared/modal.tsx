@@ -63,10 +63,10 @@ export function Modal({
       <div className="min-h-screen px-3 py-4 sm:px-6 sm:py-8 lg:px-8 flex items-center justify-center">
         <div
           ref={modalRef}
-          className={`bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl max-h-[94vh] w-full min-w-0 overflow-x-hidden overflow-y-auto ${sizeClasses[size]} animate-rise border dark:border-slate-800`}
+          className={`bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl max-h-[94vh] w-full min-w-0 overflow-x-hidden overflow-y-auto ${sizeClasses[size]} animate-rise border dark:border-slate-700/80`}
         >
           {title && (
-            <div className="flex items-center justify-between border-b dark:border-slate-800 p-6">
+            <div className="flex items-center justify-between border-b dark:border-slate-700/80 p-6">
               <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                 {title}
               </h2>
@@ -75,7 +75,7 @@ export function Modal({
                 className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
                 aria-label="Close modal"
               >
-                <X size={24} className="text-slate-500 dark:text-slate-400" />
+                <X size={24} className="text-slate-500 dark:text-slate-300" />
               </button>
             </div>
           )}
