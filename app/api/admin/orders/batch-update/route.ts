@@ -57,8 +57,9 @@ export async function POST(request: NextRequest) {
           return updatedOrder;
         }
 
-        // Chặn cướp đơn Booking đích danh
+        // Chặn cướp đơn Booking đích danh (SPADMIN được phép vượt qua)
         if (
+          user.role !== "SPADMIN" &&
           order.status === "PENDING" && 
           status === "PROCESSING" && 
           order.approvedByAdminId && 

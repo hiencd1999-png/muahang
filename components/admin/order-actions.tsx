@@ -27,6 +27,8 @@ interface OrderData {
   spcCookie?: string;
   trackingNo?: string;
   shopeeTrackingData?: string | null;
+  complaintStatus?: string | null;
+  complaintReason?: string | null;
   createdAt: Date;
   updatedAt: Date;
   userId: number;
@@ -70,6 +72,7 @@ const statusColors: Record<string, string> = {
 export function OrderActions({
   orderId,
   status,
+  complaintStatus,
   currentAdminId,
   canManageAllOrders,
   approvedByAdminId,
@@ -78,6 +81,7 @@ export function OrderActions({
 }: {
   orderId: number;
   status: string;
+  complaintStatus?: string | null;
   currentAdminId: number;
   canManageAllOrders: boolean;
   approvedByAdminId: number | null;
@@ -99,6 +103,10 @@ export function OrderActions({
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedAdminId, setSelectedAdminId] = useState<number | "">(approvedByAdminId ?? "");
   const [isAssignLoading, setIsAssignLoading] = useState(false);
+  
+  const [showComplaintModal, setShowComplaintModal] = useState(false);
+  const [isHandlingComplaint, setIsHandlingComplaint] = useState(false);
+
   const isDeliveredOrder = status === "DELIVERED";
   const isOwnedByAnotherAdmin =
     !canManageAllOrders && approvedByAdminId !== null && approvedByAdminId !== currentAdminId;
@@ -176,6 +184,8 @@ export function OrderActions({
           spcCookie: order.spcCookie,
           trackingNo: order.trackingNo,
           shopeeTrackingData: order.shopeeTrackingData,
+          complaintStatus: order.complaintStatus,
+          complaintReason: order.complaintReason,
           approvedByAdminId: order.approvedByAdminId,
           createdAt: new Date(order.createdAt),
           updatedAt: new Date(order.updatedAt),
@@ -264,6 +274,31 @@ export function OrderActions({
     }
   };
 
+  const handleComplaintSubmit = async (action: "APPROVE" | "REJECT") => {
+    setIsHandlingComplaint(true);
+    try {
+      const response = await fetch("/api/admin/order/complaint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, action }),
+      });
+      const data = await readApiResponse(response);
+
+      if (!response.ok) {
+        addToast("error", data.error ?? "Không thể xử lý khiếu nại.");
+        return;
+      }
+
+      addToast("success", data.message ?? "Xử lý thành công.");
+      setShowComplaintModal(false);
+      router.refresh();
+    } catch {
+      addToast("error", "Lỗi gửi yêu cầu xử lý khiếu nại.");
+    } finally {
+      setIsHandlingComplaint(false);
+    }
+  };
+
   return (
     <>
       <div className="flex items-center gap-2 whitespace-nowrap overflow-x-auto">
@@ -280,9 +315,9 @@ export function OrderActions({
           <button
             type="button"
             onClick={() => updateStatus("PROCESSING")}
-            disabled={loading !== "" || isOwnedByAnotherAdmin || (approvedByAdminId !== null && approvedByAdminId !== currentAdminId)}
+            disabled={loading !== "" || (!canManageAllOrders && approvedByAdminId !== null && approvedByAdminId !== currentAdminId)}
             className="shrink-0 rounded-xl bg-sky-600 hover:bg-sky-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
-            title={(approvedByAdminId !== null && approvedByAdminId !== currentAdminId) ? "Đơn đã được Booking cho người khác. Không thể tranh." : isOwnedByAnotherAdmin ? ownershipMessage : "Duyệt đơn"}
+            title={(!canManageAllOrders && approvedByAdminId !== null && approvedByAdminId !== currentAdminId) ? "Đơn đã được Booking cho người khác. Không thể tranh." : isOwnedByAnotherAdmin ? ownershipMessage : "Duyệt đơn"}
           >
             {loading === "PROCESSING" ? "..." : "Duyệt"}
           </button>
@@ -329,6 +364,28 @@ export function OrderActions({
           >
             Đổi phụ trách
           </button>
+        ) : null}
+        {complaintStatus === "PENDING" && (!isOwnedByAnotherAdmin || canManageAllOrders) ? (
+          <button
+            type="button"
+            onClick={() => {
+               handleViewDetails();
+               setShowComplaintModal(true);
+            }}
+            className="shrink-0 rounded-xl bg-orange-600 hover:bg-orange-700 px-3 py-2 text-xs font-bold text-white shadow shadow-orange-500/20"
+          >
+             🚨 Xem Khiếu nại
+          </button>
+        ) : null}
+        {complaintStatus === "APPROVED" ? (
+           <span className="shrink-0 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+             ✅ Đã Duyệt Khiếu Nại
+           </span>
+        ) : null}
+        {complaintStatus === "REJECTED" ? (
+           <span className="shrink-0 rounded-xl bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-700 dark:text-rose-400">
+             ❌ Đã Từ Chối Khiếu Nại
+           </span>
         ) : null}
       </div>
       {isOwnedByAnotherAdmin ? (
@@ -499,6 +556,62 @@ export function OrderActions({
               >
                 {isAssignLoading ? "Đang cập nhật..." : "Xác nhận"}
               </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {showComplaintModal && orderData && (
+        <Modal
+          isOpen={showComplaintModal}
+          onClose={() => setShowComplaintModal(false)}
+          title="Xử lý Khiếu nại từ User"
+          size="medium"
+        >
+          <div className="space-y-4">
+            <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
+              <p className="text-[10px] uppercase font-bold text-orange-600 mb-1 tracking-wider">Lý do khiếu nại</p>
+              <p className="text-sm font-medium text-orange-950 whitespace-pre-wrap">{orderData.complaintReason}</p>
+            </div>
+            {canManageAllOrders ? (
+              <p className="text-xs text-slate-600">
+                Lưu ý: Nếu nhấn <strong>Duyệt Hoàn Tiền</strong>, User sẽ được cộng trả lại {orderData.total}đ. Đồng thời Admin phụ trách đơn này sẽ bị trừ tiền hoa hồng (95% của {orderData.total}đ).
+              </p>
+            ) : (
+               <p className="text-xs text-slate-600">
+                  Bạn đang xem thông tin khiếu nại. Chỉ Quản trị viên cấp cao (SPADMIN) mới có quyền Duyệt hoặc Từ chối khiếu nại này.
+               </p>
+            )}
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowComplaintModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-sm transition-colors"
+                disabled={isHandlingComplaint}
+              >
+                Đóng
+              </button>
+              {canManageAllOrders && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleComplaintSubmit("REJECT")}
+                    className="px-4 py-2 rounded-xl border border-rose-500 hover:bg-rose-50 text-rose-600 font-semibold text-sm transition-colors disabled:opacity-60"
+                    disabled={isHandlingComplaint}
+                  >
+                    {isHandlingComplaint ? "Đang xử lý..." : "Từ chối Khiếu Nại"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleComplaintSubmit("APPROVE")}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors disabled:opacity-60"
+                    disabled={isHandlingComplaint}
+                  >
+                    {isHandlingComplaint ? "Đang xử lý..." : "Duyệt Hoàn Tiền"}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </Modal>

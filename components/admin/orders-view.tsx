@@ -21,6 +21,7 @@ interface Order {
   total: number;
   voucherLabel?: string | null;
   status: string;
+  complaintStatus?: string | null;
   user: { username: string; fullName?: string | null };
   createdAt: Date;
   variant: string | null;
@@ -321,6 +322,7 @@ export function AdminOrdersView({
                       <OrderActions
                         orderId={order.id}
                         status={order.status}
+                        complaintStatus={order.complaintStatus}
                         currentAdminId={currentAdminId}
                         canManageAllOrders={canManageAllOrders}
                         approvedByAdminId={order.approvedByAdminId}
@@ -391,6 +393,7 @@ export function AdminOrdersView({
                     <OrderActions
                       orderId={order.id}
                       status={order.status}
+                      complaintStatus={order.complaintStatus}
                       currentAdminId={currentAdminId}
                       canManageAllOrders={canManageAllOrders}
                       approvedByAdminId={order.approvedByAdminId}

@@ -57,20 +57,7 @@ export async function PUT(request: Request) {
 
   if (!canManageAllOrders && order.approvedByAdminId && order.approvedByAdminId !== result.user.id) {
     return NextResponse.json(
-      { error: "Bạn chỉ có thể xử lý các đơn do mình đã duyệt." },
-      { status: 403 }
-    );
-  }
-
-  // Chặn SPAdmin và các Admin khác cướp đơn đã được Booking đích danh
-  if (
-    order.status === "PENDING" &&
-    parsed.data.status === "PROCESSING" &&
-    order.approvedByAdminId && 
-    order.approvedByAdminId !== result.user.id
-  ) {
-    return NextResponse.json(
-      { error: "Đơn này đã được User Booking đích danh Admin khác. Bạn không thể cướp đơn." },
+      { error: "Bạn chỉ có thể xử lý các đơn do mình đã duyệt hoặc được Booking." },
       { status: 403 }
     );
   }

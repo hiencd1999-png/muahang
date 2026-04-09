@@ -18,7 +18,9 @@ interface Order {
   total: number;
   voucherLabel?: string | null;
   status: string;
+  complaintStatus?: string | null;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export function UserOrdersView({ orders }: { orders: Order[] }) {
@@ -260,7 +262,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                   <td className="px-4 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-300 whitespace-nowrap uppercase tracking-wider" suppressHydrationWarning>{formatDate(order.createdAt)}</td>
                   <td className="px-4 py-4">
                     <div className="flex justify-center">
-                      <UserOrderActions orderId={order.id} status={order.status} buttonClassName="min-w-[90px] h-10 px-3 py-2 text-xs" />
+                      <UserOrderActions orderId={order.id} status={order.status} complaintStatus={order.complaintStatus} updatedAt={order.updatedAt} buttonClassName="min-w-[90px] h-10 px-3 py-2 text-xs" />
                     </div>
                   </td>
                 </tr>
@@ -319,6 +321,8 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                 <UserOrderActions 
                   orderId={order.id} 
                   status={order.status} 
+                  complaintStatus={order.complaintStatus}
+                  updatedAt={order.updatedAt}
                   buttonClassName="w-full h-12 rounded-xl text-sm font-semibold shadow-sm active:scale-[0.98] transition-transform" 
                 />
               </div>

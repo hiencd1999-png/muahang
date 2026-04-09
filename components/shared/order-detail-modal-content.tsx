@@ -296,7 +296,7 @@ export function OrderDetailModalContent({
               <p className="font-medium text-gray-600 dark:text-gray-400">Danh sách link Shopee sau phân tích</p>
               <div className="mt-2 space-y-1">
                 {(() => {
-                  // Tách các link, phân loại, số lượng từ order.variant và order.note
+                  // Tách các link, phân loại, số lượng từ order.note
                   // Ưu tiên lấy từ order.note nếu có dòng "Chi tiết link:" (theo logic API)
                   const detailLines: string[] = [];
                   if (order.note && order.note.includes('Chi tiết link:')) {
@@ -305,11 +305,8 @@ export function OrderDetailModalContent({
                       detailLines.push(...match[1].split('\n').map(l => l.trim()).filter(Boolean));
                     }
                   }
-                  // Nếu không có detailLines, fallback lấy từ variant (dạng "1. Phân loại (SL x)")
-                  if (detailLines.length === 0 && order.variant) {
-                    detailLines.push(...order.variant.split('|').map(l => l.trim()).filter(Boolean));
-                  }
-                  // Nếu vẫn không có, chỉ hiện 1 link
+                  
+                  // Nếu vẫn không có, tức là đơn 1 sản phẩm, gộp cừng từ các trường tĩnh của order
                   if (detailLines.length === 0) {
                     detailLines.push(`${order.productLink} | Phân loại: ${order.variant || 'Mặc định'} | SL: ${order.quantity}`);
                   }

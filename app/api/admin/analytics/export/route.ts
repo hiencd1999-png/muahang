@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
 
   const adminMap = new Map(admins.map(a => [a.id, a]));
 
-  const deliveredOrders = ordersInMonth.filter((o) => o.status === "DELIVERED");
+  const deliveredOrders = ordersInMonth.filter((o) => o.status === "DELIVERED" && o.complaintStatus !== "APPROVED");
+  const canceledOrders = ordersInMonth.filter((o) => o.status === "CANCELED" || (o.status === "DELIVERED" && o.complaintStatus === "APPROVED"));
   
   let totalRevenue = 0;
   let totalSystemProfit = 0;
@@ -52,8 +53,8 @@ export async function GET(request: NextRequest) {
 
   const adminStats = admins.map((admin) => {
     const adminOrders = ordersInMonth.filter((o) => o.approvedByAdminId === admin.id);
-    const successAdminOrders = adminOrders.filter((o) => o.status === "DELIVERED");
-    const canceledAdminOrders = adminOrders.filter((o) => o.status === "CANCELED");
+    const successAdminOrders = adminOrders.filter((o) => o.status === "DELIVERED" && o.complaintStatus !== "APPROVED");
+    const canceledAdminOrders = adminOrders.filter((o) => o.status === "CANCELED" || (o.status === "DELIVERED" && o.complaintStatus === "APPROVED"));
     
     let adminRev = 0;
     let adminComm = 0;
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
     { "Chỉ số": "Đến ngày", "Giá trị": endParam },
     { "Chỉ số": "Tổng số đơn", "Giá trị": ordersInMonth.length },
     { "Chỉ số": "Đơn thành công", "Giá trị": deliveredOrders.length },
-    { "Chỉ số": "Đơn huỷ", "Giá trị": ordersInMonth.filter(o => o.status === "CANCELED").length },
+    { "Chỉ số": "Đơn huỷ", "Giá trị": canceledOrders.length },
     { "Chỉ số": "Doanh thu thành công (VNĐ)", "Giá trị": totalRevenue },
     { "Chỉ số": "Tổng hoa hồng Admin (VNĐ)", "Giá trị": totalAdminCommission },
     { "Chỉ số": "Tổng Lợi nhuận SPAdmin (VNĐ)", "Giá trị": totalSystemProfit },
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
       const admin = o.approvedByAdminId ? adminMap.get(o.approvedByAdminId) : null;
       let commission = 0;
       let profit = 0;
-      if (o.status === "DELIVERED") {
+      if (o.status === "DELIVERED" && o.complaintStatus !== "APPROVED") {
           commission = Math.floor(o.total * 0.95);
           profit = o.total - commission;
       }

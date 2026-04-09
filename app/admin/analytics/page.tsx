@@ -32,12 +32,15 @@ export default async function AnalyticsPage(props: { searchParams: Promise<{ fro
       status: true,
       total: true,
       approvedByAdminId: true,
+      complaintStatus: true,
     },
   });
 
   const totalOrders = ordersInMonth.length;
-  const deliveredOrders = ordersInMonth.filter((o) => o.status === "DELIVERED");
-  const canceledOrders = ordersInMonth.filter((o) => o.status === "CANCELED");
+  // Các đơn giao thành công = Trạng thái DELIVERED VÀ không bị hoàn do khiếu nại
+  const deliveredOrders = ordersInMonth.filter((o) => o.status === "DELIVERED" && o.complaintStatus !== "APPROVED");
+  // Tính các đơn bị hoàn do khiếu nại như một phần của Huỷ bỏ
+  const canceledOrders = ordersInMonth.filter((o) => o.status === "CANCELED" || (o.status === "DELIVERED" && o.complaintStatus === "APPROVED"));
   
   let totalRevenue = 0;
   let totalSystemProfit = 0;
@@ -60,8 +63,8 @@ export default async function AnalyticsPage(props: { searchParams: Promise<{ fro
   // Gom nhóm thống kê theo admin
   const adminStats = admins.map((admin) => {
     const adminOrders = ordersInMonth.filter((o) => o.approvedByAdminId === admin.id);
-    const successAdminOrders = adminOrders.filter((o) => o.status === "DELIVERED");
-    const canceledAdminOrders = adminOrders.filter((o) => o.status === "CANCELED");
+    const successAdminOrders = adminOrders.filter((o) => o.status === "DELIVERED" && o.complaintStatus !== "APPROVED");
+    const canceledAdminOrders = adminOrders.filter((o) => o.status === "CANCELED" || (o.status === "DELIVERED" && o.complaintStatus === "APPROVED"));
     
     let revenue = 0;
     let commission = 0;
