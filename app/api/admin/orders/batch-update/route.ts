@@ -11,6 +11,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "orderIds is required" }, { status: 400 });
   }
 
+  if (orderIds.length > 200) {
+    return NextResponse.json({ error: "Chỉ được phép cập nhật hàng loạt tối đa 200 đơn mỗi lần" }, { status: 400 });
+  }
+
   if (!status || !["PENDING", "PROCESSING", "ORDER_PLACED", "TRACKING_GENERATED", "DELIVERED", "CANCELED"].includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }

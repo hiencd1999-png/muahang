@@ -129,6 +129,34 @@ export async function GET(request: NextRequest) {
             },
           }),
         ]);
+      } else if (updates.status === "CANCELED" && order.status !== "CANCELED" && order.status !== "DELIVERED") {
+        await prisma.$transaction([
+          prisma.order.update({
+            where: { id: orderId },
+            data: updates,
+          }),
+          prisma.user.update({
+             where: { id: order.userId },
+             data: { balance: { increment: order.total } } 
+          }),
+          prisma.transaction.create({
+            data: { 
+              userId: order.userId, 
+              amount: order.total, 
+              type: "ORDER_REFUND", 
+              note: `Hoàn tiền tự động vì API Tracking hiển thị Đã Huỷ - Order #${order.id}` 
+            }
+          }),
+          prisma.notification.create({
+            data: { 
+              userId: order.userId, 
+              type: "ORDER_CANCELED", 
+              title: "Đơn hàng bị huỷ bởi Shopee", 
+              message: `Đơn #${order.id} của bạn vừa bị huỷ trên Shopee. Hệ thống đã hoàn trả ${order.total.toLocaleString("vi-VN")}đ vào ví của bạn.`, 
+              link: `/dashboard/orders?orderId=${order.id}` 
+            }
+          })
+        ]);
       } else {
         await prisma.order.update({
           where: { id: orderId },

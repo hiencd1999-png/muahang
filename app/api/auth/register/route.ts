@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSessionToken, hashPassword, SESSION_COOKIE } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const fullNameRegex = /^[A-Za-zÀ-ỹ]+\s[A-Za-zÀ-ỹ\s]+$/;
 const usernameRegex = /^(?!\d)[a-z0-9_]{4,20}$/;
@@ -42,6 +43,12 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+  const { allowed } = checkRateLimit(`register_${ip}`, 5, 60 * 60 * 1000); // Tối đa 5 lượt đăng ký / 1 giờ / 1 IP
+  if (!allowed) {
+    return NextResponse.json({ error: "Thiết bị của bạn đã tạo quá nhiều tài khoản. Vui lòng thử lại sau 1 giờ!" }, { status: 429 });
+  }
+
   const body = await request.json();
   const parsed = schema.safeParse(body);
 

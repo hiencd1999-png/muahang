@@ -9,20 +9,20 @@ import { ensureVoucherPricingConfigs } from "@/lib/voucher-store";
 import { calculateVoucherOrderTotal, type VoucherOption } from "@/lib/voucher";
 
 const batchItemShape = {
-  productLink: z.string().trim().min(1),
-  resolvedLink: z.string().trim().optional(),
-  productName: z.string().trim().min(1),
-  shopId: z.string().trim().min(1),
-  variant: z.string().trim().min(1),
+  productLink: z.string().trim().min(1).max(2000),
+  resolvedLink: z.string().trim().max(2000).optional(),
+  productName: z.string().trim().min(1).max(300),
+  shopId: z.string().trim().min(1).max(50),
+  variant: z.string().trim().min(1).max(300),
   quantity: z.number().int().min(1).max(100).optional(),
 };
 
 const sharedShape = {
   voucherCode: z.string().trim().min(2).max(60),
   quantity: z.number().int().min(1).max(100).optional(),
-  phone: z.string().trim().min(1).optional(),
-  address: z.string().trim().min(8),
-  note: z.string().trim().optional(),
+  phone: z.string().trim().min(1).max(50).optional(),
+  address: z.string().trim().min(8).max(800),
+  note: z.string().trim().max(2000).optional(),
   requestedAdminId: z.number().int().optional(),
 };
 

@@ -4,9 +4,9 @@ import { requireApiUser } from "@/lib/session";
 import { analyzeShopeeAddress } from "@/lib/shopee-address";
 
 const schema = z.object({
-  address: z.string().trim().min(8),
-  phone: z.string().trim().optional(),
-  note: z.string().trim().optional(),
+  address: z.string().trim().min(8).max(800),
+  phone: z.string().trim().max(50).optional(),
+  note: z.string().trim().max(2000).optional(),
 });
 
 export async function POST(request: Request) {

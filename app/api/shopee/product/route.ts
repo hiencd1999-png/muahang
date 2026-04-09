@@ -4,7 +4,7 @@ import { requireApiUser } from "@/lib/session";
 import { fetchShopeeProductDetails } from "@/lib/shopee";
 
 const schema = z.object({
-  productLink: z.string().trim().min(1),
+  productLink: z.string().trim().min(1).max(2000),
 });
 
 export async function POST(request: Request) {
