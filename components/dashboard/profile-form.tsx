@@ -156,7 +156,7 @@ export function ProfileForm({
         <button
           type="submit"
           disabled={loading}
-          className="mt-5 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-5 rounded-2xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
         </button>

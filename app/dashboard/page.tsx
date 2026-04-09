@@ -33,7 +33,7 @@ export default async function DashboardPage() {
             <Link href="/dashboard/deposit" className="rounded-full bg-amber-600 px-3 py-2 text-sm font-semibold text-white sm:px-4 hover:bg-amber-700 transition active:scale-95 shadow-md shadow-amber-900/10">
               Nạp tiền
             </Link>
-            <Link href="/dashboard/create-order" className="rounded-full bg-slate-950 dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-white sm:px-4 hover:bg-slate-800 dark:hover:bg-slate-600 transition active:scale-95 shadow-md">
+            <Link href="/dashboard/create-order" className="rounded-full bg-amber-600 dark:bg-amber-600 px-3 py-2 text-sm font-semibold text-white sm:px-4 hover:bg-amber-700 transition active:scale-95 shadow-md shadow-amber-900/10">
               Tạo đơn
             </Link>
           </div>

@@ -408,7 +408,7 @@ export function CreateOrderForm({
                       type="button"
                       onClick={() => handleAnalyzeLink(item.id)}
                       disabled={item.isAnalyzing}
-                      className="rounded-2xl bg-slate-950 dark:bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-2xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {item.isAnalyzing ? "Đang phân tích..." : "Phân tích link"}
                     </button>
@@ -530,7 +530,7 @@ export function CreateOrderForm({
               type="button"
               onClick={handleAnalyzeAddress}
               disabled={isAnalyzingAddress}
-              className="rounded-2xl bg-slate-950 dark:bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-2xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isAnalyzingAddress ? "Đang phân tích..." : "Phân tích địa chỉ"}
             </button>

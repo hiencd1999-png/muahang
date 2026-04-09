@@ -232,7 +232,7 @@ export function VoucherPricingManager({ initialConfigs }: { initialConfigs: Vouc
           type="button"
           onClick={handleSave}
           disabled={isPending}
-          className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-2xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-amber-700 shadow-lg shadow-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? "Đang lưu..." : "Lưu cấu hình voucher"}
         </button>

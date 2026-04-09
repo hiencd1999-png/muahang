@@ -232,7 +232,7 @@ export function SystemProxyManager({ initialProxies }: { initialProxies: ProxyIt
               type="button"
               onClick={handleImport}
               disabled={isPending}
-              className="rounded-2xl bg-slate-950 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-2xl bg-amber-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 shadow-lg shadow-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isPending ? "Đang import..." : "Import danh sách proxy"}
             </button>

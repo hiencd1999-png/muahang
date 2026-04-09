@@ -287,8 +287,8 @@ export function UserManagementControls({
                   type="button"
                   onClick={handleSaveBalance}
                   disabled={isSavingBalance || targetBalance === currentBalance}
-                  className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white transition disabled:opacity-60 ${
-                    operatorIsSpAdmin ? "bg-slate-900 hover:bg-slate-800" : "bg-emerald-600 hover:bg-emerald-700"
+                  className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white transition shadow-lg shadow-amber-100 disabled:opacity-60 ${
+                    operatorIsSpAdmin ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
                   }`}
                 >
                   {isSavingBalance ? "Đang cập nhật..." : operatorIsSpAdmin ? "Lưu số dư mới" : "Xác nhận chuyển tiền"}
@@ -320,7 +320,7 @@ export function UserManagementControls({
                       <button
                         type="button"
                         onClick={generatePassword}
-                        className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                        className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 shadow-sm"
                       >
                         Reset mật khẩu
                       </button>
