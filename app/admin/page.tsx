@@ -17,16 +17,16 @@ export default async function AdminPage() {
   return (
     <section className="grid gap-4 md:grid-cols-3">
       <article className="panel rounded-[1.75rem] p-6">
-        <p className="text-sm text-slate-500">Tổng user</p>
-        <p className="mt-2 text-3xl font-semibold text-slate-950">{totalUsers}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Tổng user</p>
+        <p className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{totalUsers}</p>
       </article>
       <article className="panel rounded-[1.75rem] p-6">
-        <p className="text-sm text-slate-500">Tổng đơn</p>
-        <p className="mt-2 text-3xl font-semibold text-slate-950">{totalOrders}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Tổng đơn</p>
+        <p className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{totalOrders}</p>
       </article>
       <article className="panel rounded-[1.75rem] p-6">
-        <p className="text-sm text-slate-500">Doanh thu</p>
-        <p className="mt-2 text-3xl font-semibold text-slate-950">{formatCurrency(Math.abs(revenue._sum.amount ?? 0))}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Doanh thu</p>
+        <p className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{formatCurrency(Math.abs(revenue._sum.amount ?? 0))}</p>
       </article>
     </section>
   );

@@ -45,17 +45,17 @@ export function OrderTimeline({ currentStatus, createdAt, updatedAt }: OrderTime
   }
 
   const statusColors: Record<string, { bg: string; border: string; text: string }> = {
-    PENDING: { bg: "bg-yellow-100", border: "border-yellow-300", text: "text-yellow-700" },
-    PROCESSING: { bg: "bg-sky-100", border: "border-sky-300", text: "text-sky-700" },
-    ORDER_PLACED: { bg: "bg-blue-100", border: "border-blue-300", text: "text-blue-700" },
-    TRACKING_GENERATED: { bg: "bg-indigo-100", border: "border-indigo-300", text: "text-indigo-700" },
-    DELIVERED: { bg: "bg-emerald-100", border: "border-emerald-300", text: "text-emerald-700" },
-    CANCELED: { bg: "bg-rose-100", border: "border-rose-300", text: "text-rose-700" },
+    PENDING: { bg: "bg-yellow-100 dark:bg-yellow-900/30", border: "border-yellow-300 dark:border-yellow-700/50", text: "text-yellow-700 dark:text-yellow-400" },
+    PROCESSING: { bg: "bg-sky-100 dark:bg-sky-900/30", border: "border-sky-300 dark:border-sky-700/50", text: "text-sky-700 dark:text-sky-400" },
+    ORDER_PLACED: { bg: "bg-blue-100 dark:bg-blue-900/30", border: "border-blue-300 dark:border-blue-700/50", text: "text-blue-700 dark:text-blue-400" },
+    TRACKING_GENERATED: { bg: "bg-indigo-100 dark:bg-indigo-900/30", border: "border-indigo-300 dark:border-indigo-700/50", text: "text-indigo-700 dark:text-indigo-400" },
+    DELIVERED: { bg: "bg-emerald-100 dark:bg-emerald-900/30", border: "border-emerald-300 dark:border-emerald-700/50", text: "text-emerald-700 dark:text-emerald-400" },
+    CANCELED: { bg: "bg-rose-100 dark:bg-rose-900/30", border: "border-rose-300 dark:border-rose-700/50", text: "text-rose-700 dark:text-rose-400" },
   };
 
   return (
     <div className="py-6">
-      <h3 className="mb-4 text-sm font-semibold text-slate-950">Dòng thời gian đơn hàng</h3>
+      <h3 className="mb-4 text-sm font-semibold text-slate-950 dark:text-white">Dòng thời gian đơn hàng</h3>
       <div className="space-y-4">
         {events.map((event, index) => {
           const isCompleted = statuses.indexOf(event.status) < currentIndex;
