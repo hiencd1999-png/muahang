@@ -12,10 +12,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const canViewTransactions = isSpAdminRole(currentAdmin.role);
   const canManageProxies = isSpAdminRole(currentAdmin.role);
 
-  const navLinks = [
+    const navLinks = [
     { href: "/admin", label: "Tổng quan" },
     { href: "/admin/users", label: "Quản lý user" },
     { href: "/admin/orders", label: "Quản lý đơn" },
+    { href: "/admin/bank-deposits", label: "Bank (Nội Bộ)" },
     ...(canManageVouchers ? [{ href: "/admin/vouchers", label: "Cấu hình voucher" }] : []),
     ...(canManageProxies ? [{ href: "/admin/proxies", label: "Proxy hệ thống" }] : []),
     ...(canViewTransactions ? [{ href: "/admin/transactions", label: "Giao dịch hệ thống" }] : []),

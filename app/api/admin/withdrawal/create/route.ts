@@ -6,8 +6,24 @@ import z from "zod";
 const schema = z.object({
   amount: z.number().int().min(10000, "Đơn vị tiền tối thiểu là 10.000 VNĐ"),
   walletAddress: z.string().min(5, "Ví không hợp lệ").max(200),
-  network: z.string().min(2).max(50),
+  network: z.enum(["TRC20", "BEP20", "ERC20", "BSC/BEP20"]).default("BSC/BEP20"),
+}).superRefine((data, ctx) => {
+  const isEvm = ["BEP20", "ERC20", "BSC/BEP20"].includes(data.network);
+  if (isEvm && !/^0x[a-fA-F0-9]{40}$/.test(data.walletAddress)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Địa chỉ EVM (${data.network}) không hợp lệ (phải bắt đầu bằng 0x và dài 42 ký tự)`,
+      path: ["walletAddress"]
+    });
+  } else if (data.network === "TRC20" && !/^T[A-Za-z1-9]{33}$/.test(data.walletAddress)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Địa chỉ TRC20 không hợp lệ (phải bắt đầu bằng T và dài 34 ký tự)",
+      path: ["walletAddress"]
+    });
+  }
 });
+
 
 export async function POST(req: NextRequest) {
   try {

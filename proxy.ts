@@ -4,7 +4,7 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 
 // Rate limiter for API routes
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT = 10;
+const RATE_LIMIT = 100;
 const WINDOW_MS = 60 * 1000;
 
 function getClientIP(request: NextRequest): string {

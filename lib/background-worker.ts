@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { ShopeeTrackingChecker } from "@/lib/shopee-tracking";
 import { OrderStatus } from "@prisma/client";
+import { runBinanceUSDTTracker } from "@/lib/binance-worker";
 
 const RUN_INTERVAL_MS = 5 * 60 * 1000;
 const GROUP_SIZE = 100;
 
 let isRunning = false;
+
+const retryCounters = new Map<number, number>();
 
 async function syncGroup(orders: any[], proxies: any[]) {
     // Chạy tuần tự trong nhóm 100 đơn
@@ -77,15 +80,39 @@ async function syncGroup(orders: any[], proxies: any[]) {
                 }
                 console.log(`📦 [AutoSyncWorker] Đơn #${order.id}: ${order.status} -> ${newStatus}. ${updates.status === 'DELIVERED' ? '💰 CỘNG TIỀN CHO ADMIN!' : updates.status === 'CANCELED' ? '🔄 ĐÃ HOÀN TIỀN CHO USER!' : ''}`);
             }
+
+            // Giao dịch thành công, xoá lịch sử lỗi (nếu có)
+            retryCounters.delete(order.id);
         } catch (e) {
             const msg = e instanceof Error ? e.message : "Error";
             if (msg.includes("expired") || msg.includes("rejected cookie")) {
                 await prisma.order.update({ where: { id: order.id }, data: { spcCookie: "" } });
                 console.log(`⚠️ [AutoSyncWorker] Đơn #${order.id}: Cookie đã chết. Đã tự động xoá.`);
+            } else {
+                const failCount = (retryCounters.get(order.id) || 0) + 1;
+                retryCounters.set(order.id, failCount);
+                console.log(`⚠️ [AutoSyncWorker] Đơn #${order.id}: Lỗi kiểm tra (Lần ${failCount}/3) - ${msg}`);
+
+                if (failCount >= 3) {
+                    // Đẩy vào Dead-letter queue
+                    await prisma.deadLetterQueue.create({
+                        data: {
+                            orderId: order.id,
+                            payload: `Proxy: ${proxyConf?.host || 'None'}. Lỗi chi tiết: ${msg}. SpcCookie cắt gọn: ${order.spcCookie?.substring(0, 30)}...`,
+                            error: msg
+                        }
+                    });
+                    
+                    // Stop checking this order by clearing the cookie
+                    await prisma.order.update({ where: { id: order.id }, data: { spcCookie: "" } });
+                    retryCounters.delete(order.id);
+                    console.log(`💀 [AutoSyncWorker] Đơn #${order.id}: Đã đẩy vào Dead-Letter Queue do lỗi 3 lần liên tiếp.`);
+                }
             }
         }
     }
 }
+
 
 export async function runBackgroundCron() {
     if (isRunning) return;
@@ -175,7 +202,11 @@ export function bootWorker() {
         
         setInterval(runBackgroundCron, RUN_INTERVAL_MS);
         
+        // Binance API cho phép gọi thường xuyên hơn (30-60s)
+        setInterval(runBinanceUSDTTracker, 30000);
+
         // Quét ngay lần đầu sau 10 giây tính từ khi boot server
         setTimeout(runBackgroundCron, 10000); 
+        setTimeout(runBinanceUSDTTracker, 15000); // Khởi chạy sau 15s
     }
 }

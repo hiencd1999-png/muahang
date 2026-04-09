@@ -16,6 +16,7 @@ const TYPE_LABELS: Record<string, string> = {
   ORDER_DEBIT: "Thanh toán đơn",
   ADMIN_ADJUSTMENT: "Điều chỉnh thủ công",
   ORDER_REFUND: "Hoàn tiền đơn",
+  WITHDRAWAL: "Rút tiền Crypto",
 };
 
 const TYPE_STYLES: Record<string, string> = {
@@ -23,6 +24,7 @@ const TYPE_STYLES: Record<string, string> = {
   ORDER_DEBIT: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300",
   ADMIN_ADJUSTMENT: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
   ORDER_REFUND: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+  WITHDRAWAL: "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300",
 };
 
 function typeLabel(type: string) {
@@ -41,6 +43,7 @@ function TypeIcon({ type }: { type: string }) {
   if (type === "DEPOSIT") return <ArrowDownCircle size={18} className="shrink-0 text-emerald-500" />;
   if (type === "ORDER_REFUND") return <RefreshCw size={18} className="shrink-0 text-amber-500" />;
   if (type === "ADMIN_ADJUSTMENT") return <Settings2 size={18} className="shrink-0 text-blue-500" />;
+  if (type === "WITHDRAWAL") return <ArrowUpCircle size={18} className="shrink-0 text-purple-500" />;
   return <ArrowUpCircle size={18} className="shrink-0 text-rose-500" />;
 }
 
@@ -133,6 +136,7 @@ export default async function AdminTransactionsPage({
               <option value="ORDER_DEBIT">Thanh toán đơn</option>
               <option value="ADMIN_ADJUSTMENT">Điều chỉnh thủ công</option>
               <option value="ORDER_REFUND">Hoàn tiền đơn</option>
+              <option value="WITHDRAWAL">Rút tiền Crypto</option>
             </select>
             <select
               name="pageSize"

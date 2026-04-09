@@ -1,83 +1,95 @@
-# DatDon Shopee v2.0 - Core Automation & Secure Finance
+# DATDON - TÀI LIỆU KIẾN TRÚC & NGHIỆP VỤ HỆ THỐNG (ENTERPRISE EDITION)
 
-Hệ thống chuyên dụng Đặt đơn Shopee trung gian, tích hợp công nghệ Tự Động Hóa Hành Trình (Auto-Tracking) và Phân quyền Quản trị Đa cấp. Dự án v2.0 tập trung nâng cấp cực hạn về **Vá Lỗ Hổng Bảo Mật (Security Hardening)**, **Chống Thất Thoát Tài Chính (Race Condition 防御)** và **Trải nghiệm Đồ Họa Đỉnh Cao (OLED Max Contrast)**.
-
-## 1. Tổng Quan Kiến Trúc Hệ Thống
-
-- **Công nghệ Stack:**
-  - Next.js 16 (App Router), React 19, Turbopack.
-  - Giao diện: Tailwind CSS v4, Lucide Icons, thiết kế **Deep Glassmorphism** (OLED High Contrast).
-  - Database: Prisma ORM + SQLite (với Interactive Transactions).
-  - Chống Tấn Công (Anti-Bot): Rate Limiting In-Memory, Zod strict payloads.
-  - Tự động hóa: Background Worker Scheduler, Proxy Rotator tự đổi IP.
-
-## 2. Hệ Sinh Thái Người Dùng & Phân Quyền (RBAC)
-
-### 2.1 USER (Khách Hàng)
-- **Tạo đơn đa luồng:** Hỗ trợ nhập hàng loạt link Shopee, auto-fetch địa chỉ và điền mã Voucher linh hoạt.
-- **Booking Cá Nhân Lương Thấp:** User có quyền phân phối (chỉ định lệnh) đích danh đến một Chuyên viên Admin quen thuộc. Khóa chặt quyền cướp đơn của các nhân sự khác.
-- **An toàn quỹ:** Nếu Admin không tiếp nhận đơn sau quá 6 giờ, hệ thống *Auto-Cancel* giải phóng lại tiền vào số dư.
-
-### 2.2 ADMIN (Chuyên Viên Đặt Đơn)
-- **Cơ sở cách ly độc lập:** Chỉ được tiếp cận các số liệu, thống kê và biểu đồ hiệu suất của riêng **cá nhân** mình. Bị làm mờ (ẩn) hoàn toàn các Dữ liệu Doanh thu chung của toàn Mạng Lưới (Ẩn các hệ số Margin).
-- **Hệ thống rút tiền lương (Withdrawal Crypto):**
-  - Admin được cung cấp tính năng yêu cầu Xuất/Rút tiền hoa hồng về ví Crypto cá nhân theo mạng **USDT (BSC/BEP20)**.
-  - Tích hợp tính năng **Tự hủy Lệnh Khẩn Cấp (Cancel)** dành cho các giao dịch chờ duyệt nếu nhập sai địa chỉ ví.
-  - Chống xả đơn: Lệnh bị tạm giữ Processing quá lâu không giải quyết sẽ bị kick ra chợ chung.
-
-### 2.3 SPADMIN (Trùm Hệ Thống - Owner)
-- **Kiểm soát tối cao:** Đi xuyên mọi ranh giới phân quyền, nắm trọn View Doanh thu tổng (Sổ cái), xem dòng tiền chi tiết và xuất Excel (xlsx) toàn bộ.
-- **Xử lý rút tiền Crypto khép kín:** 
-  - Toàn quyền Phê Duyệt hoặc Từ chối lệnh Rút lương của Admin mạng lưới. Cung cấp bộ lọc thông minh giúp chống thao tác sai. 
-
-## 3. Khối Nền Tảng Tài Chính Kế Toán Định Tuyến (Financial Core)
-
-- **Ngăn chặn Double Spend Attack (Rút Lố Tiền / Tấn Công Tần Số Cao):**
-  Quy trình Ghi có / Ghi nợ tại khu vực SPAdmin Duyệt Lệnh Rút đã được thiết kế sử dụng **Prisma Interactive Transactions ($transaction async tx)**. Bắt buộc phong tỏa State Tài Khoản lúc duyệt và re-verify số dư, loại trừ hoàn toàn rủi ro Admin viết Tool giã liên hoàn nhiều Request cùng lúc để đánh lừa số dư và qua mặt cổng bảo vệ.
-- **Tự Động Hóa Commission 95% / 5%:** 
-  Khi Crawler từ API quét được đơn hàng hoàn tất ở trạm cuối (DELIVERED), hệ thống kết toán tự động và ngay lập tức nhả 95% giá trị lợi nhuận biên cho Ví Admin thực hiện. SPAdmin nhận 5% Hệ số quản lý đổ vào Báo Cáo Doanh Thu. Tất cả đều không cần đến tác nghiệp bằng tay.
-
-## 4. Bảo Mật Vành Đai & Chống Tấn Công (Security)
-
-Hệ thống được thiết kế theo tiêu chuẩn Application Hardening:
-1. **Phòng thủ Timing Attack (Fake Hash Delay):** Mọi điểm mù trinh sát thời gian phản hồi ở API Đăng nhập đều dược mài nhẵn bằng hàm trễ mô phỏng để Bypass các bot trinh sát mật khẩu.
-2. **In-Memory Rate Limiter:** Đề phòng Brute Force và cào rác tự động. Tần suất Đăng nhập bị block sau 10 lần sai/5 phút; Đăng ký khóa sau 5 lần/giờ.
-3. **Payload DoS Guard:** Trải dài từ `auth`, `order` cho đến `sync`, `zod schema` được đính kèm chuỗi độ dài (max limits) cực đại, chặn đứng mầm mống OOM (Out Of Memory) Payload Bombing.
-
-## 5. Trải Nghiệm Giao Diện (OLED Max Contrast Style)
-
-- Kiến trúc Đồ họa đi theo hướng **Kính Mờ Đáy Thẳm (Deep Glassmorphism)** kết hợp màu nền Tuyệt Đối Đen (Zinc 950 xuống Black 000) trên Dark Mode.
-- Xóa bỏ việc bù trừ màu thiếu sáng. Tăng giới hạn phát sáng dạ quang bằng các thẻ Card nguyên khối Zinc 900 cùng viền Glowing Edge. 
-- Component hiển thị địa chỉ Blockchain trên màn SPAdin được thiết kế dãn dòng thẳng băng (`whitespace-nowrap`) kết hợp hiệu ứng Tương tác click tự động bôi đen copy (`select-all`) giúp cắt giảm sai số do sao chép nhầm.
-
-## 6. Worker Node Đáy (Background Polling)
-
-1. Kích hoạt Cronjob ngầm, chạy chu kỳ tự động 5 phút/lần.
-2. Thay vì dùng IP máy chủ gốc, Server nhúng proxy động định tuyến Shopee qua Proxy Rotating chống chặn Cookie.
-3. Quét tất cả Tracking ID qua API ngầm của Shopee, lấp đầy Status (`PENDING` -> `CANCELED`, `DELIVERED`,...).
+Dự án Datdon là nền tảng quản lý tài chính điện tử và xử lý đơn hàng Shopee DropShipping khép kín. Được xây dựng theo các tiêu chuẩn khắt khe của hệ thống FinTech lõi (Core-Banking) và tối ưu hóa băng thông cho lưu lượng xử lý tần số cao (High-Frequency).
 
 ---
 
-## 7. Khởi chạy Hệ Thống (Môi trường Local)
+## I. MÔ HÌNH SỔ CÁI KÉP (DOUBLE-ENTRY LEDGER CORE)
+Khác biệt hoàn toàn với các app ví điện tử sơ khai sử dụng biến Số Dư Khả Biến (Mutable State), nền tảng Datdon sử dụng tiêu chuẩn Sổ Kế Toán Kép (Double-Entry Bookkeeping).
 
+* **System Accounts:** Các tài nguyên tiền được chốt vào các Quỹ Trung Tâm (VD: `SYSTEM_REVENUE` chứa phế hoa hồng, `SYSTEM_ESCROW` chứa cọc đóng băng, `ADMIN_LIQUIDITY_POOL` kho tiền tối cao).
+* **Ledger Lines:** Bất kỳ 1 VND nào sinh ra cũng đều nằm trên Sổ Kế Toán, đảm bảo vĩnh viễn Định luật bảo toàn: `TỔNG NỢ (Debit) = TỔNG CÓ (Credit)`.
+* **Reconciliation Engine (Máy Nắn Lỗ Hổng):** Có 1 API ngầm `/api/admin/reconciliation` chuyên cộng dồn toàn bộ Transaction lịch sử và đọ chéo với cấu trúc Mutable Cache Balance của User để cảnh báo nếu có 1 đồng bạc lạm phát hay thất thoát sinh ra do bug phần mềm. Không còn nỗi lo Tiền Ảo rác.
+
+---
+
+## II. LÕI BẢO MẬT & API FIREWALL (SECURITY LAYER)
+An ninh mạng được thắt chặt bằng 3 lưới chắn lõi ở `lib/security.ts`:
+
+1. **Anti-DDoS / Rate Limiting Memory Cache:** Quét dọn liên tục bằng Map, khống chế số lượng Request trên 1 dải IP độc bản, triệt tiêu bot Spam phá nghẽn CSDL.
+2. **Idempotency Key (Chống Replay Attack):** Moị lệnh Trừ Tiền hay Nạp Xèng từ Client đều đính kèm 1 dấu vân tay `UUID4` ở Header `X-Idempotency-Key` (Lock trong 2 Phút). Bấm F5 hay Auto Click Enter nghìn lần cũng chỉ có 1 Lệnh qua lọt Cửa DB.
+3. **Canvas Image Sanitization:** Trình duyệt tự tải mảnh gạch (Image Complain) vào thẻ HTML Canvas và nén thành 70% Base64 JPEG. Mã độc (XSS/SVG Scripts) hoặc Exif Virus sẽ bị hủy diệt 100% trước khi tới Server.
+
+---
+
+## III. CHI TIẾT NGHIỆP VỤ NẠP TIỀN ĐÓNG ĐÔNG (ESCROW FLOWS)
+
+Hệ thống cho phép nạp qua 2 định dạng: Bank (Nội bộ VNĐ) và USDT (Crypto). Độc quyền bởi cơ chế **Escrow Lock**.
+
+### Nạp Tiền Qua Ngân Hàng Nội Bộ (Bank Top-up)
+Quy trình nạp này sử dụng phương thức Peer-to-Peer (P2P) từ User trực tiếp sang tài khoản ngân hàng của đại lý (Admin).
+* **Tạo Lệnh Nạp Cọc (Escrow Create)**:
+  * User nhập số tiền và chọn 1 Admin.
+  * **Khoá Rào (Liquidity Reserve):** Server không chỉ check xem ví Admin có đủ tiền không, mà dùng `prisma.$transaction` để Trừ Luôn tiền của Admin đó và cất vào Quỹ Tạm Giữ Escrow. Ngăn chặn tuyệt đối 10 User hùa nhau vào Nạp Tiền "rút ruột" 1 Admin đang còn rành số dư (Race Condition). 
+* **3 Điểm Chạm Hoàn Lại (Escrow Release):** 
+  * Nếu User Hủy lệnh (`Cancel`).
+  * Nếu Admin Bác Bỏ (`Reject`).
+  * Nếu Ngâm quá 30 Phút (`Expired`). 
+  * -> Server tự lôi trong Escrow hoàn y nguyên quỹ cho Admin.
+* **Xử lý tranh chấp - Khiếu nại (Complain System)**:
+  * Từ lúc trạng thái sang `TRANSFERRED`, hệ thống đếm ngược 15 Phút Delay. Qua 15 phút, User mới được lên ảnh bằng chứng.
+* **Duyệt Cấp Số Dư (`Approve`)**:
+  * Chốt hạ đơn! Lấy tiền trong Escrow vứt cho User. Quá trình nhẹ tựa lông hồng vì Tiền của Admin đã bị khóa từ đầu. Ảnh Bằng Chứng cũng Tự tiêu hủy luôn vào cõi hư vô, trả lại ổ cứng xanh sạch đẹp.
+
+---
+
+## IV. CHI TIẾT NGHIỆP VỤ XỬ LÝ ĐƠN SHOPEE (ORDER DROPSHIP FLOWS)
+
+Mục đích chính của nền tảng: User có quỹ sẽ lên đơn Shopee (để buff dơn), Đại lý có quỹ sẽ nhặt lại đơn để ăn chênh lệch.
+
+### 1. Phía Người Dùng: Khởi Tạo Hàng Loạt (Batch Order Creation)
+* User dán toàn bộ List Link vào API. Hệ thống bóc tách chuẩn hóa thành `shopId.itemId`. Trừ Ví chuẩn trên `Unit Price` cài trên hệ thống Voucher. Báo notification xập xình.
+
+### 2. Phía Đại Lý: Chiếm Cửa Đơn Khách
+* Đại lý vào Pool chờ, chọn đơn `PENDING` -> Bấm Update `PROCESSING`. Chốt Owner ngay cho Đại lý.
+
+### 3. Con bọ Tracker Áp Dụng Khoảng Lùi Lũy Thừa (Smart Polling Engine)
+Nghiệp vụ cốt lõi tại `/api/shopee/tracking-sync`, đây là bộ não quét Đơn Hàng Shopee không chạm.
+* **Bắt Mạch Thông Minh (Exponential Backoff):** Hệ thống được nhúng tư duy Smart Polling để giảm thiêu đốt tiền mua Proxy:
+  * Đơn vừa nhặt (ORDER_PLACED): Server giãn chờ 10 Phút mới trọc xuống Shopee.
+  * Đơn đang giao (TRACKING_GENERATED): Server giãn kịch khung chờ 6 Tiếng Đồng Hồ mới bắn 1 lượt API. Tiết kiệm tới 95% lưu lượng ảo. Proxy tha hồ mát mẻ. Server ngậm mồm trả dữ liệu Cache siêu tốc.
+* **Tự Thay Đổi Cục Diện (State Shift) Bằng Proxy Xoay:**
+  * Có trạng thái "Đã giao thành công" -> Giao Dịch Nguyên Khối Atomic: Server gõ lệnh rót 95% Hoa Hồng vào túi Đại lý chạy đơn.
+  * Shippers/Shop Hủy trên Shopee -> Server lật ngược CANCELED và Refund hoàn nguyên lại ví tiền cho User.
+
+---
+
+## V. TÍNH NĂNG TIỆN ÍCH QUẢN TRỊ 
+* **Reassign Order**: Khi Đại Lý A cắn đơn bỏ trốn. SPAdmin được ấn "Bắt cóc", hồi sinh đơn lại về `PENDING`.
+* **Audit System**: Nền tảng Log tất toán, kiểm tra 24/7 mọi hành động phá hoại. Toàn quyền chốt lịch sử từ User đến SPAdmin.
+* **Tải Báo Cáo Xuất Kho (CSV Exports)**: Sổ sách chuẩn dòng cho hệ thống khai thuế đối soát.
+* **Bơm Rút Xèng (Withdraw Control)**: Yêu cầu nhả phế hoa hồng, trừ ví Khóa ngay lập tức, chuyển hóa lại qua tiền Crypto chờ SPAdmin duyệt. 
+
+---
+
+## 🚀 Hướng Dẫn Khởi Chạy Môi Trường
+
+### Cài đặt thư viện
 ```bash
-# Cài đặt nền tảng phụ thuộc
 npm install
-
-# Setup Biến môi trường .env.local
-DATABASE_URL="file:./dev.db"
-AUTH_SECRET="1234567890abcdef"
-
-# Cập nhật & Seed cơ sở dữ liệu gốc (Bao gồm Account và Logic Tài chính)
-npx prisma db push
-npm run db:seed
-
-# Biến Server chạy Production Build thử nghiệm
-npm run dev
 ```
 
-### 8. Các Tài khoản Master Seed Defaults:
+### Triển khai Cơ Sở Dữ Liệu - Sổ Nợ Có
+Đảm bảo đã chạy file `.env` trỏ gốc PostgreSQL/SQLite:
+```bash
+npx prisma db push
+tsx scratch/seed.ts # Khởi tạo các quỹ hệ thống cốt lõi ban đầu
+npx prisma generate
+```
 
-- **Chủ Hệ Thống (SPADMIN):** `spadmin` / `Spadmin123`
-- **Chuyên viên (ADMIN):** `admin` / `Admin123` (Cùng vài account Admin clone khác)
-- **Người dùng (USER):** `testuser` / `Test123`
+### Chạy hệ thống 
+```bash
+npm run dev     # Môi trường Develop
+npm run build   # TurboPack Đóng gói Siêu Nhẹ Tĩnh
+npm start       # Chạy Production
+```

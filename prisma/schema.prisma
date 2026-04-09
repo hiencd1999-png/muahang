@@ -46,22 +46,42 @@ enum NotificationType {
   ADMIN_MESSAGE
 }
 
+enum CryptoDepositStatus {
+  PENDING
+  COMPLETED
+  EXPIRED
+}
+
+enum BankDepositStatus {
+  PENDING
+  TRANSFERRED
+  COMPLETED
+  EXPIRED
+  COMPLAINED
+  REJECTED
+}
+
 model User {
-  id           Int           @id @default(autoincrement())
-  fullName     String        @default("")
-  username     String        @unique
-  email        String        @unique
-  phone        String        @unique
-  passwordHash String
-  role         Role          @default(USER)
-  balance      Int           @default(0)
-  orders       Order[]
-  transactions Transaction[]
-  auditLogs    AuditLog[]    @relation("AuditLogAdmin")
-  notifications Notification[]
-  withdrawals   Withdrawal[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id             Int               @id @default(autoincrement())
+  fullName       String            @default("")
+  username       String            @unique
+  email          String            @unique
+  phone          String            @unique
+  passwordHash   String
+  role           Role              @default(USER)
+  balance        Int               @default(0)
+  orders         Order[]
+  transactions   Transaction[]
+  auditLogs      AuditLog[]        @relation("AuditLogAdmin")
+  notifications  Notification[]
+  withdrawals    Withdrawal[]
+  cryptoDeposits CryptoDeposit[]
+  bankConfig     AdminBankConfig?  @relation("AdminBankConfigToUser")
+  bankDeposits   BankDeposit[]     @relation("UserBankDeposits")
+  adminBankDeposits BankDeposit[]  @relation("AdminBankDeposits")
+  ledgers        Ledger[]          @relation("UserLedger")
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
 model Order {
@@ -164,4 +184,87 @@ model Withdrawal {
   processedById Int?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+}
+
+model DeadLetterQueue {
+  id        Int      @id @default(autoincrement())
+  orderId   Int?
+  payload   String?
+  error     String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model CryptoDeposit {
+  id             String              @id @default(uuid())
+  userId         Int
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  network        String              // BSC or TRX
+  address        String              // receiving wallet
+  amount         Int                 // base request amount in USDT
+  expectedAmount Float               // fractional amount to expect e.g., 5.123
+  status         CryptoDepositStatus @default(PENDING)
+  txId           String?             @unique
+  expiresAt      DateTime
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+model AdminBankConfig {
+  id            String   @id @default(cuid())
+  adminId       Int      @unique
+  admin         User     @relation("AdminBankConfigToUser", fields: [adminId], references: [id], onDelete: Cascade)
+  bankName      String
+  accountNumber String
+  accountName   String
+  branch        String?
+  contactInfo   String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model BankDeposit {
+  id             String            @id @default(cuid())
+  userId         Int
+  user           User              @relation("UserBankDeposits", fields: [userId], references: [id], onDelete: Cascade)
+  adminId        Int
+  admin          User              @relation("AdminBankDeposits", fields: [adminId], references: [id], onDelete: Cascade)
+  amount         Int               
+  status         BankDepositStatus @default(PENDING)
+  complaintImage String?
+  expiresAt      DateTime
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model SystemAccount {
+  id          String   @id // SYSTEM_REVENUE, SYSTEM_ESCROW
+  name        String
+  balance     Int      @default(0)
+  ledgers     Ledger[] @relation("SystemLedger")
+}
+
+model JournalEntry {
+  id          String   @id @default(cuid()) // Mã Bút Toán
+  type        String   
+  status      String   @default("BALANCED") 
+  createdAt   DateTime @default(now())
+  
+  lines       Ledger[] @relation("JournalLedger")
+}
+
+model Ledger {
+  id              String         @id @default(cuid())
+  journalId       String
+  journal         JournalEntry   @relation("JournalLedger", fields: [journalId], references: [id], onDelete: Cascade)
+  
+  userId          Int?
+  user            User?          @relation("UserLedger", fields: [userId], references: [id], onDelete: Cascade)
+  
+  systemAccountId String?
+  systemAccount   SystemAccount? @relation("SystemLedger", fields: [systemAccountId], references: [id], onDelete: Cascade)
+  
+  debit           Int            @default(0) // Số tiền ghi nợ
+  credit          Int            @default(0) // Số tiền ghi có
+  note            String?
 }

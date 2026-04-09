@@ -40,29 +40,28 @@ export async function POST(request: NextRequest) {
 
         // Handle refunds when canceling
         if (status === "CANCELED" && !["CANCELED", "DELIVERED"].includes(order.status)) {
-          // Create refund transaction
-          const updatedOrder = await prisma.order.update({
-            where: { id: order.id },
-            data: {
-              status,
-              processingStartedAt: null,
-            },
-          });
-
-          await prisma.transaction.create({
-            data: {
-              userId: order.userId,
-              amount: order.total,
-              type: "ORDER_REFUND",
-              note: `Hoàn tiền cho đơn #${order.id}`,
-            },
-          });
-
-          // Update user balance
-          await prisma.user.update({
-            where: { id: order.userId },
-            data: { balance: { increment: order.total } },
-          });
+          // Create refund transaction atomically
+          const [updatedOrder] = await prisma.$transaction([
+            prisma.order.update({
+              where: { id: order.id },
+              data: {
+                status,
+                processingStartedAt: null,
+              },
+            }),
+            prisma.transaction.create({
+              data: {
+                userId: order.userId,
+                amount: order.total,
+                type: "ORDER_REFUND",
+                note: `Hoàn tiền cho đơn #${order.id}`,
+              },
+            }),
+            prisma.user.update({
+              where: { id: order.userId },
+              data: { balance: { increment: order.total } },
+            }),
+          ]);
 
           return updatedOrder;
         }
@@ -82,34 +81,33 @@ export async function POST(request: NextRequest) {
         // Handle commission when manually marking as DELIVERED
         if (status === "DELIVERED" && order.status !== "DELIVERED" && order.approvedByAdminId) {
           const commission = Math.floor(order.total * 0.95);
-          const updatedOrder = await prisma.order.update({
-            where: { id: order.id },
-            data: { status, processingStartedAt: null },
-          });
-
-          await prisma.user.update({
-            where: { id: order.approvedByAdminId },
-            data: { balance: { increment: commission } },
-          });
-
-          await prisma.transaction.create({
-            data: {
-              userId: order.approvedByAdminId,
-              amount: commission,
-              type: "ADMIN_ADJUSTMENT",
-              note: `Hoa hồng xử lý đơn giao thành công #${order.id} (95% của ${order.total.toLocaleString("vi-VN")}đ)`,
-            },
-          });
-
-          await prisma.notification.create({
-            data: {
-              userId: order.approvedByAdminId,
-              type: "BALANCE_CHANGED",
-              title: "Hoa hồng hoàn thành đơn",
-              message: `Bạn được cộng ${commission.toLocaleString("vi-VN")}đ từ đơn #${order.id}.`,
-              link: `/admin/orders?orderId=${order.id}`,
-            },
-          });
+          const [updatedOrder] = await prisma.$transaction([
+            prisma.order.update({
+              where: { id: order.id },
+              data: { status, processingStartedAt: null },
+            }),
+            prisma.user.update({
+              where: { id: order.approvedByAdminId },
+              data: { balance: { increment: commission } },
+            }),
+            prisma.transaction.create({
+              data: {
+                userId: order.approvedByAdminId,
+                amount: commission,
+                type: "ADMIN_ADJUSTMENT",
+                note: `Hoa hồng xử lý đơn giao thành công #${order.id} (95% của ${order.total.toLocaleString("vi-VN")}đ)`,
+              },
+            }),
+            prisma.notification.create({
+              data: {
+                userId: order.approvedByAdminId,
+                type: "BALANCE_CHANGED",
+                title: "Hoa hồng hoàn thành đơn",
+                message: `Bạn được cộng ${commission.toLocaleString("vi-VN")}đ từ đơn #${order.id}.`,
+                link: `/admin/orders?orderId=${order.id}`,
+              },
+            }),
+          ]);
 
           return updatedOrder;
         }
