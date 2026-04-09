@@ -12,6 +12,9 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const [step, setStep] = useState<1 | 2>(1);
+  const [otpToken, setOtpToken] = useState("");
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -34,6 +37,13 @@ export function LoginForm() {
         return;
       }
 
+      if (data.require2FA) {
+          addToast("success", "Vui lòng xác thực 2FA để tiếp tục.");
+          setStep(2);
+          setLoading(false);
+          return;
+      }
+
       if (!data.user) {
         addToast("error", "Phản hồi không hợp lệ từ server.");
         setLoading(false);
@@ -46,6 +56,61 @@ export function LoginForm() {
       addToast("error", "Không thể kết nối đến server.");
       setLoading(false);
     }
+  }
+
+  async function handleVerify2FA(event: React.FormEvent<HTMLFormElement>) {
+      event.preventDefault();
+      if (!otpToken || otpToken.length < 6) return;
+      setLoading(true);
+
+      try {
+          const res = await fetch("/api/auth/login-2fa", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ otp: otpToken })
+          });
+          const data = await res.json();
+          
+          if (!res.ok) {
+              addToast("error", data.error);
+              setLoading(false);
+              return;
+          }
+
+          addToast("success", "Đăng nhập 2FA thành công!");
+          window.location.href = "/dashboard";
+      } catch (e) {
+          addToast("error", "Lỗi xác thực 2FA.");
+          setLoading(false);
+      }
+  }
+
+  if (step === 2) {
+      return (
+        <form onSubmit={handleVerify2FA} className="panel animate-rise w-full rounded-[2rem] p-8 sm:p-10 border border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/10 shadow-lg shadow-blue-500/10">
+          <div className="mb-8 space-y-3 text-center">
+            <h1 className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-2">Bảo mật Hai lớp (2FA)</h1>
+            <p className="text-sm leading-6 text-blue-700 dark:text-blue-300">
+              Nhập mã 6 số từ Google Authenticator để hoàn tất đăng nhập.
+            </p>
+          </div>
+          <div className="space-y-5">
+              <input
+                  required autoFocus minLength={6} maxLength={6}
+                  value={otpToken} onChange={e => setOtpToken(e.target.value)}
+                  className="w-full text-center tracking-[1em] text-2xl rounded-2xl border border-slate-300 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-4 text-slate-900 dark:text-white outline-none transition focus:border-blue-500"
+                  placeholder="------"
+              />
+          </div>
+          <button
+            type="submit"
+            disabled={loading || otpToken.length < 6}
+            className="mt-7 w-full rounded-2xl bg-blue-600 px-4 py-4 text-sm font-semibold text-white transition hover:bg-blue-700 shadow-lg shadow-blue-200/50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "Đang xác thực..." : "Xác nhận OTP"}
+          </button>
+        </form>
+      );
   }
 
   return (

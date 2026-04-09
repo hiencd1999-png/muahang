@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createSessionToken, SESSION_COOKIE, verifyPassword } from "@/lib/auth";
+import { createSessionToken, createTemp2FAToken, SESSION_COOKIE, verifyPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit";
 
@@ -48,13 +48,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Sai thông tin đăng nhập hoặc mật khẩu." }, { status: 401 });
   }
 
+  const cookieStore = await cookies();
+
+  // Kiểm tra 2FA
+  if (user.twoFactorEnabled) {
+      const tempToken = await createTemp2FAToken(String(user.id));
+      cookieStore.set("datdon_2fa_temp", tempToken, {
+          httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 5 * 60,
+      });
+      return NextResponse.json({ success: true, require2FA: true });
+  }
+
   const token = await createSessionToken({
     sub: String(user.id),
     username: user.username,
     role: user.role,
   });
 
-  const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",

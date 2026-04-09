@@ -70,6 +70,8 @@ model User {
   passwordHash   String
   role           Role              @default(USER)
   balance        Int               @default(0)
+  twoFactorSecret  String?         
+  twoFactorEnabled Boolean         @default(false)
   orders         Order[]
   transactions   Transaction[]
   auditLogs      AuditLog[]        @relation("AuditLogAdmin")
@@ -114,6 +116,10 @@ model Order {
 
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
+  @@index([userId, status])
+  @@index([status, updatedAt])
+  @@index([approvedByAdminId, status])
 }
 
 model VoucherPricing {
@@ -159,6 +165,9 @@ model Notification {
   read      Boolean          @default(false)
   link      String?
   createdAt DateTime         @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, read])
 }
 
 model SystemProxy {
@@ -186,6 +195,9 @@ model Withdrawal {
   processedById Int?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+
+  @@index([userId, status])
+  @@index([status, createdAt])
 }
 
 model DeadLetterQueue {
@@ -209,6 +221,9 @@ model CryptoDeposit {
   expiresAt      DateTime
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
+
+  @@index([userId, status])
+  @@index([status, expiresAt])
 }
 
 model AdminBankConfig {
@@ -237,6 +252,10 @@ model BankDeposit {
   expiresAt      DateTime
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
+
+  @@index([userId, status])
+  @@index([adminId, status])
+  @@index([status, expiresAt])
 }
 
 model SystemAccount {

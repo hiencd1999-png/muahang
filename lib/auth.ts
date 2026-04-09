@@ -32,6 +32,21 @@ export async function createSessionToken(payload: SessionPayload) {
     .sign(getJwtSecret());
 }
 
+export async function createTemp2FAToken(userId: string) {
+  return new SignJWT({ pending2FA: true })
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(userId)
+    .setIssuedAt()
+    .setExpirationTime("5m") // 5 mins to enter OTP
+    .sign(getJwtSecret());
+}
+
+export async function verifyTemp2FAToken(token: string) {
+  const { payload } = await jwtVerify(token, getJwtSecret());
+  if (!payload.pending2FA) throw new Error("Invalid token type");
+  return payload.sub;
+}
+
 export async function verifySessionToken(token: string) {
   const { payload } = await jwtVerify(token, getJwtSecret());
 

@@ -11,16 +11,23 @@ export function ProfileForm({
   balance,
   email,
   phone,
+  twoFactorEnabled,
 }: {
   fullName: string;
   username: string;
   balance: number;
   email: string;
   phone: string;
+  twoFactorEnabled: boolean;
 }) {
   const router = useRouter();
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [is2FAEnabled, setIs2FAEnabled] = useState(twoFactorEnabled);
+  const [qrCode, setQrCode] = useState("");
+  const [secretKey, setSecretKey] = useState("");
+  const [otpToken, setOtpToken] = useState("");
+  const [loading2FA, setLoading2FA] = useState(false);
 
   async function handlePasswordChange(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -63,6 +70,69 @@ export function ProfileForm({
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleGenerate2FA() {
+      setLoading2FA(true);
+      try {
+          const res = await fetch("/api/user/2fa/generate", { method: "POST" });
+          const data = await res.json();
+          if (res.ok) {
+              setQrCode(data.qrCode);
+              setSecretKey(data.secret);
+          } else {
+              addToast("error", data.error);
+          }
+      } catch (e) {
+          addToast("error", "Lỗi tạo QR Code");
+      }
+      setLoading2FA(false);
+  }
+
+  async function handleVerify2FA() {
+      if (!otpToken || otpToken.length < 6) return;
+      setLoading2FA(true);
+      try {
+          const res = await fetch("/api/user/2fa/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token: otpToken })
+          });
+          const data = await res.json();
+          if (res.ok) {
+              addToast("success", "Kích hoạt 2FA thành công!");
+              setIs2FAEnabled(true);
+              setQrCode("");
+          } else {
+              addToast("error", data.error);
+          }
+      } catch (e) {
+          addToast("error", "Lỗi gửi xác thực OTP");
+      }
+      setLoading2FA(false);
+  }
+
+  async function handleDisable2FA() {
+      if (!otpToken || otpToken.length < 6) { return addToast("error", "Nhập mã OTP để vô hiệu hóa"); }
+      setLoading2FA(true);
+      try {
+          const res = await fetch("/api/user/2fa/disable", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token: otpToken })
+          });
+          const data = await res.json();
+          if (res.ok) {
+              addToast("success", "Đã tắt 2FA.");
+              setIs2FAEnabled(false);
+              setOtpToken("");
+          } else {
+              addToast("error", data.error);
+          }
+      } catch (e) {
+          addToast("error", "Lỗi gửi OTP vô hiệu hóa");
+      }
+      setLoading2FA(false);
   }
 
   return (
@@ -161,6 +231,62 @@ export function ProfileForm({
           {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
         </button>
       </form>
+
+      {/* 2FA Security Section */}
+      <section className="panel rounded-[1.75rem] p-6 lg:col-span-2 mt-2 border border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/10">
+        <div className="flex justify-between items-start">
+            <div>
+                <h2 className="text-xl font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">Bảo mật hai lớp (2FA)</h2>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">Sử dụng Google Authenticator để bảo vệ tài khoản khỏi xâm nhập giả mạo.</p>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${is2FAEnabled ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"}`}>
+                {is2FAEnabled ? "ĐÃ BẬT" : "ĐÃ TẮT"}
+            </span>
+        </div>
+
+        <div className="mt-6">
+            {!is2FAEnabled ? (
+                !qrCode ? (
+                    <button onClick={handleGenerate2FA} disabled={loading2FA} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition active:scale-95 disabled:opacity-60">
+                        Bật xác thực 2FA (QR Code)
+                    </button>
+                ) : (
+                    <div className="flex gap-8 items-start flex-col sm:flex-row bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+                        <div className="flex-shrink-0 text-center">
+                            <img src={qrCode} alt="2FA QR Code" className="w-48 h-48 rounded-lg shadow-sm mb-3" />
+                            <p className="text-xs text-slate-500 font-mono bg-slate-100 dark:bg-slate-800 p-2 rounded-md">{secretKey}</p>
+                        </div>
+                        <div className="flex-1 space-y-4 w-full">
+                            <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2">
+                                <p>1. Cài đặt ứng dụng <b>Google Authenticator</b> hoặc Authy trên điện thoại.</p>
+                                <p>2. Chọn quét mã QR bên cạnh hoặc nhập thủ công Key.</p>
+                                <p>3. Nhập 6 số hiện ra vào ô bên dưới để kích hoạt.</p>
+                            </div>
+                            <input 
+                                value={otpToken} onChange={e => setOtpToken(e.target.value)}
+                                placeholder="Nhập mã 6 số..." minLength={6} maxLength={6}
+                                className="w-full text-center text-lg tracking-widest rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-3 outline-none focus:border-blue-500"
+                            />
+                            <button onClick={handleVerify2FA} disabled={loading2FA || otpToken.length < 6} className="w-full rounded-xl bg-emerald-600 p-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60">
+                                Xác nhận và Kích Hoạt
+                            </button>
+                        </div>
+                    </div>
+                )
+            ) : (
+                <div className="flex flex-col sm:flex-row gap-3 items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <input 
+                        value={otpToken} onChange={e => setOtpToken(e.target.value)}
+                        placeholder="Nhập mã 6 số từ App để vô hiệu hóa..." minLength={6} maxLength={6}
+                        className="flex-1 w-full text-center tracking-widest rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-3 outline-none focus:border-rose-500"
+                    />
+                    <button onClick={handleDisable2FA} disabled={loading2FA || otpToken.length < 6} className="w-full sm:w-auto rounded-xl bg-rose-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60 shrink-0">
+                        Tắt & Gỡ Bỏ 2FA
+                    </button>
+                </div>
+            )}
+        </div>
+      </section>
     </div>
   );
 }

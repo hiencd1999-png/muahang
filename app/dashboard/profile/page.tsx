@@ -11,6 +11,7 @@ export default async function ProfilePage() {
       balance={user.balance}
       email={user.email}
       phone={user.phone}
+      twoFactorEnabled={user.twoFactorEnabled}
     />
   );
 }

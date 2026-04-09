@@ -13,6 +13,11 @@ const defaultVoucherPricing = [
 ] as const;
 
 async function main() {
+  // Initialize Advanced Fintech Ledgers
+  await prisma.systemAccount.upsert({ where: { id: "SYSTEM_REVENUE" }, update: {}, create: { id: "SYSTEM_REVENUE", name: "Doanh Thu Hệ Thống" } });
+  await prisma.systemAccount.upsert({ where: { id: "SYSTEM_ESCROW" }, update: {}, create: { id: "SYSTEM_ESCROW", name: "Quỹ Trung Gian" } });
+  await prisma.systemAccount.upsert({ where: { id: "ADMIN_LIQUIDITY_POOL" }, update: {}, create: { id: "ADMIN_LIQUIDITY_POOL", name: "Kho Thanh Khoản SPADMIN" } });
+
   // Passwords must contain: 1 uppercase letter + 1 digit minimum
   // Admin creds: admin / Admin123
   // SPAdmin creds: spadmin / Spadmin123
