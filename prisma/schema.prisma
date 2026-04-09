@@ -27,6 +27,14 @@ enum TransactionType {
   ORDER_DEBIT
   ADMIN_ADJUSTMENT
   ORDER_REFUND
+  WITHDRAWAL
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELED
 }
 
 enum NotificationType {
@@ -51,6 +59,7 @@ model User {
   transactions Transaction[]
   auditLogs    AuditLog[]    @relation("AuditLogAdmin")
   notifications Notification[]
+  withdrawals   Withdrawal[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -141,4 +150,18 @@ model SystemProxy {
   updatedAt DateTime @updatedAt
 
   @@unique([host, port, username, password])
+}
+
+model Withdrawal {
+  id            Int               @id @default(autoincrement())
+  userId        Int
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount        Int
+  walletAddress String
+  network       String            @default("BSC/BEP20")
+  status        WithdrawalStatus  @default(PENDING)
+  rejectReason  String?
+  processedById Int?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 }
