@@ -184,8 +184,8 @@ export function CreateOrderForm({
         productName: data.productName || parsed.productName,
         shopId: data.shopId || parsed.shopId || "",
         resolvedLink: data.resolvedLink || currentLink,
-        variantOptions: variants,
-        selectedVariant: item.selectedVariant || variants[0] || "",
+        variantOptions: [],
+        selectedVariant: item.selectedVariant || "",
         analysisMessage: "Link đã được phân tích thành công. Vui lòng nhập phân loại cho link này.",
         analysisError: "",
         isAnalyzing: false,
@@ -200,8 +200,8 @@ export function CreateOrderForm({
           productName: parsed.productName,
           shopId: fallbackShopId,
           resolvedLink: buildCanonicalShopeeLink(fallbackShopId, fallbackItemId),
-          variantOptions: parsed.variants,
-          selectedVariant: item.selectedVariant || parsed.variants[0] || "",
+          variantOptions: [],
+          selectedVariant: item.selectedVariant || "",
           analysisMessage: "Link đã được phân tích cơ bản. Vui lòng nhập phân loại cho link này.",
           analysisError: "",
           isAnalyzing: false,
@@ -537,26 +537,6 @@ export function CreateOrderForm({
                           placeholder="Ví dụ: Đỏ, Size M, Mặc định"
                           required
                         />
-                        {item.variantOptions.length > 0 ? (
-                          <div className="mt-3">
-                            <p className="text-xs text-slate-500 dark:text-slate-300">Gợi ý phân loại (bấm để điền nhanh)</p>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {item.variantOptions.map((variant) => (
-                                <button
-                                  key={`${item.id}-${variant}`}
-                                  type="button"
-                                  onClick={() => updateOrderItem(item.id, (current) => ({
-                                    ...current,
-                                    selectedVariant: variant,
-                                  }))}
-                                  className="rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                                >
-                                  {variant}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
                       </div>
 
                       <div className="mt-4">
