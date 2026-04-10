@@ -17,7 +17,7 @@ interface OrderDraftItem {
   resolvedLink: string;
   productName: string;
   shopId: string;
-  quantity: number;
+  quantity: string;
   variantOptions: string[];
   selectedVariant: string;
   analysisError: string;
@@ -36,7 +36,7 @@ function createEmptyOrderItem(): OrderDraftItem {
     resolvedLink: "",
     productName: "",
     shopId: "",
-    quantity: 1,
+    quantity: "1",
     variantOptions: [],
     selectedVariant: "",
     analysisError: "",
@@ -86,7 +86,7 @@ export function CreateOrderForm({
   );
 
   const totalQuantity = useMemo(
-    () => nonEmptyItems.reduce((sum, item) => sum + Math.max(1, item.quantity || 1), 0),
+    () => nonEmptyItems.reduce((sum, item) => sum + Math.max(1, item.quantity === "" ? 1 : Number(item.quantity)), 0),
     [nonEmptyItems]
   );
 
@@ -301,12 +301,13 @@ export function CreateOrderForm({
         return;
       }
 
-      if (!item.selectedVariant.trim()) {
+      if (item.selectedVariant.trim() === "") {
         addToast("error", `Dòng ${index + 1} chưa nhập phân loại sản phẩm.`);
         return;
       }
 
-      if (!Number.isFinite(item.quantity) || item.quantity < 1) {
+      const parsedQty = item.quantity === "" ? 1 : Number(item.quantity);
+      if (!Number.isFinite(parsedQty) || parsedQty < 1) {
         addToast("error", `Dòng ${index + 1} cần số lượng hợp lệ (>= 1).`);
         return;
       }
@@ -325,7 +326,7 @@ export function CreateOrderForm({
         productName: item.productName.trim(),
         shopId: item.shopId.trim(),
         variant: item.selectedVariant.trim(),
-        quantity: Math.max(1, Number(item.quantity) || 1),
+        quantity: item.quantity === "" ? 1 : Math.max(1, Number(item.quantity)),
       })),
       voucherCode: selectedVoucher.code,
       phone: note.trim() || "Không cung cấp",
@@ -475,17 +476,28 @@ export function CreateOrderForm({
                   </label>
 
                   <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300 lg:col-span-2">
-                    <span>Số lượng sản phẩm này</span>
-                    <input
-                      type="number"
-                      min={1}
-                      value={item.quantity}
+                    <span>Link sản phẩm</span>
+                    <textarea
+                      value={item.productLink}
                       onChange={(event) => updateOrderItem(item.id, (current) => ({
                         ...current,
-                        quantity: Math.max(1, Number(event.target.value) || 1),
+                        productLink: event.target.value,
+                        analysisError: "",
+                        analysisMessage: "",
                       }))}
+                      rows={2}
                       className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+                      placeholder="https://shopee.vn/..."
                     />
+                    <button
+                      type="button"
+                      onClick={() => handleAnalyzeLink(item.id)}
+                      disabled={item.isAnalyzing}
+                      className="rounded-2xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {item.isAnalyzing ? "Đang phân tích..." : "Phân tích link"}
+                    </button>
+                    {item.analysisError ? <p className="text-sm text-rose-600 dark:text-rose-400">{item.analysisError}</p> : null}
                   </label>
 
                   {item.productName ? (
@@ -545,6 +557,23 @@ export function CreateOrderForm({
                             </div>
                           </div>
                         ) : null}
+                      </div>
+
+                      <div className="mt-4">
+                        <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <span>Số lượng sản phẩm này</span>
+                          <input
+                            type="number"
+                            min={1}
+                            value={item.quantity}
+                            onChange={(event) => updateOrderItem(item.id, (current) => ({
+                              ...current,
+                              quantity: event.target.value,
+                            }))}
+                            placeholder="Mặc định là 1"
+                            className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+                          />
+                        </label>
                       </div>
                     </div>
                   ) : null}
