@@ -38,7 +38,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Install tools needed for database migrations and seeding locally inside the runner
-RUN npm install prisma tsx typescript bcryptjs @prisma/client
+RUN npm install prisma@^6.17.1 tsx typescript bcryptjs @prisma/client@^6.17.1
 
 # Set the correct permission for prerender cache
 RUN mkdir .next
