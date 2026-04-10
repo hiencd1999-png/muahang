@@ -514,10 +514,19 @@ export function OrderDetailModalContent({
                 <textarea
                   value={adminForm.spcCookie}
                   onChange={(e) => setAdminForm((prev) => ({ ...prev, spcCookie: e.target.value }))}
-                  disabled={Boolean(isLockedForAnotherAdmin) || isDeliveredOrder}
-                  className="block w-full min-w-0 max-w-full resize-y overflow-x-auto whitespace-pre-wrap [overflow-wrap:anywhere] rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs break-all dark:border-gray-700 dark:bg-gray-800"
+                  readOnly={order.status === "PENDING" || order.status === "PROCESSING"}
+                  disabled={Boolean(isLockedForAnotherAdmin) || isDeliveredOrder || order.status === "PENDING" || order.status === "PROCESSING"}
+                  className={`block w-full min-w-0 max-w-full resize-y overflow-x-auto whitespace-pre-wrap [overflow-wrap:anywhere] rounded-lg border font-mono text-xs break-all px-3 py-2 ${
+                    Boolean(isLockedForAnotherAdmin) || isDeliveredOrder || order.status === "PENDING" || order.status === "PROCESSING"
+                      ? "bg-gray-100 border-gray-300 dark:border-gray-700 dark:bg-gray-800/80 cursor-not-allowed opacity-70"
+                      : "bg-white border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                  }`}
                   rows={3}
-                  placeholder="SPC_ST=..."
+                  placeholder={
+                    order.status === "PENDING" || order.status === "PROCESSING"
+                      ? "Chỉ được nhập lần đầu trong lúc bấm Đặt đơn"
+                      : "SPC_ST=..."
+                  }
                 />
               </label>
               <label className="block min-w-0 max-w-full space-y-1 text-sm text-slate-700 dark:text-slate-200">
@@ -545,10 +554,10 @@ export function OrderDetailModalContent({
                 {isLockedForAnotherAdmin
                   ? "Bạn không thể chỉnh sửa vì đơn này đang thuộc admin khác."
                   : isDeliveredOrder
-                    ? "Đơn đã giao: chỉ được phép cập nhật ghi chú. SPC_ST và Mã vận đơn đã bị khóa."
+                    ? "Đơn đã giao: chỉ được phép cập nhật ghi chú. Mã vận đơn và Cookie đã bị khóa."
                     : canManageAllOrders
-                      ? "SPAdmin có thể cập nhật Cookie SPC_ST, Mã vận đơn và ghi chú cho mọi đơn hàng."
-                      : "Admin chỉ được cập nhật Cookie SPC_ST, Mã vận đơn và ghi chú cho đơn mình phụ trách."}
+                      ? "SPAdmin có thể cập nhật Cookie SPC_ST (sau khi đặt đơn), Mã vận đơn và ghi chú cho mọi đơn hàng."
+                      : "Admin chỉ được cập nhật Cookie SPC_ST (sau khi đặt đơn), Mã vận đơn và ghi chú cho đơn mình phụ trách."}
               </p>
               <button
                 onClick={handleSaveOrderInfo}
