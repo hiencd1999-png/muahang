@@ -68,6 +68,7 @@ export function CreateOrderForm({
   const [requestedAdminId, setRequestedAdminId] = useState("");
   const [searchRequestedAdmin, setSearchRequestedAdmin] = useState("");
   const [note, setNote] = useState("");
+  const [receiverName, setReceiverName] = useState("");
   const [address, setAddress] = useState("");
   const [ward, setWard] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
@@ -313,9 +314,14 @@ export function CreateOrderForm({
       }
     }
 
+    let finalAddress = address.trim();
+    if (receiverName.trim()) {
+      finalAddress = `${receiverName.trim()}\n${finalAddress}`;
+    }
+
     const normalizedAddress = note.trim()
-      ? `${address.trim()}\nGhi chú SĐT: ${note.trim()}`
-      : address.trim();
+      ? `${finalAddress}\nGhi chú SĐT: ${note.trim()}`
+      : finalAddress;
 
     setLoading(true);
 
@@ -354,6 +360,7 @@ export function CreateOrderForm({
       setOrderItems([createEmptyOrderItem()]);
       setSelectedVoucherCode(initialVoucherCode);
       setRequestedAdminId("");
+      setReceiverName("");
       setNote("");
       setAddress("");
       setWard("");
@@ -547,6 +554,17 @@ export function CreateOrderForm({
             </svg>
             Thêm link sản phẩm
           </button>
+
+          <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+            <span>Tên người nhận (Tùy chọn)</span>
+            <input
+              value={receiverName}
+              onChange={(event) => setReceiverName(event.target.value)}
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+              placeholder="Nhập tên người nhận đơn"
+            />
+            <p className="text-xs text-slate-500 dark:text-slate-300">Tên người nhận sẽ là tên người nhận đơn.</p>
+          </label>
 
           <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
             <span>Ghi chú SĐT</span>
