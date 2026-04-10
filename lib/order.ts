@@ -1,5 +1,5 @@
 export function isValidShopeeLink(link: string) {
-  return /shopee/i.test(link);
+  return true;
 }
 
 interface ParsedShopeeLink {
