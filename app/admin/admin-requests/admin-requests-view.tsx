@@ -43,7 +43,7 @@ export function AdminRequestsView({ requests }: { requests: AdminReq[] }) {
         <p className="mb-6 text-sm text-slate-600 dark:text-zinc-400">Danh sách các User gửi yêu cầu chuyển đổi lên Admin (đã đủ điều kiện nạp &gt;= 30 USDT).</p>
 
         {requests.length === 0 ? (
-          <p className="text-slate-500 py-10 text-center">Chưa có yêu cầu nào.</p>
+          <p className="text-slate-500 dark:text-zinc-400 py-10 text-center">Chưa có yêu cầu nào.</p>
         ) : (
           <div className="overflow-x-auto w-full">
             <table className="min-w-full text-left text-sm border-collapse">
@@ -62,17 +62,17 @@ export function AdminRequestsView({ requests }: { requests: AdminReq[] }) {
                   <tr key={req.id} className="border-t border-slate-200 dark:border-zinc-800/70 hover:bg-slate-50 dark:hover:bg-zinc-800/80 transition">
                     <td className="px-4 py-4 font-mono">#{req.id}</td>
                     <td className="px-4 py-4 font-semibold text-slate-900 dark:text-white">@{req.user.username}</td>
-                    <td className="px-4 py-4">{req.user.fullName || "-"}</td>
+                    <td className="px-4 py-4 text-slate-700 dark:text-zinc-300">{req.user.fullName || "-"}</td>
                     <td className="px-4 py-4 text-center">
                       <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                         req.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' :
-                         req.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
-                         'bg-amber-100 text-amber-700'
+                         req.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                         req.status === 'REJECTED' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' :
+                         'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                       }`}>
                          {req.status}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-slate-500 text-xs">
+                    <td className="px-4 py-4 text-slate-500 dark:text-zinc-400 text-xs">
                       {formatDate(req.createdAt)}
                     </td>
                     <td className="px-4 py-4">
@@ -94,7 +94,7 @@ export function AdminRequestsView({ requests }: { requests: AdminReq[] }) {
                              </button>
                          </div>
                       ) : (
-                         <p className="text-center text-xs text-slate-400 italic">Đã xử lý</p>
+                         <p className="text-center text-xs text-slate-400 dark:text-zinc-500 italic">Đã xử lý</p>
                       )}
                     </td>
                   </tr>

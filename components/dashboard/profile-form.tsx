@@ -305,7 +305,7 @@ export function ProfileForm({
                             <input 
                                 value={otpToken} onChange={e => setOtpToken(e.target.value)}
                                 placeholder="Nhập mã 6 số..." minLength={6} maxLength={6}
-                                className="w-full text-center text-lg tracking-widest rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-3 outline-none focus:border-blue-500"
+                                className="w-full text-center text-lg tracking-widest rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-blue-500"
                             />
                             <button onClick={handleVerify2FA} disabled={loading2FA || otpToken.length < 6} className="w-full rounded-xl bg-emerald-600 p-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60">
                                 Xác nhận và Kích Hoạt
@@ -318,7 +318,7 @@ export function ProfileForm({
                     <input 
                         value={otpToken} onChange={e => setOtpToken(e.target.value)}
                         placeholder="Nhập mã 6 số từ App để vô hiệu hóa..." minLength={6} maxLength={6}
-                        className="flex-1 w-full text-center tracking-widest rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-3 outline-none focus:border-rose-500"
+                        className="flex-1 w-full text-center tracking-widest rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-rose-500"
                     />
                     <button onClick={handleDisable2FA} disabled={loading2FA || otpToken.length < 6} className="w-full sm:w-auto rounded-xl bg-rose-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60 shrink-0">
                         Tắt & Gỡ Bỏ 2FA

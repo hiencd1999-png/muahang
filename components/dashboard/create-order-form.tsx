@@ -409,7 +409,7 @@ export function CreateOrderForm({
                        placeholder="🔎 Tìm admin..."
                        value={searchRequestedAdmin}
                        onChange={e => setSearchRequestedAdmin(e.target.value)}
-                       className="w-full sm:w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm outline-none transition focus:border-amber-500"
+                       className="w-full sm:w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-3 py-2 text-sm outline-none transition focus:border-amber-500"
                     />
                   </div>
                   <select

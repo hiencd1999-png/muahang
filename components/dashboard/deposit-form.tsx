@@ -397,7 +397,7 @@ export function DepositForm() {
                            placeholder="🔎 Tìm Admin hoặc Ngân hàng..."
                            value={searchAdmin}
                            onChange={e => setSearchAdmin(e.target.value)}
-                           className="w-full sm:w-64 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm outline-none transition focus:border-emerald-500"
+                           className="w-full sm:w-64 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-3 py-2 text-sm outline-none transition focus:border-emerald-500"
                        />
                    </div>
                    <select 
