@@ -24,6 +24,7 @@ export default async function WithdrawalsPage() {
       isSpAdmin={isSpAdmin} 
       currentBalance={userObj.balance}
       pendingAmount={pendingAmount}
+      is2FAEnabled={userObj.twoFactorEnabled}
     />
   );
 }

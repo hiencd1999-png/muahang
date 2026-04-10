@@ -603,7 +603,7 @@ export function OrderDetailModalContent({
                       : "Admin chỉ được cập nhật Cookie SPC_ST (sau khi đặt đơn), Mã vận đơn và ghi chú cho đơn mình phụ trách."}
               </p>
               <button
-                onClick={handleSaveOrderInfo}
+                onClick={() => handleSaveOrderInfo()}
                 disabled={isSavingOrderInfo || Boolean(isLockedForAnotherAdmin)}
                 className="self-start px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
               >

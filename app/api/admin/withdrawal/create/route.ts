@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import z from "zod";
+import { authenticator } from "otplib";
 
 const schema = z.object({
   amount: z.number().int().min(10000, "Đơn vị tiền tối thiểu là 10.000 VNĐ"),
   walletAddress: z.string().min(5, "Ví không hợp lệ").max(200),
   network: z.enum(["TRC20", "BEP20", "ERC20", "BSC/BEP20"]).default("BSC/BEP20"),
+  otpCode: z.string().optional(),
 }).superRefine((data, ctx) => {
   const isEvm = ["BEP20", "ERC20", "BSC/BEP20"].includes(data.network);
   if (isEvm && !/^0x[a-fA-F0-9]{40}$/.test(data.walletAddress)) {
@@ -34,6 +36,21 @@ export async function POST(req: NextRequest) {
     const data = schema.parse(body);
 
     const user = result.user;
+
+    if (user.twoFactorEnabled) {
+      if (!data.otpCode) {
+        return NextResponse.json({ error: "Yêu cầu cung cấp mã 2FA." }, { status: 400 });
+      }
+      if (!user.twoFactorSecret) {
+        return NextResponse.json({ error: "Lỗi cấu hình 2FA của tài khoản." }, { status: 400 });
+      }
+      authenticator.options = { window: 3 };
+      const cleanToken = String(data.otpCode).replace(/\s+/g, '');
+      const isValid = authenticator.verify({ token: cleanToken, secret: user.twoFactorSecret });
+      if (!isValid) {
+        return NextResponse.json({ error: "Mã OTP không hợp lệ, vui lòng thử lại." }, { status: 400 });
+      }
+    }
 
     // Lọc các request PENDING
     const pendingWithdrawals = await prisma.withdrawal.aggregate({

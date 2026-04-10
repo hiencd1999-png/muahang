@@ -17,29 +17,27 @@ export default async function AdminUsersPage({
   const query = params.q || "";
   const page = Math.max(1, parseInt(params.page || "1"));
 
+  const queryIsNumeric = query.length > 0 && /^\d+$/.test(query);
+
+  const whereClause = query
+    ? {
+        OR: [
+          ...(queryIsNumeric ? [{ id: parseInt(query, 10) }] : []),
+          { fullName: { contains: query } },
+          { username: { contains: query } },
+        ],
+      }
+    : {};
+
   const [users, totalCount] = await Promise.all([
     prisma.user.findMany({
-      where: query
-        ? {
-            OR: [
-              { fullName: { contains: query } },
-              { username: { contains: query } },
-            ],
-          }
-        : {},
+      where: whereClause,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * ITEMS_PER_PAGE,
       take: ITEMS_PER_PAGE,
     }),
     prisma.user.count({
-      where: query
-        ? {
-            OR: [
-              { fullName: { contains: query } },
-              { username: { contains: query } },
-            ],
-          }
-        : {},
+      where: whereClause,
     }),
   ]);
 

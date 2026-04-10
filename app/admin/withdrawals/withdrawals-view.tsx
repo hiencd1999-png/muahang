@@ -21,11 +21,13 @@ export function WithdrawalsView({
   isSpAdmin,
   currentBalance,
   pendingAmount,
+  is2FAEnabled,
 }: {
   withdrawals: Withdrawal[];
   isSpAdmin: boolean;
   currentBalance: number;
   pendingAmount: number;
+  is2FAEnabled: boolean;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -35,6 +37,7 @@ export function WithdrawalsView({
   // Form states for Admin
   const [amountInput, setAmountInput] = useState("");
   const [walletInput, setWalletInput] = useState("");
+  const [otpInput, setOtpInput] = useState("");
 
   const handleCopy = (id: number, text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -63,7 +66,7 @@ export function WithdrawalsView({
       const res = await fetch("/api/admin/withdrawal/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: val, walletAddress: walletInput, network: "BSC/BEP20" }),
+        body: JSON.stringify({ amount: val, walletAddress: walletInput, network: "BSC/BEP20", otpCode: otpInput }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Gặp lỗi nội bộ.");
@@ -71,6 +74,7 @@ export function WithdrawalsView({
       alert("Đã tạo lệnh yêu cầu rút tiền thành công.");
       setAmountInput("");
       setWalletInput("");
+      setOtpInput("");
       router.refresh();
     } catch (error: any) {
       alert(error.message);
@@ -185,6 +189,20 @@ export function WithdrawalsView({
               />
               <p className="text-xs text-rose-500 mt-2 font-bold italic">*Xin lưu ý: Chỉ hỗ trợ rút về ví điện tử USDT (Chuẩn BEP20/BSC). Nếu nhập sai mạng chúng tôi sẽ không chịu trách nhiệm.</p>
             </div>
+            {is2FAEnabled && (
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-2">Mã 2FA (Bắt buộc)</label>
+                <input
+                  type="text"
+                  required
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value)}
+                  placeholder="Nhập 6 số từ Google Authenticator"
+                  className="w-full rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-3 outline-none focus:border-amber-500 font-bold dark:text-white tracking-widest"
+                  maxLength={6}
+                />
+              </div>
+            )}
             <button
               type="submit"
               disabled={loading}
