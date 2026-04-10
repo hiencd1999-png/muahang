@@ -8,6 +8,8 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { formatCurrency } from "@/lib/format";
 import { isAdminRole } from "@/lib/roles";
 
+import { Logo } from "@/components/shared/logo";
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
 
@@ -16,6 +18,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <header className="panel relative z-40 mb-6 rounded-[2rem] p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex-1 min-w-0">
+            <div className="mb-4">
+              <Logo />
+            </div>
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 dark:text-slate-100 mb-1 opacity-80">User dashboard</p>
             <h1 className="text-2xl font-black text-slate-950 dark:text-white sm:text-3xl truncate tracking-tight">Xin chào, {user.fullName || user.username}</h1>
             

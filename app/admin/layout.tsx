@@ -6,6 +6,8 @@ import { MobileNav } from "@/components/shared/mobile-nav";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { isSpAdminRole } from "@/lib/roles";
 
+import { Logo } from "@/components/shared/logo";
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const currentAdmin = await requireUser("ADMIN");
   const canManageVouchers = isSpAdminRole(currentAdmin.role);
@@ -31,6 +33,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <main className="shell flex-1 py-6 sm:py-8">
       <header className="panel relative z-40 mb-6 flex flex-col gap-5 rounded-[2rem] p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between border-slate-200 dark:border-zinc-800">
         <div>
+          <div className="mb-4">
+            <Logo />
+          </div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500 dark:text-zinc-400">Admin panel</p>
           <h1 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white sm:text-3xl">Điều phối user, đơn và giao dịch</h1>
         </div>

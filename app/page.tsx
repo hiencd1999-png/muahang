@@ -4,6 +4,8 @@ import { ArrowRight, Wallet, ShoppingBag, Truck, Zap, ShieldCheck, Clock } from 
 import { getCurrentUser } from "@/lib/session";
 import { getPostLoginRedirect } from "@/lib/roles";
 
+import { Logo } from "@/components/shared/logo";
+
 export default async function Home() {
   const user = await getCurrentUser();
 
@@ -13,6 +15,11 @@ export default async function Home() {
 
   return (
     <main className="flex-1 flex flex-col items-center pt-10 sm:pt-20 pb-20 overflow-hidden relative">
+      {/* Global Logo */}
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-10 z-50 animate-fade-in">
+        <Logo />
+      </div>
+
       {/* Background Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-amber-500/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />

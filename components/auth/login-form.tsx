@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/shared/toast";
 import { getPostLoginRedirect } from "@/lib/roles";
+import { Logo } from "@/components/shared/logo";
 
 export function LoginForm() {
   const router = useRouter();
@@ -89,6 +90,7 @@ export function LoginForm() {
       return (
         <form onSubmit={handleVerify2FA} className="panel animate-rise w-full rounded-[2rem] p-8 sm:p-10 border border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/10 shadow-lg shadow-blue-500/10">
           <div className="mb-8 space-y-3 text-center">
+            <div className="flex justify-center mb-6"><Logo /></div>
             <h1 className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-2">Bảo mật Hai lớp (2FA)</h1>
             <p className="text-sm leading-6 text-blue-700 dark:text-blue-300">
               Nhập mã 6 số từ Google Authenticator để hoàn tất đăng nhập.
@@ -116,9 +118,7 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="panel animate-rise w-full rounded-[2rem] p-8 sm:p-10">
       <div className="mb-8 space-y-3">
-        <span className="inline-flex rounded-full bg-amber-100 dark:bg-amber-900/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-amber-800 dark:text-amber-300">
-          Dang nhap
-        </span>
+        <div className="mb-6"><Logo /></div>
         <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Truy cập hệ thống đặt đơn.</h1>
         <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
           Nhập tài khoản để quản lý số dư, tạo đơn Shopee và theo dõi trạng thái xử lý.

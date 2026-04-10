@@ -12,6 +12,7 @@ const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/;
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
 import { getPostLoginRedirect } from "@/lib/roles";
+import { Logo } from "@/components/shared/logo";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -138,9 +139,7 @@ export function RegisterForm() {
   return (
     <form method="POST" onSubmit={handleSubmit} className="panel animate-rise w-full rounded-[2rem] p-8 sm:p-10">
       <div className="mb-8 space-y-3">
-        <span className="inline-flex rounded-full bg-amber-100 dark:bg-amber-900/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-amber-800 dark:text-amber-300">
-          Tạo tài khoản
-        </span>
+        <div className="mb-6"><Logo /></div>
         <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Đăng ký người dùng mới.</h1>
         <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
           Nhập thông tin cá nhân và mật khẩu để tạo tài khoản mới.

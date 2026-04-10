@@ -30,6 +30,13 @@ export function NotificationBell() {
   async function fetchNotifications() {
     try {
       const response = await fetch("/api/user/notifications");
+      const contentType = response.headers.get("content-type");
+      
+      if (!response.ok || !contentType?.includes("application/json")) {
+        console.warn("Failed to fetch notifications gracefully, status:", response.status);
+        return;
+      }
+      
       const data = await response.json();
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
