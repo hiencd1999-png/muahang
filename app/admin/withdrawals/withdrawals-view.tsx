@@ -138,6 +138,15 @@ export function WithdrawalsView({
         <section className="panel rounded-[1.75rem] p-6 lg:p-8">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Yêu Cầu Rút Tiền (USDT)</h2>
           
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-900/10">
+             <h3 className="text-sm font-bold text-amber-800 dark:text-amber-400 mb-2">Quy định rút tiền dành cho Admin:</h3>
+             <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-500/90 space-y-1">
+                 <li>Chỉ được phép tạo tối đa <strong>1 lệnh rút tiền mỗi tuần</strong> (nếu lệnh bị từ chối hoặc hủy thì không bị tính).</li>
+                 <li>Phải có <strong>trên 10 đơn hàng</strong> đã trực tiếp xử lý (trạng thái thành công/đã đặt) để đạt điều kiện rút.</li>
+                 <li>Mọi giao dịch chỉ được thanh toán qua ví <strong>USDT (chuẩn BEP20/BSC)</strong>.</li>
+             </ul>
+          </div>
+          
           <div className="mb-6 grid gap-4 grid-cols-1 md:grid-cols-2">
              <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-4">
                  <p className="text-sm font-semibold text-slate-500 dark:text-zinc-400">Số dư khả dụng</p>

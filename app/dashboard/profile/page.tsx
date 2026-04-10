@@ -12,6 +12,7 @@ export default async function ProfilePage() {
       email={user.email}
       phone={user.phone}
       twoFactorEnabled={user.twoFactorEnabled}
+      role={user.role}
     />
   );
 }

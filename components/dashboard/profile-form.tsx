@@ -12,6 +12,7 @@ export function ProfileForm({
   email,
   phone,
   twoFactorEnabled,
+  role,
 }: {
   fullName: string;
   username: string;
@@ -19,6 +20,7 @@ export function ProfileForm({
   email: string;
   phone: string;
   twoFactorEnabled: boolean;
+  role: string;
 }) {
   const router = useRouter();
   const { addToast } = useToast();
@@ -28,6 +30,23 @@ export function ProfileForm({
   const [secretKey, setSecretKey] = useState("");
   const [otpToken, setOtpToken] = useState("");
   const [loading2FA, setLoading2FA] = useState(false);
+  const [loadingReqAdmin, setLoadingReqAdmin] = useState(false);
+
+  async function handleRequestAdmin() {
+      setLoadingReqAdmin(true);
+      try {
+          const res = await fetch("/api/user/admin-request/create", { method: "POST" });
+          const data = await res.json();
+          if (res.ok) {
+              addToast("success", "Đã gửi yêu cầu thành công! Vui lòng đợi SPAdmin duyệt.");
+          } else {
+              addToast("error", data.error);
+          }
+      } catch (e) {
+          addToast("error", "Lỗi gửi yêu cầu");
+      }
+      setLoadingReqAdmin(false);
+  }
 
   async function handlePasswordChange(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -231,6 +250,27 @@ export function ProfileForm({
           {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
         </button>
       </form>
+
+      {role === "USER" && (
+      <section className="panel rounded-[1.75rem] p-6 lg:col-span-2 mt-2 border border-violet-200 dark:border-violet-900/50 bg-violet-50/50 dark:bg-violet-950/10">
+          <div className="flex justify-between items-start">
+             <div>
+                 <h2 className="text-xl font-semibold text-violet-900 dark:text-violet-100">Đăng ký làm Admin</h2>
+                 <p className="text-sm text-violet-700 dark:text-violet-300 mt-1">Nâng cấp tài khoản của bạn lên Admin để nhận xử lý đơn cho người dùng khác.</p>
+                 <p className="text-sm font-medium text-violet-800 dark:text-violet-200 mt-2"><strong>Điều kiện bắt buộc:</strong> Tài khoản của bạn phải có ít nhất 1 lệnh nạp Crypto thành công từ 30 USDT trở lên.</p>
+             </div>
+          </div>
+          <div className="mt-5">
+             <button
+               onClick={handleRequestAdmin}
+               disabled={loadingReqAdmin}
+               className="rounded-xl bg-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-violet-700 transition active:scale-95 disabled:opacity-60"
+             >
+               {loadingReqAdmin ? "Đang gửi yêu cầu..." : "Gửi yêu cầu xét duyệt Admin"}
+             </button>
+          </div>
+      </section>
+      )}
 
       {/* 2FA Security Section */}
       <section className="panel rounded-[1.75rem] p-6 lg:col-span-2 mt-2 border border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/10">

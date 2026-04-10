@@ -37,6 +37,12 @@ enum WithdrawalStatus {
   CANCELED
 }
 
+enum AdminRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum NotificationType {
   ORDER_CREATED
   ORDER_COMPLETED
@@ -82,6 +88,7 @@ model User {
   bankDeposits   BankDeposit[]     @relation("UserBankDeposits")
   adminBankDeposits BankDeposit[]  @relation("AdminBankDeposits")
   ledgers        Ledger[]          @relation("UserLedger")
+  adminRequests  AdminRequest[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 }
@@ -195,6 +202,18 @@ model Withdrawal {
   processedById Int?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+}
+
+model AdminRequest {
+  id        Int                @id @default(autoincrement())
+  userId    Int
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    AdminRequestStatus @default(PENDING)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
 
   @@index([userId, status])
   @@index([status, createdAt])

@@ -154,7 +154,10 @@ export async function POST(request: Request) {
         address: { contains: parsed.ward },
         createdAt: { gte: twentyFourHoursAgo },
         status: { in: ["PENDING", "PROCESSING", "ORDER_PLACED"] },
-        trackingNo: { in: [null, ""] }
+        OR: [
+          { trackingNo: null },
+          { trackingNo: "" }
+        ]
       }
     });
 

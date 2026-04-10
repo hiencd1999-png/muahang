@@ -382,7 +382,7 @@ export function CreateOrderForm({
                 Đang mở: {activeVoucherCount}/{voucherConfigs.length}
               </span>
             </div>
-            <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
+            <div className="mt-4 grid gap-4 grid-cols-1">
               <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
                 <span>Loại voucher</span>
                 <select
