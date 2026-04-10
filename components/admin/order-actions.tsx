@@ -107,6 +107,10 @@ export function OrderActions({
   const [showComplaintModal, setShowComplaintModal] = useState(false);
   const [isHandlingComplaint, setIsHandlingComplaint] = useState(false);
 
+  const [showAdminComplaintCreateModal, setShowAdminComplaintCreateModal] = useState(false);
+  const [adminComplaintReason, setAdminComplaintReason] = useState("");
+  const [isAdminComplaintLoading, setIsAdminComplaintLoading] = useState(false);
+
   const isDeliveredOrder = status === "DELIVERED";
   const isOwnedByAnotherAdmin =
     !canManageAllOrders && approvedByAdminId !== null && approvedByAdminId !== currentAdminId;
@@ -276,8 +280,13 @@ export function OrderActions({
 
   const handleComplaintSubmit = async (action: "APPROVE" | "REJECT") => {
     setIsHandlingComplaint(true);
+    // Chọn endpoint tương ứng: DELIVERED (từ USER) hay CANCELED (từ ADMIN)
+    const endpoint = status === "CANCELED" 
+      ? "/api/admin/order/admin-complaint/manage"
+      : "/api/admin/order/complaint";
+      
     try {
-      const response = await fetch("/api/admin/order/complaint", {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, action }),
@@ -296,6 +305,37 @@ export function OrderActions({
       addToast("error", "Lỗi gửi yêu cầu xử lý khiếu nại.");
     } finally {
       setIsHandlingComplaint(false);
+    }
+  };
+
+  const handleAdminComplaintCreateSubmit = async () => {
+    if (!adminComplaintReason.trim()) {
+      addToast("error", "Vui lòng nhập lý do khiếu nại khách hàng.");
+      return;
+    }
+    setIsAdminComplaintLoading(true);
+
+    try {
+      const response = await fetch("/api/admin/order/admin-complaint/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, reason: adminComplaintReason.trim() }),
+      });
+      const data = await readApiResponse(response);
+
+      if (!response.ok) {
+        addToast("error", data.error ?? "Không thể gửi khiếu nại.");
+        return;
+      }
+
+      addToast("success", "Đã gửi khiếu nại phạt.");
+      setShowAdminComplaintCreateModal(false);
+      setAdminComplaintReason("");
+      router.refresh();
+    } catch {
+      addToast("error", "Có lỗi xảy ra khi tạo khiếu nại phạt.");
+    } finally {
+      setIsAdminComplaintLoading(false);
     }
   };
 
@@ -363,6 +403,18 @@ export function OrderActions({
             title={isDeliveredOrder ? "Đơn đã giao không thể đổi phụ trách" : "Đổi admin phụ trách"}
           >
             Đổi phụ trách
+          </button>
+        ) : null}
+        
+        {/* Nút Admin gửi khiếu nại phạt khi đơn bị Hủy */}
+        {status === "CANCELED" && !complaintStatus && (!isOwnedByAnotherAdmin || canManageAllOrders) ? (
+          <button
+            type="button"
+            onClick={() => setShowAdminComplaintCreateModal(true)}
+            className="shrink-0 rounded-xl bg-purple-600 hover:bg-purple-700 px-3 py-2 text-xs font-semibold text-white transition-colors"
+            title="Khiếu nại khách hàng cố tình không nhận hàng"
+          >
+            Khiếu nại phạt
           </button>
         ) : null}
         {complaintStatus === "PENDING" && (!isOwnedByAnotherAdmin || canManageAllOrders) ? (
@@ -575,7 +627,10 @@ export function OrderActions({
             </div>
             {canManageAllOrders ? (
               <p className="text-xs text-slate-600">
-                Lưu ý: Nếu nhấn <strong>Duyệt Hoàn Tiền</strong>, User sẽ được cộng trả lại {orderData.total}đ. Đồng thời Admin phụ trách đơn này sẽ bị trừ tiền hoa hồng (95% của {orderData.total}đ).
+                {status === "CANCELED" 
+                  ? `Lưu ý: Nếu nhấn CHẤP THUẬN PHẠT, User sẽ bị trừ đi 50% tiền đơn (${Math.floor(orderData.total * 0.5)}đ). Đồng thời Admin phụ trách đơn này sẽ được cộng trả lại 50% số tiền đền bù.`
+                  : `Lưu ý: Nếu nhấn DUYỆT HOÀN TIỀN, User sẽ được cộng trả lại ${orderData.total}đ. Đồng thời Admin phụ trách đơn này sẽ bị trừ tiền hoa hồng (95% của ${orderData.total}đ).`
+                }
               </p>
             ) : (
                <p className="text-xs text-slate-600">
@@ -608,10 +663,57 @@ export function OrderActions({
                     className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors disabled:opacity-60"
                     disabled={isHandlingComplaint}
                   >
-                    {isHandlingComplaint ? "Đang xử lý..." : "Duyệt Hoàn Tiền"}
+                    {isHandlingComplaint ? "Đang xử lý..." : (status === "CANCELED" ? "Chấp thuận Phạt" : "Duyệt Hoàn Tiền")}
                   </button>
                 </>
               )}
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Modal Admin gửi khiếu nại khi Hủy */}
+      {showAdminComplaintCreateModal && (
+        <Modal
+          isOpen={showAdminComplaintCreateModal}
+          onClose={() => {
+            setShowAdminComplaintCreateModal(false);
+            setAdminComplaintReason("");
+          }}
+          title="Khiếu nại phạt khách hàng"
+          size="medium"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600">
+              Nhập lý do chi tiết và minh chứng (link ảnh, log, nếu có) để xin phép SPADMIN trừ tiền người dùng (50% đơn) và đền bù cho bạn.
+            </p>
+            <textarea
+              value={adminComplaintReason}
+              onChange={(e) => setAdminComplaintReason(e.target.value)}
+              placeholder="VD: Khách không nghe điện thoại nhiều ngày, Shopee hoàn hàng..."
+              rows={4}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAdminComplaintCreateModal(false);
+                  setAdminComplaintReason("");
+                }}
+                className="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-sm"
+                disabled={isAdminComplaintLoading}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleAdminComplaintCreateSubmit}
+                className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm disabled:opacity-60"
+                disabled={isAdminComplaintLoading || !adminComplaintReason.trim()}
+              >
+                {isAdminComplaintLoading ? "Đang gửi..." : "Gửi khiếu nại"}
+              </button>
             </div>
           </div>
         </Modal>

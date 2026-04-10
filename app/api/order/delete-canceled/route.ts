@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       userId: result.user.id,
       id: { in: normalizedIds },
     },
-    select: { id: true, status: true },
+    select: { id: true, status: true, updatedAt: true },
   });
 
   if (orders.length === 0) {
@@ -33,6 +33,14 @@ export async function POST(request: Request) {
   const nonCanceledOrder = orders.find((order) => order.status !== "CANCELED");
   if (nonCanceledOrder) {
     return NextResponse.json({ error: "Chỉ được xóa các đơn đã hủy." }, { status: 400 });
+  }
+
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+  const recentCanceledOrder = orders.find((order) => order.updatedAt > threeDaysAgo);
+  if (recentCanceledOrder) {
+    return NextResponse.json({ 
+      error: "Đơn hàng hủy cần chờ 3 ngày để Admin xem xét khiếu nại trước khi bạn có thể xóa." 
+    }, { status: 400 });
   }
 
   await prisma.order.deleteMany({

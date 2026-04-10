@@ -25,11 +25,24 @@ export async function POST(request: Request) {
 
   const orders = await prisma.order.findMany({
     where: { id: { in: parsed.data.orderIds } },
-    select: { id: true, status: true, userId: true },
+    select: { id: true, status: true, userId: true, updatedAt: true },
   });
 
   if (orders.length === 0) {
     return NextResponse.json({ error: "Không tìm thấy đơn hàng để xóa." }, { status: 404 });
+  }
+
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+  const protectedOrder = orders.find(
+    (order) => 
+      (order.status === "CANCELED" || order.status === "DELIVERED") && 
+      order.updatedAt > threeDaysAgo
+  );
+
+  if (protectedOrder) {
+    return NextResponse.json({ 
+      error: "Không thể xóa đơn: Có đơn Đã Hủy hoặc Đã Giao chưa qua 3 ngày (thời gian được phép khiếu nại)." 
+    }, { status: 400 });
   }
 
   await prisma.order.deleteMany({
