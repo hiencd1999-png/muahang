@@ -5,6 +5,9 @@ import { createAuditLog } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const bulkImportSchema = z.object({
   proxiesText: z.string().trim().min(1),
 });

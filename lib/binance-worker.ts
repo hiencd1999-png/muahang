@@ -43,18 +43,28 @@ async function binanceApiRequest(endpoint: string, params: Record<string, any>, 
     let agent;
     const finalProxy = dynamicProxy || BINANCE_PROXY;
     if (finalProxy) {
-        let proxyUrl = finalProxy;
+        let proxyUrl = finalProxy.trim();
         if (!proxyUrl.startsWith("http")) {
             const parts = proxyUrl.split(":");
             if (parts.length === 4) {
-                proxyUrl = `http://${parts[2]}:${parts[3]}@${parts[0]}:${parts[1]}`;
+                // ip:port:user:pass
+                const host = parts[0];
+                const port = parts[1];
+                const user = encodeURIComponent(parts[2]);
+                const pass = encodeURIComponent(parts[3]);
+                proxyUrl = `http://${user}:${pass}@${host}:${port}`;
             } else if (parts.length === 2) {
+                // ip:port
                 proxyUrl = `http://${parts[0]}:${parts[1]}`;
             } else {
                 proxyUrl = `http://${proxyUrl}`;
             }
         }
-        agent = new HttpsProxyAgent(proxyUrl);
+        try {
+            agent = new HttpsProxyAgent(proxyUrl);
+        } catch (e: any) {
+            console.error(`[Binance-API] Invalid Proxy Format: ${proxyUrl} - Error: ${e.message}`);
+        }
     }
 
     const response = await fetch(url, {

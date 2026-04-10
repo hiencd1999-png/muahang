@@ -25,7 +25,7 @@ export default function SettingsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/admin/settings");
+        const res = await fetch("/api/admin/settings", { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
           setConfigs({
@@ -214,7 +214,7 @@ export default function SettingsPage() {
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Proxy quét API Binance (Nhập cấu hình HTTP Proxy nếu có)</span>
               <input
                 type="text"
-                placeholder="Ví dụ: http://user:pass@127.0.0.1:8080"
+                placeholder="Ví dụ: 103.11.22.33:8080:user:pass (Hệ thống sẽ tự nhận diện)"
                 value={configs.binanceProxy}
                 onChange={e => setConfigs({...configs, binanceProxy: e.target.value})}
                 className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"

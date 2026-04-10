@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 import { getTelegramConfigs, initTelegramBot } from "@/lib/telegram";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request: NextRequest) {
   const result = await requireApiUser("SPADMIN");
   if ("error" in result) {

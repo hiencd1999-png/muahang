@@ -85,7 +85,7 @@ export function SystemProxyManager({ initialProxies }: { initialProxies: ProxyIt
   const allVisibleSelected = paginatedProxies.length > 0 && selectedVisibleCount === paginatedProxies.length;
 
   const refreshList = async () => {
-    const response = await fetch("/api/admin/proxies", { method: "GET" });
+    const response = await fetch("/api/admin/proxies", { method: "GET", cache: "no-store" });
     const data = await response.json();
 
     if (!response.ok) {

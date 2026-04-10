@@ -75,6 +75,7 @@ export function CreateOrderForm({
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   const [isAnalyzingAddress, setIsAnalyzingAddress] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
 
   const selectedVoucher = useMemo(
     () => activeVoucherConfigs.find((voucher) => voucher.code === selectedVoucherCode) ?? null,
@@ -100,9 +101,24 @@ export function CreateOrderForm({
 
   const filteredAdmins = useMemo(() => {
     if (!admins) return [];
-    return admins.filter((admin) =>
-      admin.displayName?.toLowerCase().includes(searchRequestedAdmin.toLowerCase() || "")
-    );
+    let filtered = admins;
+    if (searchRequestedAdmin) {
+      filtered = admins.filter((admin) =>
+        admin.displayName?.toLowerCase().includes(searchRequestedAdmin.toLowerCase() || "")
+      );
+    }
+    // Sắp xếp người có tỷ lệ hoàn thành cao nhất nằm trên đầu
+    return filtered.sort((a, b) => {
+      // Ưu tiên tỷ lệ hoàn thành (rate)
+      if ((b.rate || 0) !== (a.rate || 0)) {
+        return (b.rate || 0) - (a.rate || 0);
+      }
+      // Nếu tỷ lệ bằng nhau, ưu tiên số lượng đơn hoàn thành (delivered)
+      if ((b.delivered || 0) !== (a.delivered || 0)) {
+        return (b.delivered || 0) - (a.delivered || 0);
+      }
+      return 0;
+    });
   }, [admins, searchRequestedAdmin]);
 
   const updateOrderItem = (itemId: string, updater: (item: OrderDraftItem) => OrderDraftItem) => {
@@ -409,37 +425,72 @@ export function CreateOrderForm({
               </label>
 
               {admins && admins.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Chọn Admin phụ trách (Tuỳ chọn)</p>
+                <div className="space-y-3 relative">
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Chọn Admin phụ trách (Tuỳ chọn)</p>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
                     <input 
-                       type="text" 
-                       placeholder="🔎 Tìm admin..."
-                       value={searchRequestedAdmin}
-                       onChange={e => setSearchRequestedAdmin(e.target.value)}
-                       className="w-full sm:w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-3 py-2 text-sm outline-none transition focus:border-amber-500"
+                      type="text" 
+                      placeholder="Nhập tên để tìm Admin (Hệ thống sẽ tự động ghép nếu bỏ trống)..."
+                      value={searchRequestedAdmin}
+                      onChange={e => {
+                        setSearchRequestedAdmin(e.target.value);
+                        setRequestedAdminId(""); // Reset id if typing
+                        setAdminDropdownOpen(true);
+                      }}
+                      onFocus={() => setAdminDropdownOpen(true)}
+                      onBlur={() => {
+                        // Delay closing so click event on option can fire
+                        setTimeout(() => setAdminDropdownOpen(false), 200);
+                      }}
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
                     />
-                  </div>
-                  <select
-                    value={requestedAdminId}
-                    onChange={(event) => setRequestedAdminId(event.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
-                  >
-                    <option value="" className="dark:bg-slate-900">Bất kỳ ai (Hệ thống tự chọn)</option>
-                    {filteredAdmins.map((admin) => {
-                      const statsPart = admin.total && admin.total > 0 
-                        ? `(Hoàn thành: ${admin.delivered} | Hủy: ${admin.canceled} - Tỉ lệ: ${admin.rate}%)` 
-                        : "(Mới - Chưa nhận đơn)";
-                      return (
-                        <option key={admin.id} value={admin.id.toString()} className="dark:bg-slate-900">
-                          {admin.displayName} {statsPart}
-                        </option>
-                      );
-                    })}
-                    {filteredAdmins.length === 0 && searchRequestedAdmin && (
-                      <option disabled value="" className="dark:bg-slate-900">Không tìm thấy admin nào</option>
+                    {adminDropdownOpen && (
+                      <div className="absolute z-20 mt-2 w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl max-h-64 overflow-y-auto outline-none">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRequestedAdminId("");
+                            setSearchRequestedAdmin("");
+                            setAdminDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 text-sm transition hover:bg-slate-100 dark:hover:bg-slate-800 ${!requestedAdminId ? "bg-amber-50 dark:bg-amber-900/10 text-amber-900 dark:text-amber-200 font-semibold" : "text-slate-700 dark:text-slate-300"}`}
+                        >
+                          Bất kỳ ai (Hệ thống tự phân bổ)
+                        </button>
+                        {filteredAdmins.map((admin) => {
+                          const isSelected = requestedAdminId === admin.id.toString();
+                          const statsPart = admin.total && admin.total > 0 
+                            ? `(Hoàn thành: ${admin.delivered} | Hủy: ${admin.canceled} - Tỉ lệ: ${admin.rate}%)` 
+                            : "(Mới - Chưa nhận đơn)";
+                          return (
+                            <button
+                              key={admin.id}
+                              type="button"
+                              onClick={() => {
+                                setRequestedAdminId(admin.id.toString());
+                                setSearchRequestedAdmin(admin.displayName);
+                                setAdminDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-4 py-3 text-sm transition hover:bg-slate-100 dark:hover:bg-slate-800 flex justify-between items-center ${isSelected ? "bg-amber-50 dark:bg-amber-900/10 text-amber-900 dark:text-amber-400 font-semibold" : "text-slate-700 dark:text-slate-300"}`}
+                            >
+                              <span>{admin.displayName} {admin.rate !== undefined && admin.rate > 80 && "🔥"}</span>
+                              <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">{statsPart}</span>
+                            </button>
+                          );
+                        })}
+                        {filteredAdmins.length === 0 && searchRequestedAdmin && (
+                          <div className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 text-center">
+                            Không tìm thấy admin nào có tên &quot;{searchRequestedAdmin}&quot;
+                          </div>
+                        )}
+                      </div>
                     )}
-                  </select>
+                  </div>
                 </div>
               )}
             </div>
