@@ -128,7 +128,8 @@ export async function PATCH(
 
   console.log(`[BalanceAdjustment] Operater: ${result.user.username} (${result.user.role}), Target: ${targetUser.username}, Change: ${amountChange}`);
 
-  await prisma.$transaction(async (tx) => {
+  try {
+    await prisma.$transaction(async (tx) => {
     // 1. Update user info
     await tx.user.update({
       where: { id: userId },
@@ -138,6 +139,11 @@ export async function PATCH(
     if (amountChange !== 0) {
       // 2. Only deduct from operator if they are NOT SPADMIN
       if (!isSpAdmin && amountChange > 0) {
+        const currentAdmin = await tx.user.findUnique({ where: { id: result.user.id } });
+        if (!currentAdmin || currentAdmin.balance < amountChange) {
+            throw new Error(`Số dư Admin không đủ để cấp cho người dùng. Cần ${amountChange.toLocaleString()} VND.`);
+        }
+
         await tx.user.update({
           where: { id: result.user.id },
           data: { balance: { decrement: amountChange } },
@@ -186,4 +192,10 @@ export async function PATCH(
   revalidatePath("/dashboard/transactions");
 
   return NextResponse.json({ success: true });
+} catch (error: any) {
+  if (error.message?.includes("Số dư Admin không đủ")) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+  return NextResponse.json({ error: "Cập nhật thất bại" }, { status: 500 });
+}
 }

@@ -3,9 +3,16 @@ import { NextResponse } from "next/server";
 import { createSessionToken, SESSION_COOKIE, verifyTemp2FAToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { authenticator } from "otplib";
+import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
     try {
+        const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+        const { allowed } = checkRateLimit(`login2fa_${ip}`, 5, 5 * 60 * 1000); 
+        if (!allowed) {
+            return NextResponse.json({ error: "Thử sai 2FA quá nhiều lần. Vui lòng quay lại sau 5 phút!" }, { status: 429 });
+        }
+
         const { otp } = await req.json();
         if (!otp) return NextResponse.json({ error: "Thiếu mã xác thực." }, { status: 400 });
 
@@ -40,6 +47,8 @@ export async function POST(req: Request) {
 
         // Xóa temp và ghi temp chuẩn
         cookieStore.delete("datdon_2fa_temp");
+        resetRateLimit(`login2fa_${ip}`);
+        
         cookieStore.set(SESSION_COOKIE, sessionToken, {
             httpOnly: true,
             sameSite: "lax",

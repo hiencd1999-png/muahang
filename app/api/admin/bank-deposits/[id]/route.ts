@@ -52,6 +52,11 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
 
         if (action === "REJECT") {
             await prisma.$transaction(async (tx) => {
+                 const currentDeposit = await tx.bankDeposit.findUnique({ where: { id: deposit.id } });
+                 if (!currentDeposit || ["COMPLETED", "REJECTED", "EXPIRED"].includes(currentDeposit.status)) {
+                     throw new Error("Lệnh này đã được xử lý hoặc hết hạn.");
+                 }
+
                  if (!isTargetAdminSpAdmin) {
                      await tx.user.update({
                          where: { id: deposit.adminId },
@@ -78,6 +83,11 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
 
         // APPROVE: Trừ Escrow, cộng tiền user
         await prisma.$transaction(async (tx) => {
+             const currentDeposit = await tx.bankDeposit.findUnique({ where: { id: deposit.id } });
+             if (!currentDeposit || ["COMPLETED", "REJECTED", "EXPIRED"].includes(currentDeposit.status)) {
+                 throw new Error("Lệnh này đã được xử lý hoặc hết hạn.");
+             }
+
              // Cộng tiền user
              await tx.user.update({
                  where: { id: deposit.userId },

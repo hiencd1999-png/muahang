@@ -111,6 +111,10 @@ export async function PUT(request: Request) {
     updateData.cancelReason = null;
   }
 
+  const shouldPayCommission = parsed.data.status === "DELIVERED" && order.status !== "DELIVERED" && (updateData.approvedByAdminId || order.approvedByAdminId);
+  const commissionAdminId = updateData.approvedByAdminId || order.approvedByAdminId;
+  const commissionAmt = Math.floor(order.total * 0.95);
+
   await prisma.$transaction([
     prisma.order.update({
       where: { id: order.id },
@@ -130,6 +134,20 @@ export async function PUT(request: Request) {
         },
       }),
     ] : []),
+    ...(shouldPayCommission && commissionAdminId ? [
+      prisma.user.update({
+        where: { id: commissionAdminId },
+        data: { balance: { increment: commissionAmt } },
+      }),
+      prisma.transaction.create({
+        data: {
+          userId: commissionAdminId,
+          amount: commissionAmt,
+          type: TransactionType.ADMIN_ADJUSTMENT,
+          note: `Hoa hồng xử lý đơn giao thành công #${order.id} (95% của ${order.total.toLocaleString("vi-VN")}đ)`,
+        },
+      }),
+    ] : []),
   ]);
 
   revalidatePath("/admin/orders");
@@ -144,8 +162,14 @@ export async function PUT(request: Request) {
       `Lý do hủy: ${parsed.data.cancelReason?.trim()}`,
       `/dashboard/orders?orderId=${order.id}`
     );
-  } else {
-    // Notify user of other status changes via in-app if needed (currently we only do canceled here)
+  } else if (shouldPayCommission && commissionAdminId) {
+    await createNotification(
+      commissionAdminId,
+      "BALANCE_CHANGED",
+      "Hoa hồng hoàn thành đơn",
+      `Bạn được cộng ${commissionAmt.toLocaleString("vi-VN")}đ từ đơn #${order.id}.`,
+      `/admin/orders?orderId=${order.id}`
+    );
   }
 
   const { sendTelegramNotification } = await import("@/lib/telegram");

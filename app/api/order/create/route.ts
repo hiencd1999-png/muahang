@@ -206,12 +206,18 @@ export async function POST(request: Request) {
       : rawMergedProductName;
 
     const newOrder = await prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: result.user.id },
-        data: { balance: { decrement: total } },
-      });
+      // Kiểm tra số dư NỘI BỘ giao dịch (chống Race Condition thả trôi tiền < 0)
+      const currentUser = await tx.user.findUnique({ where: { id: result.user.id } });
+        if (!currentUser || currentUser.balance < total) {
+            throw new Error("Số dư không đủ để tạo đơn lúc này. Thao tác bị hủy.");
+        }
 
-      const order = await tx.order.create({
+        await tx.user.update({
+          where: { id: result.user.id },
+          data: { balance: { decrement: total } },
+        });
+
+        const order = await tx.order.create({
         data: {
           userId: result.user.id,
           productLink: primaryItem.canonicalProductLink,

@@ -21,7 +21,14 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
     const isSpAdminRole = (role: string) => role === "SPADMIN";
     const isTargetAdminSpAdmin = isSpAdminRole(deposit.admin.role);
 
+    try {
+
     const updated = await prisma.$transaction(async (tx) => {
+         const currentDeposit = await tx.bankDeposit.findUnique({ where: { id: deposit.id } });
+         if (!currentDeposit || (currentDeposit.status !== "PENDING" && currentDeposit.status !== "TRANSFERRED")) {
+              throw new Error("Lệnh nạp này đã được xử lý hoặc không thể hủy.");
+         }
+
          if (!isTargetAdminSpAdmin) {
              await tx.user.update({
                  where: { id: deposit.adminId },
@@ -44,4 +51,10 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
     });
 
     return NextResponse.json({ success: true, status: updated.status });
+} catch (error: any) {
+    if (error.message?.includes("đã được xử lý") || error.message?.includes("không thể hủy")) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Lịch hệ thống khi hủy!" }, { status: 500 });
+}
 }

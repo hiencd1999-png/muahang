@@ -34,35 +34,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Chỉ có thể đặt lại đơn hàng đã bị hủy." }, { status: 400 });
     }
 
-    if (result.user.balance < order.total) {
-      return NextResponse.json({ error: "Số dư không đủ để đặt lại đơn hàng này." }, { status: 400 });
-    }
+    await prisma.$transaction(async (tx) => {
+        // Kiểm tra độc quyền trạng thái đơn hàng (chống spam F5)
+        const currentOrder = await tx.order.findUnique({ where: { id: order.id } });
+        if (!currentOrder || currentOrder.status !== "CANCELED") {
+            throw new Error("Chỉ có thể đặt lại đơn hàng đã bị hủy. Lệnh đã bị xử lý.");
+        }
 
-    await prisma.$transaction([
-      // Trừ tiền lại
-      prisma.user.update({
-        where: { id: result.user.id },
-        data: { balance: { decrement: order.total } },
-      }),
-      // Cập nhật trạng thái đơn
-      prisma.order.update({
-        where: { id: order.id },
-        data: {
-          status: "PENDING",
-          cancelReason: null, // Xóa lý do hủy cũ
-          updatedAt: new Date(),
-        },
-      }),
-      // Ghi giao dịch
-      prisma.transaction.create({
-        data: {
-          userId: result.user.id,
-          amount: -order.total,
-          type: TransactionType.ORDER_DEBIT,
-          note: `Đặt lại đơn hàng bị hủy #${order.id}`,
-        },
-      }),
-    ]);
+        // Kiểm tra độc quyền số dư (chống spam F5 vượt quá số dư tịnh)
+        const currentUser = await tx.user.findUnique({ where: { id: result.user.id } });
+        if (!currentUser || currentUser.balance < currentOrder.total) {
+            throw new Error("Số dư không đủ để đặt lại đơn hàng này.");
+        }
+
+        // Trừ tiền
+        await tx.user.update({
+            where: { id: result.user.id },
+            data: { balance: { decrement: currentOrder.total } },
+        });
+
+        // Cập nhật trạng thái
+        await tx.order.update({
+            where: { id: order.id },
+            data: {
+              status: "PENDING",
+              cancelReason: null, 
+              updatedAt: new Date(),
+            },
+        });
+
+        // Ghi transaction log
+        await tx.transaction.create({
+            data: {
+              userId: result.user.id,
+              amount: -currentOrder.total,
+              type: TransactionType.ORDER_DEBIT,
+              note: `Đặt lại đơn hàng bị hủy #${order.id}`,
+            },
+        });
+    });
 
     await createNotification(
       result.user.id,
@@ -73,11 +83,13 @@ export async function POST(request: NextRequest) {
     );
 
     revalidatePath("/dashboard");
-    revalidatePath("/dashboard/orders");
     revalidatePath("/admin/orders");
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message?.includes("Số dư không đủ") || error.message?.includes("Chỉ có thể đặt lại")) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     console.error("Reset order error:", error);
     return NextResponse.json({ error: "Có lỗi khi đặt lại đơn hàng." }, { status: 500 });
   }

@@ -45,10 +45,15 @@ export async function PUT(request: Request) {
   }
 
   console.log(`[QuickAdjustment] Operator: ${result.user.username} (${result.user.role}), Target: ${targetUser.username}, Change: ${amountChange}`);
-
+  try {
   await prisma.$transaction(async (tx) => {
     // 1. Deduct from Admin ONLY if not SPADMIN
     if (!isSpAdmin && amountChange > 0) {
+      const currentAdmin = await tx.user.findUnique({ where: { id: result.user.id } });
+      if (!currentAdmin || currentAdmin.balance < amountChange) {
+          throw new Error(`Số dư Admin không đủ để chuyển cho người dùng. Cần ${amountChange.toLocaleString()} VND.`);
+      }
+
       await tx.user.update({
         where: { id: result.user.id },
         data: { balance: { decrement: amountChange } },
@@ -109,4 +114,10 @@ export async function PUT(request: Request) {
   revalidatePath("/dashboard/transactions");
 
   return NextResponse.json({ success: true });
+} catch (error: any) {
+  if (error.message?.includes("Số dư Admin không đủ")) {
+     return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+  return NextResponse.json({ error: "Lỗi hệ thống khi cập nhật số dư" }, { status: 500 });
+}
 }

@@ -110,8 +110,8 @@ export default async function AdminTransactionsPage({
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
               Giao dịch hệ thống
             </p>
-            <h2 className="mt-2 text-2xl font-semibold text-slate-950">Theo dõi toàn bộ giao dịch</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <h2 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">Theo dõi toàn bộ giao dịch</h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Chỉ SPADMIN được xem màn này. Bạn có thể lọc theo user, họ tên, ghi chú hoặc loại giao dịch.
             </p>
           </div>
@@ -123,13 +123,13 @@ export default async function AdminTransactionsPage({
                 name="q"
                 defaultValue={query}
                 placeholder="Tìm theo username, họ tên hoặc ghi chú..."
-                className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm outline-none focus:border-amber-500"
+                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-3 pl-11 pr-4 text-sm outline-none focus:border-amber-500 dark:text-white"
               />
             </label>
             <select
               name="type"
               defaultValue={type}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500"
+              className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm outline-none focus:border-amber-500 dark:text-white"
             >
               <option value="">Tất cả loại giao dịch</option>
               <option value="DEPOSIT">Nạp tiền</option>
@@ -141,7 +141,7 @@ export default async function AdminTransactionsPage({
             <select
               name="pageSize"
               defaultValue={String(pageSize)}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500"
+              className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm outline-none focus:border-amber-500 dark:text-white"
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <option key={size} value={size}>
@@ -159,13 +159,13 @@ export default async function AdminTransactionsPage({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Tổng giao dịch</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">{totalCount}</p>
+          <div className="rounded-[1.5rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Tổng giao dịch</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{totalCount}</p>
           </div>
-          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Số user phát sinh</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">{uniqueUsers.length}</p>
+          <div className="rounded-[1.5rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Số user phát sinh</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{uniqueUsers.length}</p>
           </div>
         </div>
       </div>
@@ -199,7 +199,7 @@ export default async function AdminTransactionsPage({
           {(query || type) ? (
             <a
               href={`/admin/transactions?pageSize=${pageSize}`}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               Xóa lọc
             </a>
@@ -207,7 +207,7 @@ export default async function AdminTransactionsPage({
         </div>
 
         <div className="mb-5 flex flex-wrap gap-2">
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+          <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
             Hiển thị: {pageSize} mục / trang
           </span>
           {query ? (
@@ -223,14 +223,14 @@ export default async function AdminTransactionsPage({
         </div>
 
         {transactions.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center">
-            <p className="text-sm text-slate-500">Không có giao dịch nào phù hợp với bộ lọc hiện tại.</p>
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-10 text-center">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Không có giao dịch nào phù hợp với bộ lọc hiện tại.</p>
           </div>
         ) : (
           <>
-            <div className="hidden overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-white shadow-sm lg:block">
+            <div className="hidden overflow-x-auto rounded-[1.5rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm lg:block">
               <table className="min-w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
+                <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                   <tr>
                     <th className="px-4 py-3">Mã GD</th>
                     <th className="px-4 py-3">Người dùng</th>
@@ -242,23 +242,23 @@ export default async function AdminTransactionsPage({
                 </thead>
                 <tbody>
                   {transactions.map((transaction) => (
-                    <tr key={transaction.id} className="border-t border-slate-200/70 align-top hover:bg-slate-50/70">
-                      <td className="px-4 py-4 font-mono text-xs font-semibold text-slate-900">#{transaction.id}</td>
-                      <td className="px-4 py-4 text-slate-700">
+                    <tr key={transaction.id} className="border-t border-slate-200/70 dark:border-slate-700/70 align-top hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition">
+                      <td className="px-4 py-4 font-mono text-xs font-semibold text-slate-900 dark:text-white">#{transaction.id}</td>
+                      <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
                         <div className="space-y-1">
-                          <p className="font-medium text-slate-900">{transaction.user.fullName || transaction.user.username}</p>
-                          <p className="text-xs text-slate-500">@{transaction.user.username}</p>
+                          <p className="font-medium text-slate-900 dark:text-white">{transaction.user.fullName || transaction.user.username}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">@{transaction.user.username}</p>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-slate-600">
+                      <td className="px-4 py-4 text-slate-600 dark:text-slate-300">
                         <TypeBadge type={transaction.type} />
                       </td>
-                      <td className="max-w-md px-4 py-4 text-slate-600">{transaction.note}</td>
-                      <td className={`px-4 py-4 text-right font-semibold ${transaction.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                      <td className="max-w-md px-4 py-4 text-slate-600 dark:text-slate-300">{transaction.note}</td>
+                      <td className={`px-4 py-4 text-right font-semibold ${transaction.amount >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}`}>
                         {transaction.amount >= 0 ? "+" : ""}
                         {formatCurrency(transaction.amount)}
                       </td>
-                      <td className="px-4 py-4 text-right text-slate-500">{formatDate(transaction.createdAt)}</td>
+                      <td className="px-4 py-4 text-right text-slate-500 dark:text-slate-400">{formatDate(transaction.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -267,25 +267,25 @@ export default async function AdminTransactionsPage({
 
             <div className="space-y-4 lg:hidden">
               {transactions.map((transaction) => (
-                <div key={transaction.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+                <div key={transaction.id} className="rounded-[1.5rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
                   <div className="flex items-start gap-3">
                     <TypeIcon type={transaction.type} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-900">#{transaction.id}</p>
-                          <p className="text-xs text-slate-500">@{transaction.user.username}</p>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">#{transaction.id}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">@{transaction.user.username}</p>
                         </div>
                         <TypeBadge type={transaction.type} />
                       </div>
-                      <p className="mt-2 text-sm font-medium text-slate-900">{transaction.user.fullName || transaction.user.username}</p>
-                      <p className="mt-2 text-sm text-slate-600">{transaction.note}</p>
+                      <p className="mt-2 text-sm font-medium text-slate-900 dark:text-white">{transaction.user.fullName || transaction.user.username}</p>
+                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{transaction.note}</p>
                       <div className="mt-3 flex items-center justify-between gap-3">
-                        <p className={`text-sm font-semibold ${transaction.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                        <p className={`text-sm font-semibold ${transaction.amount >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}`}>
                           {transaction.amount >= 0 ? "+" : ""}
                           {formatCurrency(transaction.amount)}
                         </p>
-                        <p className="text-xs text-slate-500">{formatDate(transaction.createdAt)}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{formatDate(transaction.createdAt)}</p>
                       </div>
                     </div>
                   </div>

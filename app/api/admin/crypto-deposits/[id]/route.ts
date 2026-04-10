@@ -29,10 +29,17 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
         }
 
         if (action === "REJECT") {
-            await prisma.cryptoDeposit.update({
-                where: { id: deposit.id },
-                data: { status: "EXPIRED" }
+            await prisma.$transaction(async (tx) => {
+                const currentDeposit = await tx.cryptoDeposit.findUnique({ where: { id: deposit.id } });
+                if (!currentDeposit || currentDeposit.status !== "PENDING") {
+                    throw new Error("Lệnh nạp này đã được xử lý hoặc hết hạn.");
+                }
+                await tx.cryptoDeposit.update({
+                    where: { id: deposit.id },
+                    data: { status: "EXPIRED" }
+                });
             });
+
             const { sendTelegramNotification } = await import("@/lib/telegram");
             await sendTelegramNotification(deposit.userId, `❌ *Nạp Crypto Bị Hủy*\nLệnh nạp ${deposit.amount} USDT của bạn đã bị từ chối/hủy bởi admin.`, "USER_DEPOSIT");
             return NextResponse.json({ success: true, message: "Đã từ chối lệnh nạp USDT." });
@@ -42,6 +49,11 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
         const convertedVND = deposit.amount * USDT_RATE;
 
         await prisma.$transaction(async (tx) => {
+             const currentDeposit = await tx.cryptoDeposit.findUnique({ where: { id: deposit.id } });
+             if (!currentDeposit || currentDeposit.status !== "PENDING") {
+                  throw new Error("Lệnh nạp này đã được xử lý hoặc hết hạn.");
+             }
+
              // 1. Cộng tiền user
              await tx.user.update({
                  where: { id: deposit.userId },
@@ -71,6 +83,9 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
         return NextResponse.json({ success: true, message: `Đã duyệt thành công, cộng ${convertedVND.toLocaleString()} VNĐ cho User.` });
 
     } catch (e: any) {
+        if (e.message?.includes("đã được xử lý")) {
+             return NextResponse.json({ error: e.message }, { status: 400 });
+        }
         return NextResponse.json({ error: e.message || "Lỗi xử lý duyệt USDT" }, { status: 500 });
     }
 }

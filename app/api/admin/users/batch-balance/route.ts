@@ -34,6 +34,11 @@ export async function POST(request: NextRequest) {
     const results = await prisma.$transaction(async (tx) => {
       // 1. Deduct from Admin ONLY if not SPADMIN
       if (!isSpAdmin && amountChange > 0) {
+        const currentAdmin = await tx.user.findUnique({ where: { id: admin.id } });
+        if (!currentAdmin || currentAdmin.balance < totalTransfer) {
+            throw new Error(`Số dư Admin không đủ. Cần ${totalTransfer.toLocaleString()} VND nhưng chỉ có ${currentAdmin?.balance.toLocaleString()} VND.`);
+        }
+
         await tx.user.update({
           where: { id: admin.id },
           data: { balance: { decrement: totalTransfer } },
@@ -95,7 +100,10 @@ export async function POST(request: NextRequest) {
       updated: results.length,
       totalTransferred: totalTransfer,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message?.includes("Số dư Admin không đủ")) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     console.error("Batch balance update error:", error);
     return NextResponse.json({ error: "Thanh toán hàng loạt thất bại." }, { status: 500 });
   }

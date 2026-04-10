@@ -30,6 +30,17 @@ function extractShopAndItemIds(url: string) {
 async function resolveRedirectLink(productLink: string, cookie?: string) {
   try {
     const fixed = productLink.trim().startsWith("http") ? productLink.trim() : `https://${productLink.trim()}`;
+    
+    // SSRF Protection: Only allow requests to shopee domains
+    try {
+      const parsedUrl = new URL(fixed);
+      if (!parsedUrl.hostname.includes("shopee.vn")) {
+        return fixed; 
+      }
+    } catch {
+      return fixed;
+    }
+
     const headers: Record<string, string> = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",

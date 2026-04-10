@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
+import { requireApiUser } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
-  const user = await requireUser("ADMIN");
+  const result = await requireApiUser("ADMIN");
+  if ("error" in result) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+  const user = result.user;
 
   const { orderIds, status } = await request.json();
 
@@ -32,94 +36,85 @@ export async function POST(request: NextRequest) {
     // Process each order update
     const results = (await Promise.all(
       orders.map(async (order) => {
-        // Không cho phép đổi trạng thái của đơn hàng đã Đóng (Giao vòng cuối hoặc Đã huỷ) 
-        // để tránh lỗi nghiệp vụ hoàn tiền kép
-        if (["CANCELED", "DELIVERED"].includes(order.status)) {
-            return null;
-        }
+        return prisma.$transaction(async (tx) => {
+           // Khoá Row Đơn hàng để chặn Hacker spam Lệnh kép (Double-spend refunds / commissions)
+           const currentOrder = await tx.order.findUnique({ where: { id: order.id } });
+           if (!currentOrder || ["CANCELED", "DELIVERED"].includes(currentOrder.status)) {
+               return null;
+           }
 
-        // Handle refunds when canceling
-        if (status === "CANCELED" && !["CANCELED", "DELIVERED"].includes(order.status)) {
-          // Create refund transaction atomically
-          const [updatedOrder] = await prisma.$transaction([
-            prisma.order.update({
-              where: { id: order.id },
-              data: {
-                status,
-                processingStartedAt: null,
-              },
-            }),
-            prisma.transaction.create({
-              data: {
-                userId: order.userId,
-                amount: order.total,
-                type: "ORDER_REFUND",
-                note: `Hoàn tiền cho đơn #${order.id}`,
-              },
-            }),
-            prisma.user.update({
-              where: { id: order.userId },
-              data: { balance: { increment: order.total } },
-            }),
-          ]);
+           // Handle refunds when canceling
+           if (status === "CANCELED") {
+              const updatedOrder = await tx.order.update({
+                where: { id: currentOrder.id },
+                data: { status, processingStartedAt: null },
+              });
+              await tx.transaction.create({
+                data: {
+                  userId: currentOrder.userId,
+                  amount: currentOrder.total,
+                  type: "ORDER_REFUND",
+                  note: `Hoàn tiền cho đơn #${currentOrder.id}`,
+                },
+              });
+              await tx.user.update({
+                where: { id: currentOrder.userId },
+                data: { balance: { increment: currentOrder.total } },
+              });
+              return updatedOrder;
+           }
 
-          return updatedOrder;
-        }
+           // Chặn cướp đơn Booking đích danh (SPADMIN được phép vượt qua)
+           if (
+             user.role !== "SPADMIN" &&
+             currentOrder.status === "PENDING" && 
+             status === "PROCESSING" && 
+             currentOrder.approvedByAdminId && 
+             currentOrder.approvedByAdminId !== user.id
+           ) {
+             return currentOrder;
+           }
 
-        // Chặn cướp đơn Booking đích danh (SPADMIN được phép vượt qua)
-        if (
-          user.role !== "SPADMIN" &&
-          order.status === "PENDING" && 
-          status === "PROCESSING" && 
-          order.approvedByAdminId && 
-          order.approvedByAdminId !== user.id
-        ) {
-          // Bỏ qua không xét duyệt đơn này, trả về nguyên dạng
-          return order;
-        }
+           // Handle commission when manually marking as DELIVERED
+           if (status === "DELIVERED" && currentOrder.approvedByAdminId) {
+             const commission = Math.floor(currentOrder.total * 0.95);
+             const updatedOrder = await tx.order.update({
+               where: { id: currentOrder.id },
+               data: { status, processingStartedAt: null },
+             });
+             await tx.user.update({
+               where: { id: currentOrder.approvedByAdminId },
+               data: { balance: { increment: commission } },
+             });
+             await tx.transaction.create({
+               data: {
+                 userId: currentOrder.approvedByAdminId,
+                 amount: commission,
+                 type: "ADMIN_ADJUSTMENT",
+                 note: `Hoa hồng xử lý đơn giao thành công #${currentOrder.id} (95% của ${currentOrder.total.toLocaleString("vi-VN")}đ)`,
+               },
+             });
+             await tx.notification.create({
+               data: {
+                 userId: currentOrder.approvedByAdminId,
+                 type: "BALANCE_CHANGED",
+                 title: "Hoa hồng hoàn thành đơn",
+                 message: `Bạn được cộng ${commission.toLocaleString("vi-VN")}đ từ đơn #${currentOrder.id}.`,
+                 link: `/admin/orders?orderId=${currentOrder.id}`,
+               },
+             });
+             return updatedOrder;
+           }
 
-        // Handle commission when manually marking as DELIVERED
-        if (status === "DELIVERED" && order.status !== "DELIVERED" && order.approvedByAdminId) {
-          const commission = Math.floor(order.total * 0.95);
-          const [updatedOrder] = await prisma.$transaction([
-            prisma.order.update({
-              where: { id: order.id },
-              data: { status, processingStartedAt: null },
-            }),
-            prisma.user.update({
-              where: { id: order.approvedByAdminId },
-              data: { balance: { increment: commission } },
-            }),
-            prisma.transaction.create({
-              data: {
-                userId: order.approvedByAdminId,
-                amount: commission,
-                type: "ADMIN_ADJUSTMENT",
-                note: `Hoa hồng xử lý đơn giao thành công #${order.id} (95% của ${order.total.toLocaleString("vi-VN")}đ)`,
-              },
-            }),
-            prisma.notification.create({
-              data: {
-                userId: order.approvedByAdminId,
-                type: "BALANCE_CHANGED",
-                title: "Hoa hồng hoàn thành đơn",
-                message: `Bạn được cộng ${commission.toLocaleString("vi-VN")}đ từ đơn #${order.id}.`,
-                link: `/admin/orders?orderId=${order.id}`,
-              },
-            }),
-          ]);
-
-          return updatedOrder;
-        }
-
-        // Regular status update
-        return await prisma.order.update({
-          where: { id: order.id },
-          data: {
-            status,
-            approvedByAdminId: status === "PROCESSING" ? user.id : status === "PENDING" ? null : order.approvedByAdminId,
-            processingStartedAt: status === "PROCESSING" ? new Date() : null,
-          },
+           // Regular status update
+           return await tx.order.update({
+             where: { id: currentOrder.id },
+             data: {
+               status,
+               approvedByAdminId: status === "PROCESSING" ? user.id : status === "PENDING" ? null : currentOrder.approvedByAdminId,
+               processingStartedAt: status === "PROCESSING" ? new Date() : null,
+             },
+           });
         });
       })
     )).filter(Boolean);
