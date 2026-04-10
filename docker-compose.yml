@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: datdon_admin
-      POSTGRES_PASSWORD: MatKhauMoiCuaBan123
+      POSTGRES_PASSWORD: Hienhoi123@
       POSTGRES_DB: datdon_db
     volumes:
       - datdon_db_data:/var/lib/postgresql/data
@@ -25,7 +25,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://datdon_admin:MatKhauMoiCuaBan123@db:5432/datdon_db?schema=public
+      - DATABASE_URL=postgresql://datdon_admin:Hienhoi123%40@db:5432/datdon_db?schema=public
       - SESSION_SECRET=DATDON_SECRET_KEY_SUPER_SECURE_REPLACEME
       - NEXT_TELEMETRY_DISABLED=1
       - NODE_ENV=production
@@ -48,7 +48,7 @@ services:
       - .:/app
     working_dir: /app
     environment:
-      - DATABASE_URL=postgresql://datdon_admin:MatKhauMoiCuaBan123@db:5432/datdon_db?schema=public
+      - DATABASE_URL=postgresql://datdon_admin:Hienhoi123%40@db:5432/datdon_db?schema=public
       - SESSION_SECRET=DATDON_SECRET_KEY_SUPER_SECURE_REPLACEME
     command: >
       sh -c "npm install && npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts"

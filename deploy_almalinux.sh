@@ -54,7 +54,7 @@ echo "🔐 4/6. KHỞI TẠO MÔI TRƯỜNG BẢO MẬT & ĐÓNG GÓI DATABASE"
 if [ ! -f .env ]; then
     echo "📝 Đang gieo cấu hình .env tự động..."
     cat <<EOF > .env
-DATABASE_URL="postgresql://datdon_admin:MatKhauMoiCuaBan123@db:5432/datdon_db?schema=public"
+DATABASE_URL="postgresql://datdon_admin:Hienhoi123%40@db:5432/datdon_db?schema=public"
 SESSION_SECRET="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
 EOF
     echo "✅ Đã gieo cấu hình môi trường."
