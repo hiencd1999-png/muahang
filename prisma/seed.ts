@@ -31,14 +31,7 @@ async function main() {
 
   await prisma.user.upsert({
     where: { username: "admin" },
-    update: {
-      fullName: "Quản trị viên",
-      passwordHash: adminHash,
-      email: "admin@datdon.local",
-      phone: "0900000001",
-      role: Role.ADMIN,
-      balance: 5_000_000,
-    },
+    update: {},
     create: {
       fullName: "Quản trị viên",
       username: "admin",
@@ -59,14 +52,7 @@ async function main() {
 
   await prisma.user.upsert({
     where: { username: "testuser" },
-    update: {
-      fullName: "Người dùng test",
-      passwordHash: testHash,
-      email: "testuser@datdon.local",
-      phone: "0900000002",
-      role: Role.USER,
-      balance: 500_000,
-    },
+    update: {},
     create: {
       fullName: "Người dùng test",
       username: "testuser",
@@ -87,14 +73,7 @@ async function main() {
 
   await prisma.user.upsert({
     where: { username: "spadmin" },
-    update: {
-      fullName: "Super admin",
-      passwordHash: spadminHash,
-      email: "spadmin@datdon.local",
-      phone: "0900000003",
-      role: Role.SPADMIN,
-      balance: 10_000_000,
-    },
+    update: {},
     create: {
       fullName: "Super admin",
       username: "spadmin",
@@ -125,10 +104,7 @@ async function main() {
     defaultVoucherPricing.map((voucher) =>
       prisma.voucherPricing.upsert({
         where: { code: voucher.code },
-        update: {
-          label: voucher.label,
-          unitPrice: voucher.unitPrice,
-        },
+        update: {},
         create: {
           code: voucher.code,
           label: voucher.label,
