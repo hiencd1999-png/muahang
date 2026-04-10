@@ -36,12 +36,14 @@ export async function POST(req: Request) {
             role: user.role,
         });
 
+        const isHttps = req.headers.get("x-forwarded-proto") === "https";
+
         // Xóa temp và ghi temp chuẩn
         cookieStore.delete("datdon_2fa_temp");
         cookieStore.set(SESSION_COOKIE, sessionToken, {
             httpOnly: true,
             sameSite: "lax",
-            secure: process.env.NODE_ENV === "production",
+            secure: process.env.NODE_ENV === "production" && isHttps,
             path: "/",
             maxAge: 60 * 60 * 24 * 7,
         });

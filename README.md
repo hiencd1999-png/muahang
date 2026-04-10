@@ -76,6 +76,25 @@ Nghiệp vụ cốt lõi tại `/api/shopee/tracking-sync`, đây là bộ não 
 * **Tải Báo Cáo Xuất Kho (CSV Exports)**: Sổ sách chuẩn dòng cho hệ thống khai thuế đối soát.
 * **Bơm Rút Xèng (Withdraw Control)**: Yêu cầu nhả phế hoa hồng, trừ ví Khóa ngay lập tức, chuyển hóa lại qua tiền Crypto chờ SPAdmin duyệt. 
 
+## VI. CÁC TÍNH NĂNG BẢO MẬT & VẬN HÀNH ĐÃ NÂNG CẤP (MỚI)
+
+### 1. Nâng Cấp Bảo Mật Tài Khoản bằng 2FA
+Đã tích hợp bảo mật hai lớp (Two-Factor Authentication) thông qua Google Authenticator. Đầu vào khóa bí mật (OTP Token) được check qua Server-Side. Khi mã hóa được bật, người dùng đăng nhập bằng tài khoản và mật khẩu sau đó sẽ phải nhập thêm bước thứ 2 là OTP.
+
+### 2. Xét Duyệt Nâng Quyền Đại Lý (Admin Role Upgrade)
+* Mở luồng cho các `USER` bình thường nộp đơn xin cấp phép làm `ADMIN` để có thể nhận xử lý các đơn hàng dropship.
+* **Điều kiện bộ lọc tài chính chẽ:** Tài khoản bắt buộc từng có tài sản lưu thông, yêu cầu phải có ít nhất 1 lệnh nạp tiền vào quỹ Crypto thành công với định mức $\ge$ 30 USDT. (Điều kiện tự động chặn clone và scam bot).
+* SPAdmin vận hành bảng Admin-Requests, xem xét và One-Click thao tác: từ chối, hoặc duyệt thẳng. Khi duyệt, Prisma $transaction đảm bảo Role của User chính thức chuyển sang ADMIN. Cấp quyền truy cập vùng Admin Panel.
+
+### 3. Tiêu Chuẩn Cho Phép Rút Tiền Nội Bộ 
+Phòng ngừa nghẽn tiền lưu thông, quy trình Withdraw tiền của Admin đã được thiết lập ngưỡng trần kiểm soát:
+* **Hạn mức 1 Lần / Tuần (Rate Limited Request):** Mỗi tài khoản Admin chỉ được khởi tạo thành công 1 lệnh rút tiền trong vòng 7 ngày (Những lệnh đang xử lý chưa thành công hoặc rút rác, bị Cancel, Rejected không bị tính vào hạn mức).
+* **Định mức Năng lực:** Admin bị vô hiệu hóa quyền rút tiền nếu lịch sử năng lực không đủ cao: Chưa từng xử lý hoàn thành $\ge$ 10 đơn hàng thành công thực sự về trạng thái (Status: `ORDER_PLACED`, `TRACKING_GENERATED`, `DELIVERED`).
+
+### 4. Tối Ưu UX Tốc Độ Thao Tác Bảng Điều Khiển
+* Chuẩn hóa bảng màu hành động cốt lõi `amber` chuyên nghiệp toàn platform.
+* Các Modal Nạp Tiền, Tạo Đơn thả xuống hàng ngàn Admin phụ trách nay đã được trang bị "Auto-complete Filter Search" tìm kiếm định vị nhanh bằng tên mà không cần cuộn dọc danh sách dài vô tận.
+
 ---
 
 ## 🚀 Hướng Dẫn Khởi Chạy Môi Trường

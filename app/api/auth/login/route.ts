@@ -53,8 +53,9 @@ export async function POST(request: Request) {
   // Kiểm tra 2FA
   if (user.twoFactorEnabled) {
       const tempToken = await createTemp2FAToken(String(user.id));
+      const isHttps = request.headers.get("x-forwarded-proto") === "https";
       cookieStore.set("datdon_2fa_temp", tempToken, {
-          httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 5 * 60,
+          httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production" && isHttps, path: "/", maxAge: 5 * 60,
       });
       return NextResponse.json({ success: true, require2FA: true });
   }
@@ -65,10 +66,12 @@ export async function POST(request: Request) {
     role: user.role,
   });
 
+  const isHttps = request.headers.get("x-forwarded-proto") === "https";
+
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" && isHttps,
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });

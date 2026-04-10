@@ -108,11 +108,13 @@ export async function POST(request: Request) {
       role: user.role,
     });
 
+    const isHttps = request.headers.get("x-forwarded-proto") === "https";
+
     const cookieStore = await cookies();
     cookieStore.set(SESSION_COOKIE, token, {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production" && isHttps,
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
