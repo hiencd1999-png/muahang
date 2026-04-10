@@ -33,7 +33,7 @@ if [ ! -d "\$WORK_DIR" ]; then
 else
   echo "⚠️ Thư mục \$WORK_DIR đã tồn tại. Đang tiến hành Git Pull cập nhật rẽ nhánh..."
   cd "\$WORK_DIR"
-  git pull origin main || echo "Cảnh báo Repo không update tự động được."
+  git pull origin master || echo "Cảnh báo Repo không update tự động được."
 fi
 
 # Ép kịch bản di chuyển vào Thư mục chính để thực thi các lệnh phía sau
