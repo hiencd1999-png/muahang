@@ -37,8 +37,8 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Install tools needed for database migrations and seeding
-RUN npm install -g prisma tsx typescript
+# Install tools needed for database migrations and seeding locally inside the runner
+RUN npm install prisma tsx typescript bcryptjs @prisma/client
 
 # Set the correct permission for prerender cache
 RUN mkdir .next
