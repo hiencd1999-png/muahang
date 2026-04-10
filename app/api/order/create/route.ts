@@ -22,6 +22,7 @@ const sharedShape = {
   quantity: z.number().int().min(1).max(100).optional(),
   phone: z.string().trim().min(1).max(50).optional(),
   address: z.string().trim().min(8).max(800),
+  ward: z.string().trim().min(1, "Vui lòng phân tích địa chỉ trước khi tạo đơn").max(100),
   note: z.string().trim().max(2000).optional(),
   requestedAdminId: z.number().int().optional(),
 };
@@ -45,6 +46,7 @@ type NormalizedOrderRequest = {
   voucherCode: string;
   phone?: string;
   address: string;
+  ward: string;
   note?: string;
   items: Array<z.infer<typeof batchItemSchema> & { quantity: number }>;
   requestedAdminId?: number;
@@ -77,7 +79,7 @@ function normalizeOrderRequest(body: unknown): NormalizedOrderRequest | null {
     return null;
   }
 
-  const { productLink, resolvedLink, productName, shopId, variant, voucherCode, quantity, phone, address, note } = legacyParsed.data;
+  const { productLink, resolvedLink, productName, shopId, variant, voucherCode, quantity, phone, address, ward, note } = legacyParsed.data;
 
   return {
     items: [
@@ -93,6 +95,7 @@ function normalizeOrderRequest(body: unknown): NormalizedOrderRequest | null {
     voucherCode,
     phone,
     address,
+    ward,
     note,
     requestedAdminId: legacyParsed.data.requestedAdminId
   };
@@ -143,6 +146,22 @@ export async function POST(request: Request) {
 
     if (selectedVoucher.isMaintenance) {
       return NextResponse.json({ error: `Voucher ${selectedVoucher.label} đang bảo trì.` }, { status: 400 });
+    }
+
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const pendingInWard = await prisma.order.count({
+      where: {
+        address: { contains: parsed.ward },
+        createdAt: { gte: twentyFourHoursAgo },
+        status: { in: ["PENDING", "PROCESSING", "ORDER_PLACED"] },
+        trackingNo: { in: [null, ""] }
+      }
+    });
+
+    if (pendingInWard >= 15) {
+       return NextResponse.json({ 
+         error: `Khu vực "${parsed.ward}" đang có ${pendingInWard} đơn trong 24h chưa có mã vận đơn. Tạm thời không thể tạo thêm đơn ở khu vực này.` 
+       }, { status: 400 });
     }
 
     const preparedItems = parsed.items.map((item, index) => {

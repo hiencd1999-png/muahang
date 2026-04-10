@@ -68,6 +68,7 @@ export function CreateOrderForm({
   const [requestedAdminId, setRequestedAdminId] = useState("");
   const [note, setNote] = useState("");
   const [address, setAddress] = useState("");
+  const [ward, setWard] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   const [isAnalyzingAddress, setIsAnalyzingAddress] = useState(false);
@@ -239,6 +240,14 @@ export function CreateOrderForm({
 
       setAddressSuggestions(data.suggestions);
       setShowAddressSuggestions(true);
+      
+      const parsedWard = data.parsed?.adminDivision3;
+      if (parsedWard) {
+        setWard(parsedWard);
+      } else {
+        setWard("Không xác định (Chưa nhận diện được phường)");
+      }
+      
       addToast("success", "Đã nhận gợi ý địa chỉ từ Shopee API.");
     } catch {
       addToast("error", "Lỗi khi gọi Shopee API để phân tích địa chỉ.");
@@ -257,6 +266,11 @@ export function CreateOrderForm({
     event.preventDefault();
 
     const itemsToSubmit = orderItems.filter((item) => !isEmptyDraftItem(item));
+
+    if (!ward) {
+      addToast("error", "Bắt buộc phải bấm phân tích địa chỉ trước khi tạo đơn.");
+      return;
+    }
 
     if (itemsToSubmit.length === 0) {
       addToast("error", "Thêm ít nhất một link sản phẩm trước khi đặt đơn.");
@@ -308,6 +322,7 @@ export function CreateOrderForm({
       voucherCode: selectedVoucher.code,
       phone: note.trim() || "Không cung cấp",
       address: normalizedAddress,
+      ward: ward,
       note: note.trim(),
       requestedAdminId: requestedAdminId ? parseInt(requestedAdminId, 10) : undefined,
     };
@@ -332,6 +347,7 @@ export function CreateOrderForm({
       setRequestedAdminId("");
       setNote("");
       setAddress("");
+      setWard("");
       setAddressSuggestions([]);
       setShowAddressSuggestions(false);
       router.push("/dashboard/orders");
@@ -543,7 +559,10 @@ export function CreateOrderForm({
             <span>Địa chỉ</span>
             <textarea
               value={address}
-              onChange={(event) => setAddress(event.target.value)}
+              onChange={(event) => {
+                setAddress(event.target.value);
+                setWard(""); // Reset ward when manually edited
+              }}
               required
               rows={4}
               className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
