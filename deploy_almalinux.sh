@@ -68,9 +68,9 @@ docker compose up -d --build
 echo "⏳ Đang đợi Cơ sở dữ liệu khởi động..."
 sleep 5
 
-echo "🌱 Thực thi nạp CSDL lần đầu (Database Seed)..."
-# Ép Nạp DB (Tham số -T để bỏ qua tính năng TTY giao diện khi chạy Script ngầm)
-docker compose exec -T app npx tsx prisma/seed.ts || echo "⚠️ Lệnh Seed đã được chạy trước đó hoặc cảnh báo bỏ qua."
+echo "🌱 Thực thi Cài đặt Database và nạp Data gốc..."
+# Chạy Container Seed độc lập với Full Dependencies để cấu trúc lại DB và nạp User
+docker compose --profile setup run --rm seed || echo "⚠️ Lệnh Seed đã được chạy trước đó hoặc cảnh báo bỏ qua."
 echo "✅ Build ứng dụng Next.JS & Postgres Hoàn tất!"
 
 echo "🌐 6/6. THIẾT LẬP TƯỜNG LỬA CHUYỂN HƯỚNG MẠNG (NGINX FIREWALL)"

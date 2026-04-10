@@ -34,8 +34,24 @@ services:
     networks:
       - datdon_net
     command: >
-      sh -c "npx prisma db push && 
-             node server.js"
+      sh -c "node server.js"
+
+  seed:
+    profiles: ["setup"]
+    image: node:20-alpine
+    container_name: datdon_seed
+    depends_on:
+      - db
+    networks:
+      - datdon_net
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - DATABASE_URL=postgresql://datdon_admin:MatKhauMoiCuaBan123@db:5432/datdon_db?schema=public
+      - SESSION_SECRET=DATDON_SECRET_KEY_SUPER_SECURE_REPLACEME
+    command: >
+      sh -c "npm install && npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts"
 
 volumes:
   datdon_db_data:
