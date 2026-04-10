@@ -1,3 +1,5 @@
+import { prisma } from "@/lib/prisma";
+
 const AUTOFILL_URL = "https://mall.shopee.vn/api/v4/account/address/autofill";
 const DEFAULT_LAT = 21.026140213012695;
 const DEFAULT_LNG = 105.84101104736328;
@@ -98,46 +100,67 @@ export async function analyzeShopeeAddress(input: ShopeeAddressAnalyzeInput): Pr
     throw new Error("Thiếu địa chỉ để phân tích.");
   }
 
-  const spcCookie = normalizeSpcSt(process.env.COOKIE || "");
-  if (!spcCookie) {
-    throw new Error("Thiếu SPC_ST trong cấu hình server để gọi Shopee autofill.");
-  }
-
   const phone = normalizePhone(input.phone || "");
-  const csrfToken = crypto.randomUUID().replace(/-/g, "");
-  const pageSessionId = crypto.randomUUID();
 
-  const response = await fetch(AUTOFILL_URL, {
-    method: "POST",
-    cache: "no-store",
-    headers: {
-      Host: "mall.shopee.vn",
-      Cookie: `csrftoken=${csrfToken}; ${spcCookie}`,
-      "Content-Type": "application/json",
-      "X-Csrftoken": csrfToken,
-      "X-Api-Source": "rn",
-      "User-Agent": "iOS app iPhone Shopee appver=36476 language=vi app_type=1 platform=native_ios",
-      Referer: "https://mall.shopee.vn/",
-      "Accept-Language": "vi-VN,vi,en-US,en",
-    },
-    body: JSON.stringify({
-      input: `${rawAddress} ${phone}`.trim(),
-      user_lng: DEFAULT_LNG,
-      user_lat: DEFAULT_LAT,
-      request_type: "pasting",
-      use_case: "shopee.account",
-      page_session_id: pageSessionId,
-      translate_detailed_address: false,
-    }),
+  const spcCookieEnv = normalizeSpcSt(process.env.COOKIE || "");
+  const activeOrder = await prisma.order.findFirst({
+    where: { spcCookie: { not: "" } },
+    orderBy: { createdAt: "desc" },
+    select: { spcCookie: true }
   });
+  const spcCookieDb = activeOrder ? normalizeSpcSt(activeOrder.spcCookie!) : "";
 
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(`Shopee autofill lỗi HTTP ${response.status}.`);
+  const cookiesToTry = Array.from(new Set([spcCookieEnv, spcCookieDb].filter(Boolean)));
+  if (cookiesToTry.length === 0) {
+    throw new Error("Hệ thống thiếu cấu hình SPC_ST (Cả server web và Admin duyệt đơn đều trống).");
   }
 
-  if (payload?.error !== 0) {
-    throw new Error(payload?.error_msg || "Shopee autofill trả lỗi.");
+  let lastError: Error | null = null;
+  let payload: any = null;
+
+  for (const spcCookie of cookiesToTry) {
+    try {
+      const csrfToken = crypto.randomUUID().replace(/-/g, "");
+      const pageSessionId = crypto.randomUUID();
+
+      const response = await fetch(AUTOFILL_URL, {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          Host: "mall.shopee.vn",
+          Cookie: `csrftoken=${csrfToken}; ${spcCookie}`,
+          "Content-Type": "application/json",
+          "X-Csrftoken": csrfToken,
+          "X-Api-Source": "rn",
+          "User-Agent": "iOS app iPhone Shopee appver=36476 language=vi app_type=1 platform=native_ios",
+          Referer: "https://mall.shopee.vn/",
+          "Accept-Language": "vi-VN,vi,en-US,en",
+        },
+        body: JSON.stringify({
+          input: `${rawAddress} ${phone}`.trim(),
+          user_lng: DEFAULT_LNG,
+          user_lat: DEFAULT_LAT,
+          request_type: "pasting",
+          use_case: "shopee.account",
+          page_session_id: pageSessionId,
+          translate_detailed_address: false,
+        }),
+      });
+
+      const p = await response.json().catch(() => ({}));
+      if (response.ok && p?.error === 0) {
+        payload = p;
+        break; // Tự động dừng vòng lặp nếu cookie ok
+      } else {
+        lastError = new Error(p?.error_msg || `Shopee autofill lỗi HTTP ${response.status}.`);
+      }
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error(String(e));
+    }
+  }
+
+  if (!payload) {
+    throw lastError || new Error("Shopee autofill bị từ chối bằng tất cả các cookie có sẵn.");
   }
 
   const data = payload?.data || {};

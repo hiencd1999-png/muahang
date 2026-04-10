@@ -56,7 +56,7 @@ export function CreateOrderForm({
 }: {
   balance: number;
   voucherConfigs: VoucherOption[];
-  admins: { id: number; displayName: string }[];
+  admins: { id: number; displayName: string; delivered?: number; canceled?: number; rate?: number; total?: number }[];
 }) {
   const router = useRouter();
   const { addToast } = useToast();
@@ -426,11 +426,16 @@ export function CreateOrderForm({
                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
                   >
                     <option value="" className="dark:bg-slate-900">Bất kỳ ai (Hệ thống tự chọn)</option>
-                    {filteredAdmins.map((admin) => (
-                      <option key={admin.id} value={admin.id.toString()} className="dark:bg-slate-900">
-                        {admin.displayName}
-                      </option>
-                    ))}
+                    {filteredAdmins.map((admin) => {
+                      const statsPart = admin.total && admin.total > 0 
+                        ? `(Hoàn thành: ${admin.delivered} | Hủy: ${admin.canceled} - Tỉ lệ: ${admin.rate}%)` 
+                        : "(Mới - Chưa nhận đơn)";
+                      return (
+                        <option key={admin.id} value={admin.id.toString()} className="dark:bg-slate-900">
+                          {admin.displayName} {statsPart}
+                        </option>
+                      );
+                    })}
                     {filteredAdmins.length === 0 && searchRequestedAdmin && (
                       <option disabled value="" className="dark:bg-slate-900">Không tìm thấy admin nào</option>
                     )}

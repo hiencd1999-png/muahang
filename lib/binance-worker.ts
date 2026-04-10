@@ -6,7 +6,6 @@ import fetch from "node-fetch";
 const BINANCE_KEY = process.env.BINANCE_KEY;
 const BINANCE_SECRET = process.env.BINANCE_SECRET;
 const BINANCE_PROXY = process.env.BINANCE_PROXY;
-const USDT_RATE = parseInt(process.env.USDT_RATE || "25500", 10);
 
 let timeOffset = 0;
 
@@ -22,7 +21,7 @@ async function syncBinanceTime() {
     }
 }
 
-async function binanceApiRequest(endpoint: string, params: Record<string, any>) {
+async function binanceApiRequest(endpoint: string, params: Record<string, any>, dynamicProxy?: string) {
     if (!BINANCE_KEY || !BINANCE_SECRET) return null;
 
     if (timeOffset === 0) {
@@ -42,8 +41,9 @@ async function binanceApiRequest(endpoint: string, params: Record<string, any>) 
     const url = `https://api.binance.com${endpoint}?${queryParams.toString()}`;
     
     let agent;
-    if (BINANCE_PROXY) {
-        let proxyUrl = BINANCE_PROXY;
+    const finalProxy = dynamicProxy || BINANCE_PROXY;
+    if (finalProxy) {
+        let proxyUrl = finalProxy;
         if (!proxyUrl.startsWith("http")) {
             const parts = proxyUrl.split(":");
             if (parts.length === 4) {
@@ -96,6 +96,19 @@ export async function runBinanceUSDTTracker() {
 
         if (pendingDeposits.length === 0) return;
 
+        // Lấy config từ DB
+        const sysConfigs = await prisma.systemConfig.findMany({ 
+            where: { key: { in: ["USDT_RATE", "BINANCE_PROXY"] } } 
+        });
+        
+        let USDT_RATE = 25500;
+        let dbBinanceProxy = "";
+        
+        for (const c of sysConfigs) {
+            if (c.key === "USDT_RATE") USDT_RATE = parseInt(c.value, 10) || 25500;
+            if (c.key === "BINANCE_PROXY") dbBinanceProxy = c.value;
+        }
+
         // Cập nhật trạng thái những lệnh đã hết hạn
         const now = new Date();
         const expiredIds: string[] = [];
@@ -134,7 +147,7 @@ export async function runBinanceUSDTTracker() {
                 startTime,
                 endTime,
                 status: 1 // Chỉ lấy giao dịch thành công
-            });
+            }, dbBinanceProxy);
 
             if (!Array.isArray(records)) continue;
 

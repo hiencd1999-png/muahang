@@ -64,9 +64,9 @@ export default async function AdminTransactionsPage({
     ...(query
       ? {
           OR: [
-            { note: { contains: query } },
-            { user: { username: { contains: query } } },
-            { user: { fullName: { contains: query } } },
+            { note: { contains: query, mode: "insensitive" as const } },
+            { user: { username: { contains: query, mode: "insensitive" as const } } },
+            { user: { fullName: { contains: query, mode: "insensitive" as const } } },
           ],
         }
       : {}),

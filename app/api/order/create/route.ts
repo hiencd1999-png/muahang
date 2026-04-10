@@ -151,7 +151,7 @@ export async function POST(request: Request) {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const pendingInWard = await prisma.order.count({
       where: {
-        address: { contains: parsed.ward },
+        address: { contains: parsed.ward, mode: "insensitive" as const },
         createdAt: { gte: twentyFourHoursAgo },
         status: { in: ["PENDING", "PROCESSING", "ORDER_PLACED"] },
         OR: [

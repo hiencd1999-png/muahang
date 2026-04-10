@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 
-const USDT_RATE = 25500; // Tỷ giá cố định tạm thời: 1 USDT = 25,500 VNĐ
-
 export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
     const result = await requireApiUser("SPADMIN");
     if ("error" in result) return NextResponse.json({ error: result.error }, { status: result.status });
@@ -44,6 +42,10 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
             await sendTelegramNotification(deposit.userId, `❌ *Nạp Crypto Bị Hủy*\nLệnh nạp ${deposit.amount} USDT của bạn đã bị từ chối/hủy bởi admin.`, "USER_DEPOSIT");
             return NextResponse.json({ success: true, message: "Đã từ chối lệnh nạp USDT." });
         }
+
+        // Lấy USDT RATE
+        const rateConfig = await prisma.systemConfig.findUnique({ where: { key: "USDT_RATE" } });
+        const USDT_RATE = rateConfig?.value ? parseInt(rateConfig.value, 10) : 25500;
 
         // APPROVE: Cộng tiền VND cho User
         const convertedVND = deposit.amount * USDT_RATE;

@@ -34,9 +34,12 @@ export async function POST(req: Request) {
 
         const { network, amount } = parsed.data;
 
+        const bscConfig = await prisma.systemConfig.findUnique({ where: { key: "CRYPTO_WALLET_BSC" } });
+        const trxConfig = await prisma.systemConfig.findUnique({ where: { key: "CRYPTO_WALLET_TRX" } });
+
         const address = network === "BSC" 
-            ? process.env.BINANCE_DEPOSIT_ADDRESS_BSC || ""
-            : process.env.BINANCE_DEPOSIT_ADDRESS_TRX || "";
+            ? bscConfig?.value?.trim() || ""
+            : trxConfig?.value?.trim() || "";
 
         if (!address) {
             return NextResponse.json({ error: "Hệ thống chưa cấu hình ví nạp cho mạng này." }, { status: 500 });

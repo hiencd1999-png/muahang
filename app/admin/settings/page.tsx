@@ -16,6 +16,10 @@ export default function SettingsPage() {
     notifyAdminOrder: true,
     notifyAdminDeposit: true,
     notifyAdminWithdrawal: true,
+    cryptoWalletBsc: "",
+    cryptoWalletTrx: "",
+    usdtRate: "25500",
+    binanceProxy: "",
   });
 
   useEffect(() => {
@@ -32,6 +36,10 @@ export default function SettingsPage() {
             notifyAdminOrder: data.notifyAdminOrder ?? true,
             notifyAdminDeposit: data.notifyAdminDeposit ?? true,
             notifyAdminWithdrawal: data.notifyAdminWithdrawal ?? true,
+            cryptoWalletBsc: data.cryptoWalletBsc || "",
+            cryptoWalletTrx: data.cryptoWalletTrx || "",
+            usdtRate: data.usdtRate || "25500",
+            binanceProxy: data.binanceProxy || "",
           });
         }
       } catch {
@@ -76,7 +84,7 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-slate-500">Các tùy chọn sẽ được áp dụng cho toàn bộ nền tảng.</p>
       </div>
 
-      <form onSubmit={handleSave} className="grid gap-6 lg:grid-cols-[1fr_350px]">
+      <form onSubmit={handleSave} className="grid gap-6 lg:grid-cols-2">
         {/* Telegram Config Section */}
         <section className="panel p-6 rounded-[2rem] space-y-6">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -172,7 +180,63 @@ export default function SettingsPage() {
 
         </section>
 
-        <section className="space-y-6">
+        {/* Crypto Config Section */}
+        <section className="panel p-6 rounded-[2rem] space-y-6 lg:col-span-2">
+          <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Cấu hình Hệ thống Nạp tiền Crypto</h2>
+            <p className="mt-1 text-sm text-slate-500">Cấu hình ví nhận tiền USDT và tỷ lệ quy đổi khi người dùng nạp tiền.</p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Ví Binance USDT (BEP20)</span>
+              <input
+                type="text"
+                placeholder="Nhập địa chỉ ví BEP20"
+                value={configs.cryptoWalletBsc}
+                onChange={e => setConfigs({...configs, cryptoWalletBsc: e.target.value})}
+                className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Ví Binance USDT (TRC20)</span>
+              <input
+                type="text"
+                placeholder="Nhập địa chỉ ví TRC20"
+                value={configs.cryptoWalletTrx}
+                onChange={e => setConfigs({...configs, cryptoWalletTrx: e.target.value})}
+                className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+              />
+            </label>
+
+            <label className="block sm:col-span-2">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Proxy quét API Binance (Nhập cấu hình HTTP Proxy nếu có)</span>
+              <input
+                type="text"
+                placeholder="Ví dụ: http://user:pass@127.0.0.1:8080"
+                value={configs.binanceProxy}
+                onChange={e => setConfigs({...configs, binanceProxy: e.target.value})}
+                className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+              />
+              <p className="mt-1 text-xs text-slate-500">Giúp hệ thống vượt tường lửa hoặc giới hạn truy cập từ Binance. Bỏ trống nếu server VPS truy cập Binance bình thường.</p>
+            </label>
+
+            <label className="block sm:col-span-2">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Tỷ lệ chuyển đổi (1 USDT = ? VNĐ)</span>
+              <input
+                type="number"
+                placeholder="25500"
+                value={configs.usdtRate}
+                onChange={e => setConfigs({...configs, usdtRate: e.target.value})}
+                className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+              />
+              <p className="mt-1 text-xs text-slate-500">Người dùng chuyển USDT sẽ tự động nhân với tỷ lệ này vào số dư VNĐ. Mặc định 25500.</p>
+            </label>
+          </div>
+        </section>
+
+        <section className="space-y-6 lg:col-span-2">
           <div className="panel p-6 rounded-[2rem]">
              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Lưu lại thay đổi</h2>
              <button

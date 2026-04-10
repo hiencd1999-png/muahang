@@ -23,8 +23,8 @@ export default async function AdminUsersPage({
     ? {
         OR: [
           ...(queryIsNumeric ? [{ id: parseInt(query, 10) }] : []),
-          { fullName: { contains: query } },
-          { username: { contains: query } },
+          { fullName: { contains: query, mode: "insensitive" as const } },
+          { username: { contains: query, mode: "insensitive" as const } },
         ],
       }
     : {};

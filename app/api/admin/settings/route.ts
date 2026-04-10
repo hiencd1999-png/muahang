@@ -10,7 +10,22 @@ export async function GET(request: NextRequest) {
   }
 
   const configs = await getTelegramConfigs();
-  return NextResponse.json(configs);
+  const rawSystemConfigs = await prisma.systemConfig.findMany({
+    where: { key: { in: ["CRYPTO_WALLET_BSC", "CRYPTO_WALLET_TRX", "USDT_RATE", "BINANCE_PROXY"] } }
+  });
+  
+  const sysConfigMap = rawSystemConfigs.reduce((acc, curr) => {
+    acc[curr.key] = curr.value;
+    return acc;
+  }, {} as Record<string, string>);
+
+  return NextResponse.json({
+    ...configs,
+    cryptoWalletBsc: sysConfigMap["CRYPTO_WALLET_BSC"] || "",
+    cryptoWalletTrx: sysConfigMap["CRYPTO_WALLET_TRX"] || "",
+    usdtRate: sysConfigMap["USDT_RATE"] || "25500",
+    binanceProxy: sysConfigMap["BINANCE_PROXY"] || "",
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -29,6 +44,10 @@ export async function POST(request: NextRequest) {
     "TELEGRAM_NOTIFY_ADMIN_ORDER": body.notifyAdminOrder ? "true" : "false",
     "TELEGRAM_NOTIFY_ADMIN_DEPOSIT": body.notifyAdminDeposit ? "true" : "false",
     "TELEGRAM_NOTIFY_ADMIN_WITHDRAWAL": body.notifyAdminWithdrawal ? "true" : "false",
+    "CRYPTO_WALLET_BSC": body.cryptoWalletBsc || "",
+    "CRYPTO_WALLET_TRX": body.cryptoWalletTrx || "",
+    "USDT_RATE": body.usdtRate || "25500",
+    "BINANCE_PROXY": body.binanceProxy || "",
   };
 
   const currentConfigs = await getTelegramConfigs();
