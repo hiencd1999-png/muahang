@@ -1,0 +1,79 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { requireApiUser } from "@/lib/session";
+import { getTelegramConfigs, initTelegramBot } from "@/lib/telegram";
+
+export async function GET(request: NextRequest) {
+  const result = await requireApiUser("SPADMIN");
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  const configs = await getTelegramConfigs();
+  return NextResponse.json(configs);
+}
+
+export async function POST(request: NextRequest) {
+  const result = await requireApiUser("SPADMIN");
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  const body = await request.json();
+
+  const mapToUpdate = {
+    "TELEGRAM_BOT_TOKEN": body.botToken || "",
+    "TELEGRAM_BOT_ENABLED": body.enabled ? "true" : "false",
+    "TELEGRAM_NOTIFY_USER_ORDER": body.notifyUserOrder ? "true" : "false",
+    "TELEGRAM_NOTIFY_USER_DEPOSIT": body.notifyUserDeposit ? "true" : "false",
+    "TELEGRAM_NOTIFY_ADMIN_ORDER": body.notifyAdminOrder ? "true" : "false",
+    "TELEGRAM_NOTIFY_ADMIN_DEPOSIT": body.notifyAdminDeposit ? "true" : "false",
+    "TELEGRAM_NOTIFY_ADMIN_WITHDRAWAL": body.notifyAdminWithdrawal ? "true" : "false",
+  };
+
+  const currentConfigs = await getTelegramConfigs();
+
+  for (const [key, value] of Object.entries(mapToUpdate)) {
+    await prisma.systemConfig.upsert({
+      where: { key },
+      update: { value },
+      create: { key, value },
+    });
+  }
+
+  // After updating configs, reload the bot if token or enabled status changed
+  if (currentConfigs.botToken !== body.botToken) {
+    if (currentConfigs.botToken) {
+        // Token changed, we need to sever all connections because the old bot is replaced.
+        const linkedUsers = await prisma.user.findMany({
+            where: { telegramId: { not: null } },
+            select: { id: true }
+        });
+
+        if (linkedUsers.length > 0) {
+            await prisma.user.updateMany({
+                where: { id: { in: linkedUsers.map(u => u.id) } },
+                data: { telegramId: null, telegramUsername: null }
+            });
+
+            // Optional: send an internal notification
+            const notifications = linkedUsers.map(u => ({
+                userId: u.id,
+                type: "ADMIN_MESSAGE" as const,
+                title: "Cập nhật Bot Telegram",
+                message: "Hệ thống vừa chuyển sang dùng Bot Telegram mới. Vui lòng vào Thông tin tài khoản để liên kết lại phần Cấu hình Telegram.",
+                link: "/dashboard/profile"
+            }));
+            await prisma.notification.createMany({ data: notifications });
+        }
+    }
+    
+    console.log("Admin updated Telegram configs. Reloading Telegram bot from Server...");
+    initTelegramBot().catch(e => console.error(e));
+  } else if (currentConfigs.enabled !== body.enabled) {
+    console.log("Admin updated Telegram toggles. Reloading Telegram bot from Server...");
+    initTelegramBot().catch(e => console.error(e));
+  }
+
+  return NextResponse.json({ success: true });
+}

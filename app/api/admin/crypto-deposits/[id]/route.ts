@@ -33,6 +33,8 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
                 where: { id: deposit.id },
                 data: { status: "EXPIRED" }
             });
+            const { sendTelegramNotification } = await import("@/lib/telegram");
+            await sendTelegramNotification(deposit.userId, `❌ *Nạp Crypto Bị Hủy*\nLệnh nạp ${deposit.amount} USDT của bạn đã bị từ chối/hủy bởi admin.`, "USER_DEPOSIT");
             return NextResponse.json({ success: true, message: "Đã từ chối lệnh nạp USDT." });
         }
 
@@ -62,6 +64,9 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
                  }
              });
         });
+
+        const { sendTelegramNotification } = await import("@/lib/telegram");
+        await sendTelegramNotification(deposit.userId, `🎉 *Nạp Crypto Thành Công*\nLệnh nạp ${deposit.amount} USDT đã được duyệt. Bạn nhận được ${convertedVND.toLocaleString()} VNĐ vào tài khoản!`, "USER_DEPOSIT");
 
         return NextResponse.json({ success: true, message: `Đã duyệt thành công, cộng ${convertedVND.toLocaleString()} VNĐ cho User.` });
 

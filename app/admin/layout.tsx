@@ -24,6 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     ...(canViewTransactions ? [{ href: "/admin/transactions", label: "Giao dịch hệ thống" }] : []),
     ...(canViewTransactions ? [{ href: "/admin/crypto-deposits", label: "Crypto (USDT)" }] : []),
     ...(isSpAdminRole(currentAdmin.role) ? [{ href: "/admin/admin-requests", label: "Yêu cầu làm Admin" }] : []),
+    ...(isSpAdminRole(currentAdmin.role) ? [{ href: "/admin/settings", label: "Cấu hình hệ thống" }] : []),
     { href: "/admin/withdrawals", label: "Rút tiền USDT" },
     { href: "/admin/analytics", label: "Phân tích - Thống kê" },
     { href: "/admin/logs", label: "Nhật ký hoạt động" },

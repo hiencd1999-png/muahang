@@ -71,6 +71,8 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
                      data: { status: "REJECTED", complaintImage: null }
                  });
             });
+            const { sendTelegramNotification } = await import("@/lib/telegram");
+            await sendTelegramNotification(deposit.userId, `❌ *Lệnh Nạp Bị Từ Chối*\nLệnh nạp ${deposit.amount.toLocaleString()} VND đã bị từ chối/hủy. Vui lòng liên hệ hỗ trợ nếu cần.`, "USER_DEPOSIT");
             return NextResponse.json({ success: true, message: "Đã từ chối lệnh nạp và hoàn Escrow." });
         }
 
@@ -98,6 +100,10 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
                  }
              });
         });
+
+        // Telegram Notify Success
+        const { sendTelegramNotification } = await import("@/lib/telegram");
+        await sendTelegramNotification(deposit.userId, `🎉 *Nạp Nội Bộ Thành Công*\nTuyệt vời! Lệnh nạp ${deposit.amount.toLocaleString()} VND của bạn đã được duyệt. Số dư đã cập nhật.`, "USER_DEPOSIT");
 
         return NextResponse.json({ success: true, message: "Đã duyệt và cộng tiền thành công!" });
 

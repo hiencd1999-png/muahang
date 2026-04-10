@@ -198,6 +198,12 @@ export async function POST(request: Request) {
     const primaryItem = preparedItems[0];
     const mergedNote = mergeOrderNote(parsed.note, preparedItems);
     const mergedVariant = preparedItems.map((item, index) => `${index + 1}. ${item.variant} (SL ${item.quantity})`).join(" | ");
+    
+    // Combine product names
+    const rawMergedProductName = preparedItems.map(item => item.productName.trim()).join(" + ");
+    const mergedProductName = rawMergedProductName.length > 300 
+      ? rawMergedProductName.substring(0, 300) + '...' 
+      : rawMergedProductName;
 
     const newOrder = await prisma.$transaction(async (tx) => {
       await tx.user.update({
@@ -209,7 +215,7 @@ export async function POST(request: Request) {
         data: {
           userId: result.user.id,
           productLink: primaryItem.canonicalProductLink,
-          productName: primaryItem.productName,
+          productName: mergedProductName,
           shopId: preparedItems.length === 1 ? primaryItem.shopId : null,
           variant: mergedVariant,
           quantity: totalQuantity,
@@ -226,7 +232,7 @@ export async function POST(request: Request) {
       });
 
       const orderNoteParts = [
-        "Tạo đơn Shopee",
+        `Tạo đơn: ${mergedProductName.substring(0, 60)}${mergedProductName.length > 60 ? '...' : ''}`,
         `Voucher: ${selectedVoucher.label}`,
         `Số link: ${preparedItems.length}`,
         `Tổng SL: ${totalQuantity}`,
@@ -249,6 +255,16 @@ export async function POST(request: Request) {
       `Đơn hàng #${newOrder.id} được tạo`,
       `Bạn vừa tạo đơn hàng với số tiền ${(total / 1000).toFixed(0)}k`,
       "/dashboard/orders"
+    );
+
+    const { broadcastToAdmins } = await import("@/lib/telegram");
+    
+    const reqUrl = new URL(request.url);
+    const adminOrderLink = `${reqUrl.origin}/admin/orders?orderId=${newOrder.id}&action=view`;
+
+    await broadcastToAdmins(
+        `📦 *Có đơn hàng mới!*\n- Mã đơn: #${newOrder.id}\n- Sản phẩm: ${mergedProductName}\n- Khách hàng: ${result.user.username}\n- Địa chỉ: ${parsed.address}\n- Link Mua Nháp: ${primaryItem.canonicalProductLink}\n- Tổng phí: ${(total).toLocaleString('vi-VN')} đ\n- *🔗 Mở chi tiết:* [Click để xem và Nhận đơn](${adminOrderLink})`, 
+        "ADMIN_ORDER"
     );
 
     revalidatePath("/dashboard");

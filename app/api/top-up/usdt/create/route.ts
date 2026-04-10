@@ -59,6 +59,10 @@ export async function POST(req: Request) {
             }
         });
 
+        const { broadcastToAdmins } = await import("@/lib/telegram");
+        await broadcastToAdmins(`🔔 *Yêu Cầu Nạp Crypto Mới*\nKhách hàng: ${result.user.username}\nSố tiền: ${expectedAmount} USDT\nMạng: ${network}`, "ADMIN_DEPOSIT");
+
+
         return NextResponse.json({
             orderId: deposit.id,
             network: deposit.network,

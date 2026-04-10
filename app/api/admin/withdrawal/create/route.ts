@@ -99,6 +99,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const { broadcastToAdmins } = await import("@/lib/telegram");
+    await broadcastToAdmins(`💸 *Yêu Cầu Rút USDT Mới*\nAdmin: ${user.username}\nSố tiền: ${data.amount.toLocaleString()} VND\nMạng: ${data.network}`, "ADMIN_WITHDRAWAL");
+
     return NextResponse.json(withdrawal);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 });

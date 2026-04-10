@@ -70,6 +70,13 @@ export async function POST(req: NextRequest) {
             });
         });
 
+        // Telegram Notify
+        const withdrawal = await prisma.withdrawal.findUnique({ where: { id: data.id } });
+        if (withdrawal) {
+            const { sendTelegramNotification } = await import("@/lib/telegram");
+            await sendTelegramNotification(withdrawal.userId, `✅ *Rút USDT Thành Công*\nLệnh rút ${withdrawal.amount.toLocaleString()} USDT đã được duyệt và xuất khoản!`, "USER_DEPOSIT");
+        }
+
     } else {
         // Reject Logic
         const withdrawal = await prisma.withdrawal.findUnique({ where: { id: data.id } });
@@ -91,6 +98,10 @@ export async function POST(req: NextRequest) {
                 }
             })
         ]);
+        
+        // Telegram Notify
+        const { sendTelegramNotification } = await import("@/lib/telegram");
+        await sendTelegramNotification(withdrawal.userId, `❌ *Rút USDT Bị Từ Chối*\nLệnh rút ${withdrawal.amount.toLocaleString()} USDT đã bị hủy.\nLý do: ${data.rejectReason || "Vui lòng liên hệ SPAdmin."}`, "USER_DEPOSIT");
     }
 
     return NextResponse.json({ success: true });

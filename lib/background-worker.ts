@@ -78,6 +78,13 @@ async function syncGroup(orders: any[], proxies: any[]) {
                 } else {
                     await prisma.order.update({ where: { id: order.id }, data: updates });
                 }
+                
+                const { sendTelegramNotification } = await import("@/lib/telegram");
+                let teleMsg = `📦 *Cập nhật vận chuyển*\nĐơn hàng #${order.id}\nTrạng thái mới: ${newStatus}`;
+                if (updates.status === 'DELIVERED') teleMsg = `🎉 *Đơn #${order.id} Giao Thành Công*\nShopee đã cập nhật giao hàng thành công!`;
+                if (updates.status === 'CANCELED') teleMsg = `🚫 *Đơn #${order.id} Đã Bị Hoàn/Hủy*\nHệ thống Shopee cập nhật trạng thái hủy. Hệ thống đã hoàn ${order.total.toLocaleString("vi-VN")}đ vào ví của bạn.`;
+                await sendTelegramNotification(order.userId, teleMsg, "USER_ORDER");
+
                 console.log(`📦 [AutoSyncWorker] Đơn #${order.id}: ${order.status} -> ${newStatus}. ${updates.status === 'DELIVERED' ? '💰 CỘNG TIỀN CHO ADMIN!' : updates.status === 'CANCELED' ? '🔄 ĐÃ HOÀN TIỀN CHO USER!' : ''}`);
             }
 
@@ -195,10 +202,15 @@ export async function runBackgroundCron() {
 }
 
 const globalAny: any = global;
+import { initTelegramBot } from '@/lib/telegram';
+
 export function bootWorker() {
     if (!globalAny.__backgroundWorkerStarted) {
         globalAny.__backgroundWorkerStarted = true;
         console.log("🛠️ Datdon: Khởi chạy bộ quét tự động (Auto-Sync) 5 phút một lần cùng Server.");
+        
+        // Start Telegram
+        initTelegramBot().catch(e => console.error("Ngắt kết nối bot Telegram:", e));
         
         setInterval(runBackgroundCron, RUN_INTERVAL_MS);
         

@@ -13,6 +13,9 @@ export function ProfileForm({
   phone,
   twoFactorEnabled,
   role,
+  telegramId,
+  telegramUsername,
+  telegramEnabled,
 }: {
   fullName: string;
   username: string;
@@ -21,6 +24,9 @@ export function ProfileForm({
   phone: string;
   twoFactorEnabled: boolean;
   role: string;
+  telegramId: string | null;
+  telegramUsername: string | null;
+  telegramEnabled: boolean;
 }) {
   const router = useRouter();
   const { addToast } = useToast();
@@ -31,6 +37,45 @@ export function ProfileForm({
   const [otpToken, setOtpToken] = useState("");
   const [loading2FA, setLoading2FA] = useState(false);
   const [loadingReqAdmin, setLoadingReqAdmin] = useState(false);
+
+  const [loadingTelegram, setLoadingTelegram] = useState(false);
+  const [telegramLinkInfo, setTelegramLinkInfo] = useState<{link: string, token: string} | null>(null);
+  const [isTelegramLinked, setIsTelegramLinked] = useState(!!telegramId);
+
+  async function handleLinkTelegram() {
+      setLoadingTelegram(true);
+      try {
+          const res = await fetch("/api/user/telegram/token", { method: "POST" });
+          const data = await res.json();
+          if (res.ok) {
+              setTelegramLinkInfo({ link: data.link, token: data.token });
+          } else {
+              addToast("error", data.error || "Lỗi tạo token Telegram.");
+          }
+      } catch (e) {
+          addToast("error", "Lỗi tạo liên kết Telegram.");
+      }
+      setLoadingTelegram(false);
+  }
+
+  async function handleUnlinkTelegram() {
+      setLoadingTelegram(true);
+      try {
+          const res = await fetch("/api/user/telegram/unlink", { method: "DELETE" });
+          if (res.ok) {
+              setIsTelegramLinked(false);
+              setTelegramLinkInfo(null);
+              addToast("success", "Đã hủy liên kết Telegram thành công.");
+              router.refresh();
+          } else {
+              const data = await res.json();
+              addToast("error", data.error || "Lỗi hủy liên kết.");
+          }
+      } catch (e) {
+          addToast("error", "Lỗi hủy liên kết Telegram.");
+      }
+      setLoadingTelegram(false);
+  }
 
   async function handleRequestAdmin() {
       setLoadingReqAdmin(true);
@@ -327,6 +372,67 @@ export function ProfileForm({
             )}
         </div>
       </section>
+
+      {/* Telegram Link Section */}
+      <section className="panel rounded-[1.75rem] p-6 lg:col-span-2 mt-2 border border-sky-200 dark:border-sky-900/50 bg-sky-50/50 dark:bg-sky-950/10">
+        <div className="flex justify-between items-start">
+            <div>
+                <h2 className="text-xl font-semibold text-sky-900 dark:text-sky-100 flex items-center gap-2">
+                  <svg className="h-6 w-6 text-sky-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .24z"/></svg>
+                  Nhận thông báo qua Telegram
+                </h2>
+                <p className="text-sm text-sky-700 dark:text-sky-300 mt-1">Liên kết với bot hỗ trợ để nhận thông báo tức thì về đơn hàng và nạp tiền.</p>
+            </div>
+            {!telegramEnabled ? (
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                    BẢO TRÌ
+                </span>
+            ) : (
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${isTelegramLinked ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"}`}>
+                    {isTelegramLinked ? "ĐÃ LIÊN KẾT" : "CHƯA LIÊN KẾT"}
+                </span>
+            )}
+        </div>
+
+        <div className="mt-6">
+            {!telegramEnabled ? (
+                <div className="flex bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 text-center items-center justify-center text-sm font-medium text-slate-500">
+                    Hệ thống Telegram Bot hiện đang bảo trì nhằm nâng cấp. Vui lòng quay lại sau!
+                </div>
+            ) : !isTelegramLinked ? (
+                !telegramLinkInfo ? (
+                    <button onClick={handleLinkTelegram} disabled={loadingTelegram} className="rounded-xl bg-sky-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-sky-700 transition active:scale-95 disabled:opacity-60 flex items-center gap-2">
+                        <span>Liên kết Telegram</span>
+                    </button>
+                ) : (
+                    <div className="flex gap-8 items-start flex-col sm:flex-row bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+                        <div className="flex-1 space-y-4 w-full text-sm text-slate-700 dark:text-slate-300">
+                            <p>1. Nhấp vào nút bên dưới để mở ứng dụng Telegram.</p>
+                            <p>2. Bấm <b>Start</b> (Bắt đầu) trong đoạn chat với Bot.</p>
+                            <p>3. Bot sẽ tự động thông báo liên kết thành công. Sau đó bạn hãy tải lại trang này.</p>
+                            
+                            <div className="mt-4 flex gap-4 items-center">
+                              <a href={telegramLinkInfo.link} target="_blank" rel="noreferrer" className="inline-block rounded-xl bg-sky-600 p-3 text-sm font-semibold text-white transition hover:bg-sky-700 shadow-sm">
+                                  Mở Telegram & Bắt đầu
+                              </a>
+                              <p className="text-xs text-sky-600 bg-sky-50 px-3 py-2 rounded-lg font-mono">Token: {telegramLinkInfo.token}</p>
+                            </div>
+                        </div>
+                    </div>
+                )
+            ) : (
+                <div className="flex flex-col sm:flex-row justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      Tài khoản Telegram đã liên kết: <span className="font-bold text-sky-600">@{telegramUsername || "Unknown"}</span>
+                    </p>
+                    <button onClick={handleUnlinkTelegram} disabled={loadingTelegram} className="w-full sm:w-auto rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 px-6 py-2 border border-rose-200 dark:border-rose-900/50 text-sm font-semibold transition hover:bg-rose-200 dark:hover:bg-rose-900/50 disabled:opacity-60 shrink-0 mt-4 sm:mt-0">
+                        Hủy liên kết
+                    </button>
+                </div>
+            )}
+        </div>
+      </section>
+
     </div>
   );
 }

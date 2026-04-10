@@ -28,5 +28,16 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
         data: { status: "TRANSFERRED" }
     });
 
+    const { sendTelegramNotification } = await import("@/lib/telegram");
+    
+    const reqUrl = new URL(req.url);
+    const adminBankLink = `${reqUrl.origin}/admin/bank-deposits`;
+
+    await sendTelegramNotification(
+        deposit.adminId, 
+        `🔔 *Khách Đã Chuyển Tiền Cọc*\nUser ${result.user.username} (Mã user: ${result.user.id}) vừa xác nhận chuyển khoản lệnh nạp bank nội bộ.\n- Số tiền: ${(deposit.amount).toLocaleString('vi-VN')} VND\n- *🔗 Mở chi tiết:* [Click để kiểm tra và duyệt](${adminBankLink})`, 
+        "ADMIN_DEPOSIT"
+    );
+
     return NextResponse.json({ success: true, status: updated.status });
 }

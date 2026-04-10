@@ -144,7 +144,25 @@ export async function PUT(request: Request) {
       `Lý do hủy: ${parsed.data.cancelReason?.trim()}`,
       `/dashboard/orders?orderId=${order.id}`
     );
+  } else {
+    // Notify user of other status changes via in-app if needed (currently we only do canceled here)
   }
+
+  const { sendTelegramNotification } = await import("@/lib/telegram");
+  const statusToVi: Record<string, string> = {
+    "PROCESSING": "Đang Xử Lý",
+    "ORDER_PLACED": "Đã Đặt Đơn",
+    "TRACKING_GENERATED": "Có Mã Vận Đơn",
+    "DELIVERED": "Đã Giao Về Kho",
+    "CANCELED": "Đã Hủy"
+  };
+  const humanStatus = statusToVi[parsed.data.status] || parsed.data.status.replace(/_/g, ' ');
+
+  let teleMsg = `📦 *Đơn hàng #${order.id}*\nTrạng thái mới: ${humanStatus}`;
+  if (parsed.data.status === "CANCELED") {
+      teleMsg += `\nLý do: ${parsed.data.cancelReason?.trim()}`;
+  }
+  await sendTelegramNotification(order.userId, teleMsg, "USER_ORDER");
 
   await createAuditLog({
     actorId: result.user.id,
