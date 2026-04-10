@@ -106,10 +106,14 @@ echo "✅ Kết nối NGINX nội bộ tới mạng Docker thành công!"
 
 echo "🛡️ 5/5. CẤU HÌNH TƯỜNG LỬA (FIREWALLD)"
 # Cho phép khách truy cập web đâm xuyên qua hệ điều hành
-firewall-cmd --permanent --add-service=http
-firewall-cmd --permanent --add-service=https
-firewall-cmd --reload
-echo "✅ Mở cổng HTTP/HTTPS Thành công!"
+if command -v firewall-cmd &> /dev/null; then
+    firewall-cmd --permanent --add-service=http
+    firewall-cmd --permanent --add-service=https
+    firewall-cmd --reload
+    echo "✅ Mở cổng HTTP/HTTPS Thành công!"
+else
+    echo "⚠️ Firewalld không được cài đặt mặc định trên OS này. (Hãy đảm bảo mở port 80 và 443 trên Panel quản lý VPS của bạn)."
+fi
 
 # ==================================
 # KẾT THÚC
