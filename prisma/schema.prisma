@@ -89,6 +89,7 @@ model User {
   adminBankDeposits BankDeposit[]  @relation("AdminBankDeposits")
   ledgers        Ledger[]          @relation("UserLedger")
   adminRequests  AdminRequest[]
+  isLocked       Boolean           @default(false)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   telegramId     String?           @unique

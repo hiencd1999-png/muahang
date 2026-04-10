@@ -17,6 +17,7 @@ export function UserManagementControls({
   canManageRoles,
   canEditUser,
   operatorIsSpAdmin = false,
+  isLocked,
 }: {
   userId: number;
   username: string;
@@ -28,6 +29,7 @@ export function UserManagementControls({
   canManageRoles: boolean;
   canEditUser: boolean;
   operatorIsSpAdmin?: boolean;
+  isLocked?: boolean;
 }) {
   const router = useRouter();
   const { addToast } = useToast();
@@ -36,6 +38,7 @@ export function UserManagementControls({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [nextRole, setNextRole] = useState<UserRole>(currentRole);
+  const [nextIsLocked, setNextIsLocked] = useState(isLocked ?? false);
   const [isSaving, setIsSaving] = useState(false);
   const suggestedBalances = (operatorIsSpAdmin ? [
     currentBalance,
@@ -53,7 +56,8 @@ export function UserManagementControls({
   useEffect(() => {
     setNextRole(currentRole);
     setTargetBalance(currentBalance);
-  }, [currentRole, currentBalance]);
+    setNextIsLocked(isLocked ?? false);
+  }, [currentRole, currentBalance, isLocked]);
 
   function generatePassword() {
     const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
@@ -104,8 +108,9 @@ export function UserManagementControls({
   async function handleSaveUser() {
     const hasPasswordChange = generatedPassword.length > 0;
     const hasRoleChange = canManageRoles && nextRole !== currentRole;
+    const hasLockChange = operatorIsSpAdmin && nextIsLocked !== (isLocked ?? false);
 
-    if (!hasPasswordChange && !hasRoleChange) {
+    if (!hasPasswordChange && !hasRoleChange && !hasLockChange) {
       addToast("error", "Chưa có thay đổi nào để lưu.");
       return;
     }
@@ -118,6 +123,7 @@ export function UserManagementControls({
       body: JSON.stringify({
         ...(hasPasswordChange ? { password: generatedPassword } : {}),
         ...(hasRoleChange ? { role: nextRole } : {}),
+        ...(hasLockChange ? { isLocked: nextIsLocked } : {}),
       }),
     });
 
@@ -148,10 +154,12 @@ export function UserManagementControls({
               ? currentRole === "SPADMIN"
                 ? "SPADMIN không thể tác động lên SPADMIN khác."
                 : "ADMIN chỉ được chỉnh sửa tài khoản có role USER."
-              : "Quản lý user"
+              : operatorIsSpAdmin
+                ? "Quản lý user"
+                : "Chuyển tiền"
           }
         >
-          {canEditUser ? "Quản lý user" : currentRole === "SPADMIN" ? "Bị hạn chế" : "Chỉ SPADMIN"}
+          {canEditUser ? (operatorIsSpAdmin ? "Quản lý user" : "Chuyển tiền") : currentRole === "SPADMIN" ? "Bị hạn chế" : "Chỉ SPADMIN"}
         </button>
       </div>
 
@@ -161,21 +169,31 @@ export function UserManagementControls({
           setIsModalOpen(false);
           setGeneratedPassword("");
           setNextRole(currentRole);
+          setNextIsLocked(isLocked ?? false);
           setTargetBalance(currentBalance);
         }}
-        title={`Quản lý user @${username}`}
+        title={operatorIsSpAdmin ? `Quản lý user @${username}` : `Chuyển tiền cho user`}
         size="large"
       >
         <div className="min-w-0 space-y-6 overflow-x-hidden">
           <div className="grid gap-4 rounded-[1.75rem] border border-slate-200 bg-gradient-to-r from-white to-amber-50 p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
-                User profile
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
+                  {operatorIsSpAdmin ? "User profile" : "User"}
+                </p>
+                {(isLocked ?? false) && (
+                  <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[0.65rem] font-bold text-rose-700 border border-rose-200">
+                    BỊ KHÓA
+                  </span>
+                )}
+              </div>
               <h3 className="mt-2 truncate text-2xl font-semibold text-slate-950">
-                {displayName}
+                {operatorIsSpAdmin ? displayName : username}
               </h3>
-              <p className="mt-1 text-sm text-slate-500">@{username}</p>
+              <p className="mt-1 text-sm text-slate-500">
+                {operatorIsSpAdmin ? `@${username}` : "Thông tin cá nhân đã bị ẩn"}
+              </p>
             </div>
             <div className="grid gap-3 sm:text-right">
               <div>
@@ -191,26 +209,28 @@ export function UserManagementControls({
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm xl:col-span-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Họ và tên</p>
-              <p className="mt-2 break-words text-sm font-semibold text-slate-900">{displayName}</p>
+          {operatorIsSpAdmin && (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm xl:col-span-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Họ và tên</p>
+                <p className="mt-2 break-words text-sm font-semibold text-slate-900">{displayName}</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Username</p>
+                <p className="mt-2 break-words text-sm font-semibold text-slate-900">@{username}</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Số điện thoại</p>
+                <p className="mt-2 break-words text-sm font-semibold text-slate-900">{phone}</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm xl:col-span-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Email</p>
+                <p className="mt-2 break-words text-sm font-semibold text-slate-900">{email}</p>
+              </div>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Username</p>
-              <p className="mt-2 break-words text-sm font-semibold text-slate-900">@{username}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Số điện thoại</p>
-              <p className="mt-2 break-words text-sm font-semibold text-slate-900">{phone}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm xl:col-span-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Email</p>
-              <p className="mt-2 break-words text-sm font-semibold text-slate-900">{email}</p>
-            </div>
-          </div>
+          )}
 
-          <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className={`grid min-w-0 gap-5 ${operatorIsSpAdmin ? "xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" : ""}`}>
             <section className="min-w-0 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
@@ -282,12 +302,24 @@ export function UserManagementControls({
                 </div>
               </div>
 
-              <div className="mt-4">
+              <div className="mt-4 flex gap-3">
+                {!operatorIsSpAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setTargetBalance(currentBalance);
+                    }}
+                    className="w-1/3 rounded-2xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition"
+                  >
+                    Đóng
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleSaveBalance}
                   disabled={isSavingBalance || targetBalance === currentBalance}
-                  className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white transition shadow-lg shadow-amber-100 disabled:opacity-60 ${
+                  className={`${operatorIsSpAdmin ? "w-full" : "w-2/3"} rounded-2xl px-4 py-3 text-sm font-semibold text-white transition shadow-lg shadow-amber-100 disabled:opacity-60 ${
                     operatorIsSpAdmin ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
                   }`}
                 >
@@ -296,11 +328,13 @@ export function UserManagementControls({
               </div>
             </section>
 
-            <section className="min-w-0 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="mb-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                  Account
-                </p>
+            {operatorIsSpAdmin && (
+              <section className="min-w-0 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+                <div>
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      Account
+                    </p>
                 <h4 className="mt-2 text-lg font-semibold text-slate-950">Thông tin user</h4>
                 <p className="mt-1 text-sm text-slate-500">
                   Xem đầy đủ thông tin user, reset mật khẩu ngẫu nhiên và cập nhật role ngay trong một form rộng, rõ ràng.
@@ -361,33 +395,53 @@ export function UserManagementControls({
                       SPADMIN có thể thay đổi role của user.
                     </p>
                   </label>
-                ) : null}
+                  ) : null}
+
+                  {operatorIsSpAdmin ? (
+                    <label className={`flex items-center gap-3 p-4 rounded-2xl border transition-colors cursor-pointer ${
+                      nextIsLocked ? "border-rose-300 bg-rose-50" : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={nextIsLocked}
+                        onChange={(e) => setNextIsLocked(e.target.checked)}
+                        className="h-5 w-5 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                      />
+                      <div className="flex flex-col">
+                        <span className={`font-semibold ${nextIsLocked ? "text-rose-900" : "text-slate-900"}`}>Khóa tài khoản</span>
+                        <span className={`text-xs mt-1 ${nextIsLocked ? "text-rose-700" : "text-slate-500"}`}>Người dùng sẽ không thể đăng nhập hoặc thao tác trên hệ thống.</span>
+                      </div>
+                    </label>
+                  ) : null}
+                </div>
               </div>
 
               <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
-                  type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setGeneratedPassword("");
-                    setNextRole(currentRole);
-                    setTargetBalance(currentBalance);
-                  }}
-                  className="rounded-2xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300"
-                  disabled={isSaving}
-                >
-                  Đóng
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveUser}
-                  className="rounded-2xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
-                  disabled={isSaving}
-                >
-                  {isSaving ? "Đang lưu..." : "Lưu thông tin user"}
-                </button>
-              </div>
-            </section>
+                    type="button"
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setGeneratedPassword("");
+                      setNextRole(currentRole);
+                      setNextIsLocked(isLocked ?? false);
+                      setTargetBalance(currentBalance);
+                    }}
+                    className="rounded-2xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300"
+                    disabled={isSaving}
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveUser}
+                    className="rounded-2xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? "Đang lưu..." : "Lưu thông tin user"}
+                  </button>
+                </div>
+              </section>
+            )}
           </div>
         </div>
       </Modal>

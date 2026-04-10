@@ -13,8 +13,9 @@ const schema = z
     password: z.string().optional(),
     role: z.enum(USER_ROLES).optional(),
     balance: z.number().int().min(0).optional(),
+    isLocked: z.boolean().optional(),
   })
-  .refine((data) => Boolean(data.password?.trim()) || typeof data.role !== "undefined" || typeof data.balance !== "undefined", {
+  .refine((data) => Boolean(data.password?.trim()) || typeof data.role !== "undefined" || typeof data.balance !== "undefined" || typeof data.isLocked !== "undefined", {
     message: "Cần ít nhất một thay đổi hợp lệ.",
   });
 
@@ -49,6 +50,7 @@ export async function PATCH(
       username: true,
       role: true,
       balance: true,
+      isLocked: true,
     },
   });
 
@@ -70,7 +72,7 @@ export async function PATCH(
     );
   }
 
-  const updates: { passwordHash?: string; role?: UserRole; balance?: number } = {};
+  const updates: { passwordHash?: string; role?: UserRole; balance?: number; isLocked?: boolean } = {};
   const changedFields: string[] = [];
   const details: Record<string, unknown> = {
     username: targetUser.username,
@@ -99,6 +101,16 @@ export async function PATCH(
     changedFields.push("role");
     details.previousRole = targetUser.role;
     details.nextRole = parsed.data.role;
+  }
+
+  if (typeof parsed.data.isLocked !== "undefined" && parsed.data.isLocked !== targetUser.isLocked) {
+    if (!isSpAdminRole(result.user.role)) {
+      return NextResponse.json({ error: "Chỉ SPADMIN mới có quyền khóa/mở khóa tài khoản." }, { status: 403 });
+    }
+
+    updates.isLocked = parsed.data.isLocked;
+    changedFields.push("isLocked");
+    details.isLocked = parsed.data.isLocked;
   }
 
   if (typeof parsed.data.balance !== "undefined" && parsed.data.balance !== targetUser.balance) {

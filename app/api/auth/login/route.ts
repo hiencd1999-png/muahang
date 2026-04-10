@@ -42,6 +42,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Sai thông tin đăng nhập hoặc mật khẩu." }, { status: 401 });
   }
 
+  if (user.isLocked) {
+    return NextResponse.json({ error: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để biết thêm chi tiết." }, { status: 403 });
+  }
+
   const valid = await verifyPassword(parsed.data.password, user.passwordHash);
 
   if (!valid) {

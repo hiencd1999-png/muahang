@@ -15,6 +15,7 @@ interface User {
   balance: number;
   email: string;
   phone: string;
+  isLocked: boolean;
   createdAt: Date;
 }
 
@@ -124,8 +125,12 @@ export function AdminUsersView({
                   <td className="px-4 py-4 font-medium text-slate-900 dark:text-white">#{user.id}</td>
                   <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
                     <div className="space-y-1">
-                      <p className="font-semibold text-slate-900 dark:text-white">{user.fullName || user.username}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">@{user.username}</p>
+                      <p className="font-semibold text-slate-900 dark:text-white">
+                        {operatorIsSpAdmin ? (user.fullName || user.username) : user.username}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                        {operatorIsSpAdmin ? `@${user.username}` : "thông tin ẩn"}
+                      </p>
                     </div>
                   </td>
                   <td className="px-4 py-4">
@@ -153,6 +158,7 @@ export function AdminUsersView({
                         canManageRoles={operatorIsSpAdmin && (user.role !== "SPADMIN" || user.id === currentAdminId)}
                         canEditUser={operatorIsSpAdmin ? (user.role !== "SPADMIN" || user.id === currentAdminId) : user.role === "USER"}
                         operatorIsSpAdmin={operatorIsSpAdmin}
+                        isLocked={user.isLocked}
                       />
                     </div>
                   </td>
@@ -178,8 +184,12 @@ export function AdminUsersView({
                     <span className="font-medium text-slate-900 dark:text-white">ID: {user.id}</span>
                     <span className="rounded-full bg-slate-100 dark:bg-slate-800/50 px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300">{user.role}</span>
                   </div>
-                  <p className="mt-1 text-sm font-medium text-slate-900 dark:text-white">{user.fullName || user.username}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">@{user.username}</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900 dark:text-white">
+                    {operatorIsSpAdmin ? (user.fullName || user.username) : user.username}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    {operatorIsSpAdmin ? `@${user.username}` : "thông tin ẩn"}
+                  </p>
                   <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 font-bold">{formatCurrency(user.balance)}</p>
                 </div>
                 <div className="w-full">
@@ -194,6 +204,7 @@ export function AdminUsersView({
                     canManageRoles={operatorIsSpAdmin && (user.role !== "SPADMIN" || user.id === currentAdminId)}
                     canEditUser={operatorIsSpAdmin ? (user.role !== "SPADMIN" || user.id === currentAdminId) : user.role === "USER"}
                     operatorIsSpAdmin={operatorIsSpAdmin}
+                    isLocked={user.isLocked}
                   />
                 </div>
               </div>

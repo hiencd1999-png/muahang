@@ -50,6 +50,10 @@ export async function requireUser(requiredRole?: UserRole) {
     redirect("/login");
   }
 
+  if (user.isLocked) {
+    redirect("/login?error=Tài khoản của bạn đã bị khóa");
+  }
+
   if (!hasRequiredRole(user.role, requiredRole)) {
     redirect("/dashboard");
   }
@@ -62,6 +66,10 @@ export async function requireApiUser(requiredRole?: UserRole) {
 
   if (!user) {
     return { error: "Unauthorized", status: 401 } as const;
+  }
+
+  if (user.isLocked) {
+    return { error: "Tài khoản của bạn đã bị khóa", status: 403 } as const;
   }
 
   if (!hasRequiredRole(user.role, requiredRole)) {
