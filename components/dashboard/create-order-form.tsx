@@ -475,31 +475,6 @@ export function CreateOrderForm({
                     {item.analysisError ? <p className="text-sm text-rose-600 dark:text-rose-400">{item.analysisError}</p> : null}
                   </label>
 
-                  <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300 lg:col-span-2">
-                    <span>Link sản phẩm</span>
-                    <textarea
-                      value={item.productLink}
-                      onChange={(event) => updateOrderItem(item.id, (current) => ({
-                        ...current,
-                        productLink: event.target.value,
-                        analysisError: "",
-                        analysisMessage: "",
-                      }))}
-                      rows={2}
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
-                      placeholder="https://shopee.vn/..."
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleAnalyzeLink(item.id)}
-                      disabled={item.isAnalyzing}
-                      className="rounded-2xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {item.isAnalyzing ? "Đang phân tích..." : "Phân tích link"}
-                    </button>
-                    {item.analysisError ? <p className="text-sm text-rose-600 dark:text-rose-400">{item.analysisError}</p> : null}
-                  </label>
-
                   {item.productName ? (
                     <div className="lg:col-span-2 rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/10 p-4">
                       <p className="text-sm font-medium text-amber-900 dark:text-amber-400">Sản phẩm</p>
