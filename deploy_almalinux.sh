@@ -26,18 +26,18 @@ echo "📥 2/6. CLONE MÃ NGUỒN TỪ GITHUB"
 # Thiết lập không gian cài đặt chuẩn mực
 WORK_DIR="/var/www/datdon"
 
-if [ ! -d "\$WORK_DIR" ]; then
-  mkdir -p "\$WORK_DIR"
-  echo "⏬ Đang tải mã nguồn từ Github vào \$WORK_DIR..."
-  git clone https://github.com/hiencd1999-png/muahang.git "\$WORK_DIR"
+if [ ! -d "$WORK_DIR" ]; then
+  mkdir -p "$WORK_DIR"
+  echo "⏬ Đang tải mã nguồn từ Github vào $WORK_DIR..."
+  git clone https://github.com/hiencd1999-png/muahang.git "$WORK_DIR"
 else
-  echo "⚠️ Thư mục \$WORK_DIR đã tồn tại. Đang tiến hành Git Pull cập nhật rẽ nhánh..."
-  cd "\$WORK_DIR"
+  echo "⚠️ Thư mục $WORK_DIR đã tồn tại. Đang tiến hành Git Pull cập nhật rẽ nhánh..."
+  cd "$WORK_DIR"
   git pull origin master || echo "Cảnh báo Repo không update tự động được."
 fi
 
 # Ép kịch bản di chuyển vào Thư mục chính để thực thi các lệnh phía sau
-cd "\$WORK_DIR"
+cd "$WORK_DIR"
 
 echo "📦 3/6. CÀI ĐẶT DOCKER ENGINE TỪ REPO CHÍNH CHỦ"
 # Cài đặt cấu hình Docker repository cho AlmaLinux
