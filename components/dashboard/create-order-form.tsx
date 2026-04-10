@@ -66,6 +66,7 @@ export function CreateOrderForm({
   const [orderItems, setOrderItems] = useState<OrderDraftItem[]>([createEmptyOrderItem()]);
   const [selectedVoucherCode, setSelectedVoucherCode] = useState(initialVoucherCode);
   const [requestedAdminId, setRequestedAdminId] = useState("");
+  const [searchRequestedAdmin, setSearchRequestedAdmin] = useState("");
   const [note, setNote] = useState("");
   const [address, setAddress] = useState("");
   const [ward, setWard] = useState("");
@@ -95,6 +96,13 @@ export function CreateOrderForm({
   );
 
   const activeVoucherCount = activeVoucherConfigs.length;
+
+  const filteredAdmins = useMemo(() => {
+    if (!admins) return [];
+    return admins.filter((admin) =>
+      admin.displayName?.toLowerCase().includes(searchRequestedAdmin.toLowerCase() || "")
+    );
+  }, [admins, searchRequestedAdmin]);
 
   const updateOrderItem = (itemId: string, updater: (item: OrderDraftItem) => OrderDraftItem) => {
     setOrderItems((current) => current.map((item) => (item.id === itemId ? updater(item) : item)));
@@ -393,21 +401,33 @@ export function CreateOrderForm({
               </label>
 
               {admins && admins.length > 0 && (
-                <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                  <span>Chọn Admin phụ trách (Tuỳ chọn)</span>
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Chọn Admin phụ trách (Tuỳ chọn)</p>
+                    <input 
+                       type="text" 
+                       placeholder="🔎 Tìm admin..."
+                       value={searchRequestedAdmin}
+                       onChange={e => setSearchRequestedAdmin(e.target.value)}
+                       className="w-full sm:w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm outline-none transition focus:border-amber-500"
+                    />
+                  </div>
                   <select
                     value={requestedAdminId}
                     onChange={(event) => setRequestedAdminId(event.target.value)}
                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
                   >
                     <option value="" className="dark:bg-slate-900">Bất kỳ ai (Hệ thống tự chọn)</option>
-                    {admins.map((admin) => (
+                    {filteredAdmins.map((admin) => (
                       <option key={admin.id} value={admin.id.toString()} className="dark:bg-slate-900">
                         {admin.displayName}
                       </option>
                     ))}
+                    {filteredAdmins.length === 0 && searchRequestedAdmin && (
+                      <option disabled value="" className="dark:bg-slate-900">Không tìm thấy admin nào</option>
+                    )}
                   </select>
-                </label>
+                </div>
               )}
             </div>
           </div>

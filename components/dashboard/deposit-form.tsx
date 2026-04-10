@@ -51,6 +51,7 @@ export function DepositForm() {
   const [loadingBank, setLoadingBank] = useState(false);
   const bankInputRef = useRef<HTMLInputElement>(null);
   const [bankConfigs, setBankConfigs] = useState<any[]>([]);
+  const [searchAdmin, setSearchAdmin] = useState("");
   const [selectedAdminId, setSelectedAdminId] = useState<number | null>(null);
   const [bankOrder, setBankOrder] = useState<any>(null);
 
@@ -339,6 +340,18 @@ export function DepositForm() {
      return () => clearInterval(timer);
   }, []);
 
+  const filteredBankConfigs = bankConfigs.filter(c => 
+    c.adminName?.toLowerCase().includes(searchAdmin.toLowerCase() || "") || 
+    c.bankName?.toLowerCase().includes(searchAdmin.toLowerCase() || "")
+  );
+
+  // Auto-select first item when filtering
+  useEffect(() => {
+    if (filteredBankConfigs.length > 0 && !filteredBankConfigs.some(c => c.adminId === selectedAdminId)) {
+        setSelectedAdminId(filteredBankConfigs[0].adminId);
+    }
+  }, [searchAdmin, filteredBankConfigs, selectedAdminId]);
+
   return (
     <div className="panel rounded-[1.75rem] p-6 shadow-sm flex flex-col space-y-6">
       <input 
@@ -376,16 +389,28 @@ export function DepositForm() {
                </div>
            ) : (
                <>
-                 <div className="space-y-2">
-                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Chọn cổng nạp (Admin):</p>
+                 <div className="space-y-3">
+                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                       <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Chọn cổng nạp (Admin):</p>
+                       <input 
+                           type="text" 
+                           placeholder="🔎 Tìm Admin hoặc Ngân hàng..."
+                           value={searchAdmin}
+                           onChange={e => setSearchAdmin(e.target.value)}
+                           className="w-full sm:w-64 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm outline-none transition focus:border-emerald-500"
+                       />
+                   </div>
                    <select 
                       value={selectedAdminId || ""} 
                       onChange={e => setSelectedAdminId(Number(e.target.value))}
                       className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                    >
-                     {bankConfigs.map(c => (
+                     {filteredBankConfigs.map(c => (
                         <option key={c.adminId} value={c.adminId}>Admin {c.adminName} - Ngân hàng {c.bankName}</option>
                      ))}
+                     {filteredBankConfigs.length === 0 && (
+                        <option disabled value="">Không tìm thấy admin nào</option>
+                     )}
                    </select>
                  </div>
 

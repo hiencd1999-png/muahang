@@ -47,6 +47,31 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: `Tài khoản bạn chỉ dư ${user.balance} VNĐ, tổng lệnh chờ: ${totalPending} VNĐ. Rút vượt quá số khả dụng.` }, { status: 400 });
     }
 
+    const successfulOrdersCount = await prisma.order.count({
+      where: {
+        approvedByAdminId: user.id,
+        status: { in: ["ORDER_PLACED", "TRACKING_GENERATED", "DELIVERED"] }
+      }
+    });
+
+    if (successfulOrdersCount <= 10) {
+      return NextResponse.json({ error: `Bạn cần xử lý đặt đơn thành công trên 10 giao dịch (hiện tại: ${successfulOrdersCount}) để được phép rút tiền.` }, { status: 400 });
+    }
+
+    // Check limit: 1 withdrawal per week (excluding rejected or canceled ones)
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentWithdrawalCount = await prisma.withdrawal.count({
+      where: {
+        userId: user.id,
+        createdAt: { gte: oneWeekAgo },
+        status: { in: ["PENDING", "APPROVED"] }
+      }
+    });
+
+    if (recentWithdrawalCount > 0) {
+      return NextResponse.json({ error: "Mỗi tuần bạn chỉ được phép tạo tối đa 1 lệnh rút tiền." }, { status: 400 });
+    }
+
     const withdrawal = await prisma.withdrawal.create({
       data: {
         userId: user.id,
