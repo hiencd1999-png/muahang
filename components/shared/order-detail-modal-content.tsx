@@ -131,7 +131,7 @@ export function OrderDetailModalContent({
 
   const isDeliveredOrder = order.status === "DELIVERED";
 
-  const handleSaveOrderInfo = async () => {
+  const handleSaveOrderInfo = async (skipToast = false) => {
     setIsSavingOrderInfo(true);
     try {
       const response = await fetch(`/api/admin/order/update/${order.id}`, {
@@ -147,11 +147,44 @@ export function OrderDetailModalContent({
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to save order info");
 
-      addToast("success", "Thông tin đơn hàng đã được cập nhật");
+      if (!skipToast) {
+        addToast("success", "Thông tin đơn hàng đã được cập nhật");
+      }
+      return true;
     } catch (error) {
       addToast("error", error instanceof Error ? error.message : "Lỗi khi lưu thông tin đơn hàng");
+      return false;
     } finally {
       setIsSavingOrderInfo(false);
+    }
+  };
+
+  const handleForceFetchTracking = async () => {
+    // Nếu cookie có thay đổi so với DB hoặc đang thiếu tracking, ta chủ động lưu nội dung mới trước
+    if (adminForm.spcCookie !== (order.spcCookie || "")) {
+      const saved = await handleSaveOrderInfo(true);
+      if (!saved) return; // Nếu lưu lỗi thì dừng
+    } else if (!adminForm.spcCookie) {
+      addToast("error", "Vui lòng nhập cookie SPC_ST");
+      return;
+    }
+
+    setIsFetchingTracking(true);
+    setTrackingFetchError(null);
+    try {
+      const res = await fetch(`/api/shopee/tracking-sync?orderId=${order.id}&force=true`);
+      const data = await res.json();
+      if (res.ok && data.tracking) {
+        setShopeeTracking(data.tracking);
+        setTrackingFetchError(null);
+        addToast("success", "Lấy thông tin đơn thành công");
+      } else {
+        setTrackingFetchError(data.error || "Lỗi khi lấy thông tin tracking");
+      }
+    } catch (err) {
+      setTrackingFetchError("Hệ thống lỗi khi fetch tracking.");
+    } finally {
+      setIsFetchingTracking(false);
     }
   };
 
@@ -510,7 +543,17 @@ export function OrderDetailModalContent({
           <div className="min-w-0 max-w-full overflow-x-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700/80 dark:bg-slate-900">
             <div className="flex min-w-0 max-w-full flex-col gap-3 overflow-x-hidden">
               <label className="block min-w-0 max-w-full space-y-1 text-sm text-slate-700 dark:text-slate-200">
-                <span>Cookie SPC_ST</span>
+                <div className="flex items-center justify-between">
+                  <span>Cookie SPC_ST</span>
+                  <button
+                    type="button"
+                    onClick={handleForceFetchTracking}
+                    disabled={isFetchingTracking || Boolean(isLockedForAnotherAdmin) || isDeliveredOrder || order.status === "PENDING" || order.status === "PROCESSING"}
+                    className="px-2 py-1 text-[10px] sm:text-xs font-semibold bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 dark:hover:bg-amber-900/60 rounded border border-amber-200 dark:border-amber-800 disabled:opacity-50 transition-colors cursor-pointer"
+                  >
+                    {isFetchingTracking ? "Đang lấy..." : "Lấy thông tin đơn"}
+                  </button>
+                </div>
                 <textarea
                   value={adminForm.spcCookie}
                   onChange={(e) => setAdminForm((prev) => ({ ...prev, spcCookie: e.target.value }))}

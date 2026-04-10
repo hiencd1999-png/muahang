@@ -11,6 +11,8 @@ export async function GET(request: NextRequest) {
   }
 
   const orderIdRaw = request.nextUrl.searchParams.get("orderId");
+  const forceRaw = request.nextUrl.searchParams.get("force");
+  const isForceParams = forceRaw === "true";
   const orderId = Number(orderIdRaw);
   if (!orderId || isNaN(orderId)) {
     return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
@@ -44,18 +46,20 @@ export async function GET(request: NextRequest) {
     // SMART POLLING (Exponential Backoff): Tránh spam Proxy Shopee
     const msSinceLastUpdate = Date.now() - order.updatedAt.getTime();
 
-    // 1. Nếu đang Đi đường (TRACKING_GENERATED): Rất lâu mới giao tới, giãn cách 6 Tiếng/lần quét
-    if (order.status === "TRACKING_GENERATED" && msSinceLastUpdate < 6 * 60 * 60 * 1000) {
-        let cached = [];
-        try { if (order.shopeeTrackingData) cached = JSON.parse(order.shopeeTrackingData); } catch {}
-        return NextResponse.json({ tracking: cached, autoUpdatedStatus: order.status, cachedResponse: true, msg: "Delayed backoff" });
-    }
+    if (!isForceParams) {
+      // 1. Nếu đang Đi đường (TRACKING_GENERATED): Rất lâu mới giao tới, giãn cách 6 Tiếng/lần quét
+      if (order.status === "TRACKING_GENERATED" && msSinceLastUpdate < 6 * 60 * 60 * 1000) {
+          let cached = [];
+          try { if (order.shopeeTrackingData) cached = JSON.parse(order.shopeeTrackingData); } catch {}
+          return NextResponse.json({ tracking: cached, autoUpdatedStatus: order.status, cachedResponse: true, msg: "Delayed backoff" });
+      }
 
-    // 2. Nếu vừa Đặt Đơn (ORDER_PLACED): Chờ tối thiểu 10 Phút mới rà soát
-    if (order.status === "ORDER_PLACED" && msSinceLastUpdate < 10 * 60 * 1000) {
-        let cached = [];
-        try { if (order.shopeeTrackingData) cached = JSON.parse(order.shopeeTrackingData); } catch {}
-        return NextResponse.json({ tracking: cached, autoUpdatedStatus: order.status, cachedResponse: true, msg: "10-min cooling" });
+      // 2. Nếu vừa Đặt Đơn (ORDER_PLACED): Chờ tối thiểu 10 Phút mới rà soát
+      if (order.status === "ORDER_PLACED" && msSinceLastUpdate < 10 * 60 * 1000) {
+          let cached = [];
+          try { if (order.shopeeTrackingData) cached = JSON.parse(order.shopeeTrackingData); } catch {}
+          return NextResponse.json({ tracking: cached, autoUpdatedStatus: order.status, cachedResponse: true, msg: "10-min cooling" });
+      }
     }
 
     // Pick a random proxy
