@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: datdon_db
+    restart: always
+    environment:
+      POSTGRES_USER: datdon_admin
+      POSTGRES_PASSWORD: MatKhauMoiCuaBan123
+      POSTGRES_DB: datdon_db
+    volumes:
+      - datdon_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - datdon_net
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: datdon_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://datdon_admin:MatKhauMoiCuaBan123@db:5432/datdon_db?schema=public
+      - SESSION_SECRET=DATDON_SECRET_KEY_SUPER_SECURE_REPLACEME
+      - NEXT_TELEMETRY_DISABLED=1
+      - NODE_ENV=production
+    depends_on:
+      - db
+    networks:
+      - datdon_net
+    command: >
+      sh -c "npx prisma db push && 
+             node server.js"
+
+volumes:
+  datdon_db_data:
+
+networks:
+  datdon_net:
+    driver: bridge

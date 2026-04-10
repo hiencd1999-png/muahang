@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.67.1", "192.168.0.101", "localhost:3000"],
   serverExternalPackages: ["@prisma/client"],
   devIndicators: false,
+  output: "standalone",
 };
 
 export default nextConfig;

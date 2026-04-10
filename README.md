@@ -109,7 +109,7 @@ npm install
 Khởi tạo cấu trúc bảng và Bơm dữ liệu chuẩn cho các Sổ Tài Khoản trung tâm:
 ```bash
 npx prisma db push
-tsx scratch/seed.ts 
+tsx prisma/seed.ts 
 npx prisma generate
 ```
 
