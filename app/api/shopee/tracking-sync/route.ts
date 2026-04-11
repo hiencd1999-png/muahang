@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ tracking: [] });
     }
 
-    // ONLINE HEALING: Fix 'Sản phẩm Shopee' from cached shopee tracking data right away before early-returns
-    if (order.productName === "Sản phẩm Shopee" && order.shopeeTrackingData) {
+    // ONLINE HEALING: Fix wrong/fallback names from cached shopee tracking data right away before early-returns
+    if (order.shopeeTrackingData) {
       try {
         const cached = JSON.parse(order.shopeeTrackingData);
         if (cached && cached.length > 0) {
@@ -55,7 +55,8 @@ export async function GET(request: NextRequest) {
                if (fallbackMatch) matchedNames.push(fallbackMatch.name.trim());
            }
            const foundName = matchedNames.join(" / ");
-           if (foundName) {
+           // If the native name from Shopee differs from our current DB record (which might be fallback), upgrade it
+           if (foundName && foundName !== order.productName) {
               await prisma.order.update({
                  where: { id: order.id },
                  data: { productName: foundName }
@@ -176,38 +177,38 @@ export async function GET(request: NextRequest) {
        ).catch(() => {});
     }
 
-    if (order.productName === "Sản phẩm Shopee") {
-      let foundName = "";
-      if (results && results.length > 0) {
-         let matchedNames: string[] = [];
-         const trackingsToMatch = (newTrackingNo || order.trackingNo || "").split("\n").map(t => t.trim()).filter(Boolean);
-         
-         if (trackingsToMatch.length > 0) {
-             for (const t of trackingsToMatch) {
-                 const matching = results.find((r: any) => r.tracking_number && r.tracking_number === t && r.name && r.name.trim().length > 3);
-                 if (matching && !matchedNames.includes(matching.name.trim())) {
-                     matchedNames.push(matching.name.trim());
-                 }
-             }
-         }
+    let foundName = "";
+    if (results && results.length > 0) {
+       let matchedNames: string[] = [];
+       const trackingsToMatch = (newTrackingNo || order.trackingNo || "").split("\n").map(t => t.trim()).filter(Boolean);
+       
+       if (trackingsToMatch.length > 0) {
+           for (const t of trackingsToMatch) {
+               const matching = results.find((r: any) => r.tracking_number && r.tracking_number === t && r.name && r.name.trim().length > 3);
+               if (matching && !matchedNames.includes(matching.name.trim())) {
+                   matchedNames.push(matching.name.trim());
+               }
+           }
+       }
 
-         if (matchedNames.length === 0) {
-             const fallbackMatch = results.find((r: any) => r.name && r.name.trim().length > 3);
-             if (fallbackMatch) matchedNames.push(fallbackMatch.name.trim());
-         }
-         foundName = matchedNames.join(" / ");
-      }
-      if (foundName) {
-         updates.productName = foundName;
-      } else if (order.productLink && order.spcCookie) {
-        try {
-          const { fetchShopeeProductDetails } = await import("@/lib/shopee");
-          const details = await fetchShopeeProductDetails(order.productLink, order.spcCookie);
-          if (details.productName && details.productName !== "Sản phẩm Shopee") {
-             updates.productName = details.productName;
-          }
-        } catch (e) {}
-      }
+       if (matchedNames.length === 0) {
+           const fallbackMatch = results.find((r: any) => r.name && r.name.trim().length > 3);
+           if (fallbackMatch) matchedNames.push(fallbackMatch.name.trim());
+       }
+       foundName = matchedNames.join(" / ");
+    }
+    
+    // Upgrade name if native Shopee name differs from our DB record
+    if (foundName && foundName !== order.productName) {
+       updates.productName = foundName;
+    } else if (order.productName === "Sản phẩm Shopee" && order.productLink && order.spcCookie) {
+      try {
+        const { fetchShopeeProductDetails } = await import("@/lib/shopee");
+        const details = await fetchShopeeProductDetails(order.productLink, order.spcCookie);
+        if (details.productName && details.productName !== "Sản phẩm Shopee") {
+           updates.productName = details.productName;
+        }
+      } catch (e) {}
     }
 
     if (Object.keys(updates).length > 0) {

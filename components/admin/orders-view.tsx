@@ -272,7 +272,7 @@ export function AdminOrdersView({
                 <th className="px-4 py-3 whitespace-nowrap">User</th>
                 <th className="px-4 py-3 whitespace-nowrap min-w-[300px]">Địa chỉ</th>
                 <th className="px-4 py-3 whitespace-nowrap min-w-[150px]">Phân loại</th>
-                <th className="px-4 py-3 whitespace-nowrap">Tổng</th>
+                <th className="px-4 py-3 whitespace-nowrap">Voucher</th>
                 <th className="px-4 py-3 whitespace-nowrap">Trạng thái</th>
                 <th className="px-4 py-3 whitespace-nowrap">Phụ trách</th>
                 <th className="px-4 py-3 whitespace-nowrap">Ngày</th>
@@ -303,7 +303,7 @@ export function AdminOrdersView({
                   <td className="px-4 py-4 text-slate-600 font-medium text-xs whitespace-nowrap truncate max-w-[150px]">
                     {order.variant || "-"}
                   </td>
-                  <td className="px-4 py-4 text-slate-900 font-semibold">{formatCurrency(order.total)}</td>
+                  <td className="px-4 py-4 text-slate-900 font-semibold text-xs whitespace-nowrap">{order.voucherLabel || formatCurrency(order.total)}</td>
                   <td className="px-4 py-4">
                     <div className="flex justify-center">
                       <StatusPill status={order.status} />
@@ -365,8 +365,10 @@ export function AdminOrdersView({
                     <p className="mt-1 font-medium text-slate-900">{order.user.fullName || order.user.username}</p>
                   </div>
                   <div className="rounded-2xl bg-slate-50 p-3">
-                    <p className="text-xs text-slate-500">Tổng tiền</p>
-                    <p className="mt-1 text-slate-900 font-semibold">{formatCurrency(order.total)}</p>
+                    <p className="text-xs text-slate-500">Voucher</p>
+                    <p className="mt-1 text-slate-900 font-semibold flex items-center justify-between">
+                       <span className="text-xs">{order.voucherLabel || formatCurrency(order.total)}</span>
+                    </p>
                   </div>
                 </div>
                 <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-700">

@@ -354,7 +354,12 @@ export function OrderActions({
         {status === "PENDING" ? (
           <button
             type="button"
-            onClick={() => updateStatus("PROCESSING")}
+            onClick={() => {
+              const confirmed = window.confirm("Lưu ý: Phải lên được cookie SPC_ST trong 30p nếu không đơn sẽ lại đẩy về trạng thái đang chờ.");
+              if (confirmed) {
+                updateStatus("PROCESSING");
+              }
+            }}
             disabled={loading !== "" || (!canManageAllOrders && approvedByAdminId !== null && approvedByAdminId !== currentAdminId)}
             className="shrink-0 rounded-xl bg-sky-600 hover:bg-sky-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors"
             title={(!canManageAllOrders && approvedByAdminId !== null && approvedByAdminId !== currentAdminId) ? "Đơn đã được Booking cho người khác. Không thể tranh." : isOwnedByAnotherAdmin ? ownershipMessage : "Duyệt đơn"}

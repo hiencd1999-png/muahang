@@ -407,22 +407,27 @@ export function CreateOrderForm({
               </span>
             </div>
             <div className="mt-4 grid gap-4 grid-cols-1">
-              <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                <span>Loại voucher</span>
-                <select
-                  value={selectedVoucherCode}
-                  onChange={(event) => setSelectedVoucherCode(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
-                  required
-                >
-                  <option value="" className="dark:bg-slate-900">Chọn loại voucher</option>
-                  {activeVoucherConfigs.map((voucher) => (
-                    <option key={voucher.code} value={voucher.code} className="dark:bg-slate-900">
-                      {voucher.label} - {formatCurrency(voucher.unitPrice)} / sản phẩm
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className="space-y-2">
+                <label className="space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300 block">
+                  <span>Loại voucher</span>
+                  <select
+                    value={selectedVoucherCode}
+                    onChange={(event) => setSelectedVoucherCode(event.target.value)}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+                    required
+                  >
+                    <option value="" className="dark:bg-slate-900">Chọn loại voucher</option>
+                    {activeVoucherConfigs.map((voucher) => (
+                      <option key={voucher.code} value={voucher.code} className="dark:bg-slate-900">
+                        {voucher.label} - {formatCurrency(voucher.unitPrice)} / sản phẩm
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p className="text-[13px] text-amber-600 dark:text-amber-400 font-medium">
+                  Lưu ý: Mã voucher chỉ giảm số tiền bằng với giá trị voucher, nếu sản phẩm có giá lớn hơn thì bạn sẽ phải tự thanh toán phần tiền chênh lệch phát sinh khi nhận hàng.
+                </p>
+              </div>
 
               {admins && admins.length > 0 && (
                 <div className="space-y-3 relative">
