@@ -42,11 +42,15 @@ export async function POST(req: NextRequest) {
                  throw new Error(`Tài khoản admin không đủ số dư khả dụng (do đang bị tạm giữ hoa hồng giải quyết khiếu nại). Giao dịch thất bại.`);
             }
 
-            // 1. Cập nhật status lệnh rút
-            await tx.withdrawal.update({
-                where: { id: data.id },
+            // 1. Cập nhật status lệnh rút (kết hợp Optimistic Concurrency Control)
+            const updateResult = await tx.withdrawal.updateMany({
+                where: { id: data.id, status: "PENDING" },
                 data: { status: "APPROVED", processedById: spadminId }
             });
+
+            if (updateResult.count === 0) {
+                throw new Error("Lệnh rút này đã được xử lý bởi một tiến trình khác.");
+            }
 
             // 2. Trừ tiền An Toàn tuyệt đối
             await tx.user.update({
@@ -89,20 +93,23 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Lệnh đã được xử lý hoặc không tồn tại." }, { status: 400 });
         }
 
-        await prisma.$transaction([
-            prisma.withdrawal.update({
-                where: { id: data.id },
+        await prisma.$transaction(async (tx) => {
+            const updateResult = await tx.withdrawal.updateMany({
+                where: { id: data.id, status: "PENDING" },
                 data: { status: "REJECTED", processedById: spadminId, rejectReason: data.rejectReason || "Từ chối" }
-            }),
-            prisma.notification.create({
-                data: {
-                    userId: withdrawal.userId,
-                    type: "ADMIN_MESSAGE",
-                    title: "Lệnh Rút Tiền Bị Hủy",
-                    message: `Lệnh rút ${withdrawal.amount} đã bị Hủy bỏ. Lý do: ${data.rejectReason || "Không xác định"}.`,
-                }
-            })
-        ]);
+            });
+
+            if (updateResult.count > 0) {
+                await tx.notification.create({
+                    data: {
+                        userId: withdrawal.userId,
+                        type: "ADMIN_MESSAGE",
+                        title: "Lệnh Rút Tiền Bị Hủy",
+                        message: `Lệnh rút ${withdrawal.amount} đã bị Hủy bỏ. Lý do: ${data.rejectReason || "Không xác định"}.`,
+                    }
+                });
+            }
+        });
         
         // Telegram Notify
         const { sendTelegramNotification } = await import("@/lib/telegram");

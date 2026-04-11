@@ -31,13 +31,17 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Lệnh đã được xử lý, không thể tự hủy" }, { status: 400 });
     }
 
-    await prisma.withdrawal.update({
-        where: { id: data.id },
+    const updateResult = await prisma.withdrawal.updateMany({
+        where: { id: data.id, status: "PENDING" },
         data: { 
             status: "CANCELED", 
             rejectReason: "Quản trị viên tự hủy" 
         }
     });
+
+    if (updateResult.count === 0) {
+        return NextResponse.json({ error: "Lệnh rút tiền đã được hệ thống xử lý trước khi bạn hủy." }, { status: 409 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

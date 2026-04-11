@@ -115,40 +115,54 @@ export async function PUT(request: Request) {
   const commissionAdminId = updateData.approvedByAdminId || order.approvedByAdminId;
   const commissionAmt = Math.floor(order.total * 0.95);
 
-  await prisma.$transaction([
-    prisma.order.update({
-      where: { id: order.id },
-      data: updateData,
-    }),
-    ...(shouldRefund ? [
-      prisma.user.update({
-        where: { id: order.userId },
-        data: { balance: { increment: order.total } },
-      }),
-      prisma.transaction.create({
-        data: {
-          userId: order.userId,
-          amount: order.total,
-          type: TransactionType.ORDER_REFUND,
-          note: `Hoàn tiền đơn hàng #${order.id}`,
-        },
-      }),
-    ] : []),
-    ...(shouldPayCommission && commissionAdminId ? [
-      prisma.user.update({
-        where: { id: commissionAdminId },
-        data: { balance: { increment: commissionAmt } },
-      }),
-      prisma.transaction.create({
-        data: {
-          userId: commissionAdminId,
-          amount: commissionAmt,
-          type: TransactionType.ADMIN_ADJUSTMENT,
-          note: `Hoa hồng xử lý đơn giao thành công #${order.id} (95% của ${order.total.toLocaleString("vi-VN")}đ)`,
-        },
-      }),
-    ] : []),
-  ]);
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Optimistic Concurrency Control: Ensure status is exactly what we validated
+      const updateResult = await tx.order.updateMany({
+        where: { id: order.id, status: order.status },
+        data: updateData,
+      });
+
+      if (updateResult.count === 0) {
+        throw new Error("ConcurrencyError");
+      }
+
+      if (shouldRefund) {
+        await tx.user.update({
+          where: { id: order.userId },
+          data: { balance: { increment: order.total } },
+        });
+        await tx.transaction.create({
+          data: {
+            userId: order.userId,
+            amount: order.total,
+            type: TransactionType.ORDER_REFUND,
+            note: `Hoàn tiền đơn hàng #${order.id}`,
+          },
+        });
+      }
+
+      if (shouldPayCommission && commissionAdminId) {
+        await tx.user.update({
+          where: { id: commissionAdminId },
+          data: { balance: { increment: commissionAmt } },
+        });
+        await tx.transaction.create({
+          data: {
+            userId: commissionAdminId,
+            amount: commissionAmt,
+            type: TransactionType.ADMIN_ADJUSTMENT,
+            note: `Hoa hồng xử lý đơn giao thành công #${order.id} (95% của ${order.total.toLocaleString("vi-VN")}đ)`,
+          },
+        });
+      }
+    });
+  } catch (error: any) {
+    if (error.message === "ConcurrencyError") {
+      return NextResponse.json({ error: "Thao tác không thành công do trạng thái đơn đã bị thay đổi trước đó." }, { status: 409 });
+    }
+    throw error;
+  }
 
   revalidatePath("/admin/orders");
   revalidatePath("/dashboard");

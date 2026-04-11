@@ -126,61 +126,75 @@ export async function GET(request: NextRequest) {
     if (Object.keys(updates).length > 0) {
       if (updates.status === "DELIVERED" && order.approvedByAdminId) {
         const commission = Math.floor(order.total * 0.95);
-        await prisma.$transaction([
-          prisma.order.update({
-            where: { id: orderId },
-            data: updates,
-          }),
-          prisma.user.update({
-            where: { id: order.approvedByAdminId },
-            data: { balance: { increment: commission } },
-          }),
-          prisma.transaction.create({
-            data: {
-              userId: order.approvedByAdminId,
-              amount: commission,
-              type: "ADMIN_ADJUSTMENT",
-              note: `Hoa hồng xử lý đơn giao thành công #${order.id} (95% của ${order.total.toLocaleString("vi-VN")}đ)`,
-            },
-          }),
-          prisma.notification.create({
-            data: {
-              userId: order.approvedByAdminId,
-              type: "BALANCE_CHANGED",
-              title: "Hoa hồng hoàn thành đơn",
-              message: `Bạn được cộng ${commission.toLocaleString("vi-VN")}đ từ đơn #${order.id}.`,
-              link: `/admin/orders?orderId=${order.id}`,
-            },
-          }),
-        ]);
+        try {
+          await prisma.$transaction(async (tx) => {
+            const updateResult = await tx.order.updateMany({
+              where: { id: orderId, status: order.status },
+              data: updates,
+            });
+
+            if (updateResult.count === 0) throw new Error("ConcurrencyError");
+
+            await tx.user.update({
+              where: { id: order.approvedByAdminId! },
+              data: { balance: { increment: commission } },
+            });
+            await tx.transaction.create({
+              data: {
+                userId: order.approvedByAdminId!,
+                amount: commission,
+                type: "ADMIN_ADJUSTMENT",
+                note: `Hoa hồng xử lý đơn giao thành công #${order.id} (95% của ${order.total.toLocaleString("vi-VN")}đ)`,
+              },
+            });
+            await tx.notification.create({
+              data: {
+                userId: order.approvedByAdminId!,
+                type: "BALANCE_CHANGED",
+                title: "Hoa hồng hoàn thành đơn",
+                message: `Bạn được cộng ${commission.toLocaleString("vi-VN")}đ từ đơn #${order.id}.`,
+                link: `/admin/orders?orderId=${order.id}`,
+              },
+            });
+          });
+        } catch (error: any) {
+           if (error.message !== "ConcurrencyError") throw error;
+        }
       } else if (updates.status === "CANCELED") {
-        await prisma.$transaction([
-          prisma.order.update({
-            where: { id: orderId },
-            data: updates,
-          }),
-          prisma.user.update({
-             where: { id: order.userId },
-             data: { balance: { increment: order.total } } 
-          }),
-          prisma.transaction.create({
-            data: { 
-              userId: order.userId, 
-              amount: order.total, 
-              type: "ORDER_REFUND", 
-              note: `Hoàn tiền tự động vì API Tracking hiển thị Đã Huỷ - Order #${order.id}` 
-            }
-          }),
-          prisma.notification.create({
-            data: { 
-              userId: order.userId, 
-              type: "ORDER_CANCELED", 
-              title: "Đơn hàng bị huỷ bởi Shopee", 
-              message: `Đơn #${order.id} của bạn vừa bị huỷ trên Shopee. Hệ thống đã hoàn trả ${order.total.toLocaleString("vi-VN")}đ vào ví của bạn.`, 
-              link: `/dashboard/orders?orderId=${order.id}` 
-            }
-          })
-        ]);
+        try {
+          await prisma.$transaction(async (tx) => {
+            const updateResult = await tx.order.updateMany({
+              where: { id: orderId, status: order.status },
+              data: updates,
+            });
+
+            if (updateResult.count === 0) throw new Error("ConcurrencyError");
+
+            await tx.user.update({
+               where: { id: order.userId },
+               data: { balance: { increment: order.total } } 
+            });
+            await tx.transaction.create({
+              data: { 
+                userId: order.userId, 
+                amount: order.total, 
+                type: "ORDER_REFUND", 
+                note: `Hoàn tiền tự động vì API Tracking hiển thị Đã Huỷ - Order #${order.id}` 
+              }
+            });
+            await tx.notification.create({
+              data: { 
+                userId: order.userId, 
+                type: "ORDER_CANCELED", 
+                title: "Đơn hàng bị huỷ bởi Shopee", 
+                message: `Đơn #${order.id} của bạn vừa bị huỷ trên Shopee. Hệ thống đã hoàn trả ${order.total.toLocaleString("vi-VN")}đ vào ví của bạn.`, 
+                link: `/dashboard/orders?orderId=${order.id}` 
+              }
+            });
+          });
+        } catch (error: any) {
+           if (error.message !== "ConcurrencyError") throw error;
+        }
       } else {
         await prisma.order.update({
           where: { id: orderId },

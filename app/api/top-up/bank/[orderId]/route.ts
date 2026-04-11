@@ -22,25 +22,29 @@ export async function GET(req: Request, props: { params: Promise<{ orderId: stri
             const isTargetAdminSpAdmin = isSpAdminRole(deposit.admin.role);
 
             await prisma.$transaction(async (tx) => {
-                if (!isTargetAdminSpAdmin) {
-                    await tx.user.update({
-                        where: { id: deposit.adminId },
-                        data: { balance: { increment: deposit.amount } }
-                    });
-                    await tx.transaction.create({
-                        data: {
-                            userId: deposit.adminId,
-                            amount: deposit.amount,
-                            type: "ADMIN_ADJUSTMENT",
-                            note: `[Hoàn Escrow] Lệnh chờ nạp Bank từ User ${result.user.id} quá hạn`
-                        }
+                const currentDeposit = await tx.bankDeposit.findUnique({ where: { id: deposit.id }});
+                // Ensure it wasn't already processed by another concurrent request
+                if (currentDeposit && currentDeposit.status === "PENDING") {
+                    if (!isTargetAdminSpAdmin) {
+                        await tx.user.update({
+                            where: { id: deposit.adminId },
+                            data: { balance: { increment: deposit.amount } }
+                        });
+                        await tx.transaction.create({
+                            data: {
+                                userId: deposit.adminId,
+                                amount: deposit.amount,
+                                type: "ADMIN_ADJUSTMENT",
+                                note: `[Hoàn Escrow] Lệnh chờ nạp Bank từ User ${result.user.id} quá hạn`
+                            }
+                        });
+                    }
+                    
+                    await tx.bankDeposit.update({
+                        where: { id: deposit.id },
+                        data: { status: "EXPIRED" }
                     });
                 }
-                
-                await tx.bankDeposit.update({
-                    where: { id: deposit.id },
-                    data: { status: "EXPIRED" }
-                });
             });
         }
         deposit.status = "EXPIRED";
