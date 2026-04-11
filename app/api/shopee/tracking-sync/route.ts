@@ -35,6 +35,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ tracking: [] });
     }
 
+    // ONLINE HEALING: Fix 'Sản phẩm Shopee' from cached shopee tracking data right away before early-returns
+    if (order.productName === "Sản phẩm Shopee" && order.shopeeTrackingData) {
+      try {
+        const cached = JSON.parse(order.shopeeTrackingData);
+        if (cached && cached.length > 0) {
+           let matchedNames: string[] = [];
+           const trackingsToMatch = (order.trackingNo || "").split("\n").map(t => t.trim()).filter(Boolean);
+           if (trackingsToMatch.length > 0) {
+               for (const t of trackingsToMatch) {
+                   const matching = cached.find((r: any) => r.tracking_number && r.tracking_number === t && r.name && r.name.trim().length > 3);
+                   if (matching && !matchedNames.includes(matching.name.trim())) {
+                       matchedNames.push(matching.name.trim());
+                   }
+               }
+           }
+           if (matchedNames.length === 0) {
+               const fallbackMatch = cached.find((r: any) => r.name && r.name.trim().length > 3);
+               if (fallbackMatch) matchedNames.push(fallbackMatch.name.trim());
+           }
+           const foundName = matchedNames.join(" / ");
+           if (foundName) {
+              await prisma.order.update({
+                 where: { id: order.id },
+                 data: { productName: foundName }
+              });
+              order.productName = foundName;
+           }
+        }
+      } catch (e) {}
+    }
+
     if (order.status === "DELIVERED" || order.status === "CANCELED") {
       let cached = [];
       try {
