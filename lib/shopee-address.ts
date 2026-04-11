@@ -102,7 +102,8 @@ export async function analyzeShopeeAddress(input: ShopeeAddressAnalyzeInput): Pr
 
   const phone = normalizePhone(input.phone || "");
 
-  const spcCookieEnv = normalizeSpcSt(process.env.COOKIE || "");
+  const sysConfig = await prisma.systemConfig.findUnique({ where: { key: "SHOPEE_SPC_ST" } });
+  const spcCookieEnv = normalizeSpcSt(sysConfig?.value || process.env.COOKIE || "");
   const activeOrder = await prisma.order.findFirst({
     where: { spcCookie: { not: "" } },
     orderBy: { createdAt: "desc" },

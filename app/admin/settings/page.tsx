@@ -20,6 +20,7 @@ export default function SettingsPage() {
     cryptoWalletTrx: "",
     usdtRate: "25500",
     binanceProxy: "",
+    shopeeSpcSt: "",
   });
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function SettingsPage() {
             cryptoWalletTrx: data.cryptoWalletTrx || "",
             usdtRate: data.usdtRate || "25500",
             binanceProxy: data.binanceProxy || "",
+            shopeeSpcSt: data.shopeeSpcSt || "",
           });
         }
       } catch {
@@ -232,6 +234,28 @@ export default function SettingsPage() {
                 className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
               />
               <p className="mt-1 text-xs text-slate-500">Người dùng chuyển USDT sẽ tự động nhân với tỷ lệ này vào số dư VNĐ. Mặc định 25500.</p>
+            </label>
+          </div>
+        </section>
+
+        {/* Shopee Config Section */}
+        <section className="panel p-6 rounded-[2rem] space-y-6 lg:col-span-2">
+          <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Cấu hình Shopee</h2>
+            <p className="mt-1 text-sm text-slate-500">Cấu hình Cookie dùng để lấy link sản phẩm và phân tích địa chỉ.</p>
+          </div>
+
+          <div className="grid gap-6">
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Cookie SPC_ST</span>
+              <input
+                type="text"
+                placeholder="Ví dụ: SPC_ST=ABCDEFGHIJKLMNOPQRSTUVWXYZ..."
+                value={configs.shopeeSpcSt}
+                onChange={e => setConfigs({...configs, shopeeSpcSt: e.target.value})}
+                className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+              />
+              <p className="mt-1 text-xs text-slate-500">Mặc định ưu tiên cấu hình này hoặc cấu hình có trong file .env. Nếu cả hai đều trống sẽ tự động lấy Cookie từ đơn hàng gần nhất có SPC_ST (dùng cho phân tích địa chỉ).</p>
             </label>
           </div>
         </section>

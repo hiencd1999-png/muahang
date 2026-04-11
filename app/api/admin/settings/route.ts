@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   const configs = await getTelegramConfigs();
   const rawSystemConfigs = await prisma.systemConfig.findMany({
-    where: { key: { in: ["CRYPTO_WALLET_BSC", "CRYPTO_WALLET_TRX", "USDT_RATE", "BINANCE_PROXY"] } }
+    where: { key: { in: ["CRYPTO_WALLET_BSC", "CRYPTO_WALLET_TRX", "USDT_RATE", "BINANCE_PROXY", "SHOPEE_SPC_ST"] } }
   });
   
   const sysConfigMap = rawSystemConfigs.reduce((acc, curr) => {
@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     cryptoWalletTrx: sysConfigMap["CRYPTO_WALLET_TRX"] || "",
     usdtRate: sysConfigMap["USDT_RATE"] || "25500",
     binanceProxy: sysConfigMap["BINANCE_PROXY"] || "",
+    shopeeSpcSt: sysConfigMap["SHOPEE_SPC_ST"] || "",
   });
 }
 
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
     "CRYPTO_WALLET_TRX": body.cryptoWalletTrx || "",
     "USDT_RATE": body.usdtRate || "25500",
     "BINANCE_PROXY": body.binanceProxy || "",
+    "SHOPEE_SPC_ST": body.shopeeSpcSt || "",
   };
 
   const currentConfigs = await getTelegramConfigs();

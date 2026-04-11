@@ -1,3 +1,5 @@
+import { prisma } from "@/lib/prisma";
+
 export interface ShopeeProductDetails {
   shopId: string;
   itemId: string;
@@ -123,7 +125,8 @@ async function resolveShopAndItemIds(productLink: string, cookie?: string) {
 }
 
 export async function fetchShopeeProductDetails(productLink: string): Promise<ShopeeProductDetails> {
-  const cookie = process.env.COOKIE?.trim();
+  const sysConfig = await prisma.systemConfig.findUnique({ where: { key: "SHOPEE_SPC_ST" } });
+  const cookie = (sysConfig?.value || process.env.COOKIE || "").trim();
   const { shopId, itemId, resolvedLink } = await resolveShopAndItemIds(productLink, cookie);
 
   if (!shopId || !itemId) {
