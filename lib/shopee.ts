@@ -36,7 +36,7 @@ async function resolveRedirectLink(productLink: string, cookie?: string) {
     // SSRF Protection: Only allow requests to shopee domains
     try {
       const parsedUrl = new URL(fixed);
-      if (!parsedUrl.hostname.includes("shopee.vn")) {
+      if (parsedUrl.hostname !== "shopee.vn" && !parsedUrl.hostname.endsWith(".shopee.vn")) {
         return fixed; 
       }
     } catch {

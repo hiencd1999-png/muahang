@@ -30,8 +30,7 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
 
     const { sendTelegramNotification } = await import("@/lib/telegram");
     
-    const reqUrl = new URL(req.url);
-    const adminBankLink = `${reqUrl.origin}/admin/bank-deposits`;
+    const adminBankLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://datdon.otistx.com"}/admin/bank-deposits`;
 
     await sendTelegramNotification(
         deposit.adminId, 

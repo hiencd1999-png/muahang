@@ -34,13 +34,13 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
         const isSpAdmin = isSpAdminRole(result.user.role);
         const isOwner = deposit.adminId === result.user.id;
 
+        if (!isSpAdmin && !isOwner) {
+             return NextResponse.json({ error: "Bạn không có quyền thao tác trên lệnh nạp không thuộc về bạn." }, { status: 403 });
+        }
+
         if (deposit.status === "COMPLAINED") {
              if (!isSpAdmin) {
                  return NextResponse.json({ error: "Chỉ SPAdmin mới có quyền duyệt hoặc từ chối đơn khiếu nại." }, { status: 403 });
-             }
-        } else if (deposit.status === "TRANSFERRED") {
-             if (!isOwner) {
-                 return NextResponse.json({ error: "Bạn không có quyền duyệt lệnh chuyển khoản của Admin khác." }, { status: 403 });
              }
         }
 

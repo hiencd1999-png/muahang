@@ -64,8 +64,7 @@ export async function POST(request: NextRequest) {
   });
 
   const { broadcastToAdmins } = await import("@/lib/telegram");
-  const reqUrl = new URL(request.url);
-  const adminOrderLink = `${reqUrl.origin}/admin/orders?orderId=${order.id}&action=view`;
+  const adminOrderLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://datdon.otistx.com"}/admin/orders?orderId=${order.id}&action=view`;
 
   await broadcastToAdmins(
     `🚨 *Admin Khiếu nại Đơn Hủy!*\n- Lệnh: #${order.id}\n- Khách hàng không nhận hàng.\n- Lý do: ${reason}\n- *🔗 Mở chi tiết để duyệt:* [Click](${adminOrderLink})`,
