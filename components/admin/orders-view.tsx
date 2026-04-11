@@ -291,10 +291,16 @@ export function AdminOrdersView({
                     />
                   </td>
                   <td className="px-4 py-4 font-semibold text-slate-900 whitespace-nowrap">#{order.id}</td>
-                  <td className="px-4 py-4 text-slate-700 text-sm whitespace-nowrap">{order.user.fullName || order.user.username}</td>
+                  <td className="px-4 py-4 text-slate-700 text-sm whitespace-nowrap">
+                    {canManageAllOrders || order.approvedByAdminId === currentAdminId ? (order.user.fullName || order.user.username) : "***"}
+                  </td>
                   <td className="px-4 py-4 text-sm text-slate-700">
                     <div className="flex flex-col items-center">
-                      <p className="font-medium text-slate-900 whitespace-nowrap truncate max-w-[280px]">{getShortAddress(order.address)}</p>
+                      {canManageAllOrders || order.approvedByAdminId === currentAdminId ? (
+                        <p className="font-medium text-slate-900 whitespace-nowrap truncate max-w-[280px]">{getShortAddress(order.address)}</p>
+                      ) : (
+                        <p className="font-medium text-amber-600 italic whitespace-nowrap truncate max-w-[280px]">Nhận đơn để xem địa chỉ</p>
+                      )}
                       {!order.productName?.includes("Đơn gộp") && (
                         <p className="mt-1 truncate text-xs text-slate-500 max-w-[250px]">{order.productName || order.productLink}</p>
                       )}
@@ -350,7 +356,11 @@ export function AdminOrdersView({
                 </div>
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Địa chỉ</p>
-                  <p className="mt-2 font-semibold text-slate-900 whitespace-nowrap truncate">{getShortAddress(order.address)}</p>
+                  {canManageAllOrders || order.approvedByAdminId === currentAdminId ? (
+                    <p className="mt-2 font-semibold text-slate-900 whitespace-nowrap truncate">{getShortAddress(order.address)}</p>
+                  ) : (
+                    <p className="mt-2 font-medium text-amber-600 italic whitespace-nowrap truncate">Nhận đơn để xem địa chỉ</p>
+                  )}
                   {!order.productName?.includes("Đơn gộp") && (
                     <p className="mt-1 text-xs text-slate-500 truncate">{order.productName || order.productLink}</p>
                   )}
@@ -362,7 +372,9 @@ export function AdminOrdersView({
                 <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
                   <div className="rounded-2xl bg-slate-50 p-3">
                     <p className="text-xs text-slate-500">Khách hàng</p>
-                    <p className="mt-1 font-medium text-slate-900">{order.user.fullName || order.user.username}</p>
+                    <p className="mt-1 font-medium text-slate-900">
+                      {canManageAllOrders || order.approvedByAdminId === currentAdminId ? (order.user.fullName || order.user.username) : "***"}
+                    </p>
                   </div>
                   <div className="rounded-2xl bg-slate-50 p-3">
                     <p className="text-xs text-slate-500">Voucher</p>
