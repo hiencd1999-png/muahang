@@ -37,6 +37,9 @@ export async function PUT(request: Request) {
   const amountChange = parsed.data.mode === "add" ? parsed.data.amount : -parsed.data.amount;
   
   if (!isSpAdmin) {
+    if (targetUser.role !== "USER") {
+      return NextResponse.json({ error: "ADMIN chỉ có thể thao tác với tài khoản USER." }, { status: 403 });
+    }
     if (parsed.data.mode !== "add") {
       return NextResponse.json({ error: "ADMIN chỉ có thể chuyển cộng thêm tiền, không được trừ." }, { status: 400 });
     }

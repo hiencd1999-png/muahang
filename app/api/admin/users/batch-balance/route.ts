@@ -19,6 +19,15 @@ export async function POST(request: NextRequest) {
   }
 
   if (!isSpAdmin) {
+    const targetUsers = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { role: true },
+    });
+    
+    if (targetUsers.some((u) => u.role !== "USER")) {
+      return NextResponse.json({ error: "ADMIN chỉ có thể thao tác với tài khoản USER." }, { status: 403 });
+    }
+
     if (amountChange <= 0) {
       return NextResponse.json({ error: "ADMIN chỉ có thể chuyển cộng thêm số dư, không được trừ." }, { status: 400 });
     }

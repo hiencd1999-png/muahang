@@ -19,7 +19,16 @@ export default async function AdminUsersPage({
 
   const queryIsNumeric = query.length > 0 && /^\d+$/.test(query);
 
-  const whereClause = query
+  const baseWhereClause = operatorIsSpAdmin
+    ? {}
+    : {
+        OR: [
+          { role: "USER" as const },
+          { id: currentAdmin.id },
+        ],
+      };
+
+  const queryWhereClause = query
     ? {
         OR: [
           ...(queryIsNumeric ? [{ id: parseInt(query, 10) }] : []),
@@ -27,7 +36,11 @@ export default async function AdminUsersPage({
           { username: { contains: query, mode: "insensitive" as const } },
         ],
       }
-    : {};
+    : null;
+
+  const whereClause = queryWhereClause
+    ? { AND: [baseWhereClause, queryWhereClause] }
+    : baseWhereClause;
 
   const [users, totalCount] = await Promise.all([
     prisma.user.findMany({
