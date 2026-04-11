@@ -30,7 +30,12 @@ async function sweepExpiredDeposits() {
 
             // Bọc cẩn thận qua ACID $transaction để dù lỗi RAM cũng an toàn cực độ
             await prisma.$transaction(async (tx) => {
-                if (!isTargetAdminSpAdmin) {
+                const updateResult = await tx.bankDeposit.updateMany({
+                     where: { id: deposit.id, status: "PENDING" },
+                     data: { status: "EXPIRED" }
+                });
+
+                if (updateResult.count > 0 && !isTargetAdminSpAdmin) {
                     await tx.user.update({
                         where: { id: deposit.adminId },
                         data: { balance: { increment: deposit.amount } }
@@ -44,12 +49,6 @@ async function sweepExpiredDeposits() {
                          }
                     });
                 }
-                
-                // Đóng mộc khai tử
-                await tx.bankDeposit.update({
-                    where: { id: deposit.id },
-                    data: { status: "EXPIRED" }
-                });
             });
             console.log(`[Sweeper] ♻️ Rollback thành công lệnh cọc mã ${deposit.id}`);
         }
