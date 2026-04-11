@@ -28,14 +28,14 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
 
         if (action === "REJECT") {
             await prisma.$transaction(async (tx) => {
-                const currentDeposit = await tx.cryptoDeposit.findUnique({ where: { id: deposit.id } });
-                if (!currentDeposit || currentDeposit.status !== "PENDING") {
-                    throw new Error("Lệnh nạp này đã được xử lý hoặc hết hạn.");
-                }
-                await tx.cryptoDeposit.update({
-                    where: { id: deposit.id },
+                const updateResult = await tx.cryptoDeposit.updateMany({
+                    where: { id: deposit.id, status: "PENDING" },
                     data: { status: "EXPIRED" }
                 });
+
+                if (updateResult.count === 0) {
+                    throw new Error("Lệnh nạp này đã được xử lý hoặc hết hạn.");
+                }
             });
 
             const { sendTelegramNotification } = await import("@/lib/telegram");
@@ -51,8 +51,13 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
         const convertedVND = deposit.amount * USDT_RATE;
 
         await prisma.$transaction(async (tx) => {
-             const currentDeposit = await tx.cryptoDeposit.findUnique({ where: { id: deposit.id } });
-             if (!currentDeposit || currentDeposit.status !== "PENDING") {
+             // 2. Chốt trạng thái
+             const updateResult = await tx.cryptoDeposit.updateMany({
+                 where: { id: deposit.id, status: "PENDING" },
+                 data: { status: "COMPLETED", txId: "SPADMIN_MANUAL_APPROVAL" }
+             });
+
+             if (updateResult.count === 0) {
                   throw new Error("Lệnh nạp này đã được xử lý hoặc hết hạn.");
              }
 
@@ -60,12 +65,6 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
              await tx.user.update({
                  where: { id: deposit.userId },
                  data: { balance: { increment: convertedVND } }
-             });
-
-             // 2. Chốt trạng thái
-             await tx.cryptoDeposit.update({
-                 where: { id: deposit.id },
-                 data: { status: "COMPLETED", txId: "SPADMIN_MANUAL_APPROVAL" }
              });
 
              // 3. Ghi vết giao dịch

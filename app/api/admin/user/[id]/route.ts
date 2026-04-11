@@ -154,18 +154,17 @@ export async function PATCH(
     if (amountChange !== 0) {
       // 2. Only deduct from operator if they are NOT SPADMIN
       if (!isSpAdmin && amountChange > 0) {
-        const currentAdmin = await tx.user.findUnique({ where: { id: result.user.id } });
         const txLockedCommission = await getLockedAdminCommission(result.user.id, tx);
         const minRequired = amountChange + txLockedCommission;
 
-        if (!currentAdmin || currentAdmin.balance < minRequired) {
-            throw new Error(`Số dư khả dụng của Admin không đủ để cấp cho người dùng do một phần bị tạm giữ.`);
-        }
-
-        await tx.user.update({
-          where: { id: result.user.id },
+        const updateResult = await tx.user.updateMany({
+          where: { id: result.user.id, balance: { gte: minRequired } },
           data: { balance: { decrement: amountChange } },
         });
+
+        if (updateResult.count === 0) {
+            throw new Error(`Số dư khả dụng của Admin không đủ để cấp cho người dùng do một phần bị tạm giữ (hoặc lỗi song song).`);
+        }
 
         // Admin sender transaction
         await tx.transaction.create({

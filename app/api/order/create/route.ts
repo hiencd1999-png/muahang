@@ -207,15 +207,14 @@ export async function POST(request: Request) {
 
     const newOrder = await prisma.$transaction(async (tx) => {
       // Kiểm tra số dư NỘI BỘ giao dịch (chống Race Condition thả trôi tiền < 0)
-      const currentUser = await tx.user.findUnique({ where: { id: result.user.id } });
-        if (!currentUser || currentUser.balance < total) {
-            throw new Error("Số dư không đủ để tạo đơn lúc này. Thao tác bị hủy.");
-        }
-
-        await tx.user.update({
-          where: { id: result.user.id },
+      const updateResult = await tx.user.updateMany({
+          where: { id: result.user.id, balance: { gte: total } },
           data: { balance: { decrement: total } },
-        });
+      });
+
+      if (updateResult.count === 0) {
+          throw new Error("Số dư khả dụng không đủ để tạo đơn hoặc hệ thống đang xử lý một giao dịch khác. Vui lòng thử lại.");
+      }
 
         const order = await tx.order.create({
         data: {

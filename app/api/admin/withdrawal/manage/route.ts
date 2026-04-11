@@ -32,15 +32,8 @@ export async function POST(req: NextRequest) {
                  throw new Error("Lệnh đã được xử lý từ trước");
             }
 
-            // Đọc lại balance MỚI NHẤT của Admin bên trong chuỗi giao dịch kín
-            const admin = await tx.user.findUnique({ where: { id: currentWithdrawal.userId } });
-            
             const lockedCommission = await getLockedAdminCommission(currentWithdrawal.userId, tx);
             const minimumRequiredBalance = currentWithdrawal.amount + lockedCommission;
-
-            if (!admin || admin.balance < minimumRequiredBalance) {
-                 throw new Error(`Tài khoản admin không đủ số dư khả dụng (do đang bị tạm giữ hoa hồng giải quyết khiếu nại). Giao dịch thất bại.`);
-            }
 
             // 1. Cập nhật status lệnh rút (kết hợp Optimistic Concurrency Control)
             const updateResult = await tx.withdrawal.updateMany({
@@ -53,10 +46,14 @@ export async function POST(req: NextRequest) {
             }
 
             // 2. Trừ tiền An Toàn tuyệt đối
-            await tx.user.update({
-                where: { id: currentWithdrawal.userId },
+            const userUpdateResult = await tx.user.updateMany({
+                where: { id: currentWithdrawal.userId, balance: { gte: minimumRequiredBalance } },
                 data: { balance: { decrement: currentWithdrawal.amount } }
             });
+
+            if (userUpdateResult.count === 0) {
+                 throw new Error(`Tài khoản admin không đủ số dư khả dụng (do đang bị tạm giữ hoa hồng giải quyết khiếu nại hoặc lỗi giao dịch). Giao dịch thất bại.`);
+            }
 
             // 3. Lưu vết Giao dịch hệ thống 
             await tx.transaction.create({

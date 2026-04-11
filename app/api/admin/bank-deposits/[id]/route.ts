@@ -52,8 +52,15 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
 
         if (action === "REJECT") {
             await prisma.$transaction(async (tx) => {
-                 const currentDeposit = await tx.bankDeposit.findUnique({ where: { id: deposit.id } });
-                 if (!currentDeposit || ["COMPLETED", "REJECTED", "EXPIRED"].includes(currentDeposit.status)) {
+                 const updateResult = await tx.bankDeposit.updateMany({
+                     where: { 
+                         id: deposit.id, 
+                         status: { notIn: ["COMPLETED", "REJECTED", "EXPIRED"] } 
+                     },
+                     data: { status: "REJECTED", complaintImage: null }
+                 });
+
+                 if (updateResult.count === 0) {
                      throw new Error("Lệnh này đã được xử lý hoặc hết hạn.");
                  }
 
@@ -71,10 +78,6 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
                          }
                      });
                  }
-                 await tx.bankDeposit.update({
-                     where: { id: deposit.id },
-                     data: { status: "REJECTED", complaintImage: null }
-                 });
             });
             const { sendTelegramNotification } = await import("@/lib/telegram");
             await sendTelegramNotification(deposit.userId, `❌ *Lệnh Nạp Bị Từ Chối*\nLệnh nạp ${deposit.amount.toLocaleString()} VND đã bị từ chối/hủy. Vui lòng liên hệ hỗ trợ nếu cần.`, "USER_DEPOSIT");
@@ -83,8 +86,15 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
 
         // APPROVE: Trừ Escrow, cộng tiền user
         await prisma.$transaction(async (tx) => {
-             const currentDeposit = await tx.bankDeposit.findUnique({ where: { id: deposit.id } });
-             if (!currentDeposit || ["COMPLETED", "REJECTED", "EXPIRED"].includes(currentDeposit.status)) {
+             const updateResult = await tx.bankDeposit.updateMany({
+                 where: { 
+                     id: deposit.id, 
+                     status: { notIn: ["COMPLETED", "REJECTED", "EXPIRED"] } 
+                 },
+                 data: { status: "COMPLETED", complaintImage: null }
+             });
+
+             if (updateResult.count === 0) {
                  throw new Error("Lệnh này đã được xử lý hoặc hết hạn.");
              }
 
@@ -92,12 +102,6 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
              await tx.user.update({
                  where: { id: deposit.userId },
                  data: { balance: { increment: deposit.amount } }
-             });
-
-             // Mark order as COMPLETED
-             await tx.bankDeposit.update({
-                 where: { id: deposit.id },
-                 data: { status: "COMPLETED", complaintImage: null }
              });
 
              // Lưu lịch sử giao dịch: Cộng User

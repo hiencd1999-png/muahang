@@ -35,27 +35,19 @@ export async function POST(request: NextRequest) {
     }
 
     await prisma.$transaction(async (tx) => {
-        // Kiểm tra độc quyền trạng thái đơn hàng (chống spam F5)
-        const currentOrder = await tx.order.findUnique({ where: { id: order.id } });
-        if (!currentOrder || currentOrder.status !== "CANCELED") {
-            throw new Error("Chỉ có thể đặt lại đơn hàng đã bị hủy. Lệnh đã bị xử lý.");
-        }
-
-        // Kiểm tra độc quyền số dư (chống spam F5 vượt quá số dư tịnh)
-        const currentUser = await tx.user.findUnique({ where: { id: result.user.id } });
-        if (!currentUser || currentUser.balance < currentOrder.total) {
-            throw new Error("Số dư không đủ để đặt lại đơn hàng này.");
-        }
-
-        // Trừ tiền
-        await tx.user.update({
-            where: { id: result.user.id },
-            data: { balance: { decrement: currentOrder.total } },
+        // Kiểm tra độc quyền số dư và trừ tiền (chống spam F5 vượt quá số dư tịnh)
+        const userUpdateResult = await tx.user.updateMany({
+            where: { id: result.user.id, balance: { gte: order.total } },
+            data: { balance: { decrement: order.total } },
         });
 
-        // Cập nhật trạng thái
-        await tx.order.update({
-            where: { id: order.id },
+        if (userUpdateResult.count === 0) {
+            throw new Error("Số dư không đủ để đặt lại đơn hàng này (hoặc có giao dịch song song).");
+        }
+
+        // Cập nhật trạng thái (chống spam thao tác 2 lần)
+        const orderUpdateResult = await tx.order.updateMany({
+            where: { id: order.id, status: "CANCELED" },
             data: {
               status: "PENDING",
               cancelReason: null, 
@@ -63,11 +55,15 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        if (orderUpdateResult.count === 0) {
+            throw new Error("Chỉ có thể đặt lại đơn hàng đã bị hủy. Lệnh đã bị xử lý.");
+        }
+
         // Ghi transaction log
         await tx.transaction.create({
             data: {
               userId: result.user.id,
-              amount: -currentOrder.total,
+              amount: -order.total,
               type: TransactionType.ORDER_DEBIT,
               note: `Đặt lại đơn hàng bị hủy #${order.id}`,
             },

@@ -34,10 +34,14 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === "REJECT") {
-    await prisma.order.update({
-      where: { id: orderId },
+    const updateResult = await prisma.order.updateMany({
+      where: { id: orderId, complaintStatus: "PENDING" },
       data: { complaintStatus: "REJECTED" },
     });
+
+    if (updateResult.count === 0) {
+      return NextResponse.json({ error: "Khiếu nại này đã được xử lý bởi một tiến trình khác." }, { status: 409 });
+    }
     
     // Báo cho User
     await createNotification(
@@ -62,46 +66,53 @@ export async function POST(request: NextRequest) {
   // Nếu Approve: Hoàn tiền User, Trừ hoa hồng Admin phụ trách
   const commission = Math.floor(order.total * 0.95);
 
-  const txs: any[] = [
-    prisma.order.update({
-      where: { id: orderId },
-      data: { complaintStatus: "APPROVED" },
-    }),
-    
-    // Hoàn tiền User
-    prisma.user.update({
-      where: { id: order.userId },
-      data: { balance: { increment: order.total } },
-    }),
-    prisma.transaction.create({
-      data: {
-        userId: order.userId,
-        amount: order.total,
-        type: "ORDER_REFUND",
-        note: `Hoàn tiền do khiếu nại thành công đơn #${order.id}`,
-      },
-    }),
-  ];
+  try {
+    await prisma.$transaction(async (tx) => {
+      const updateResult = await tx.order.updateMany({
+        where: { id: orderId, complaintStatus: "PENDING" },
+        data: { complaintStatus: "APPROVED" },
+      });
 
-  if (order.approvedByAdminId) {
-    // Trừ commission của Admin chuyên trách
-    txs.push(
-      prisma.user.update({
-        where: { id: order.approvedByAdminId },
-        data: { balance: { decrement: commission } },
-      }),
-      prisma.transaction.create({
+      if (updateResult.count === 0) {
+        throw new Error("ConcurrencyError");
+      }
+
+      await tx.user.update({
+        where: { id: order.userId },
+        data: { balance: { increment: order.total } },
+      });
+
+      await tx.transaction.create({
         data: {
-          userId: order.approvedByAdminId,
-          amount: -commission,
-          type: "ADMIN_ADJUSTMENT",
-          note: `Trừ tiền do đơn #${order.id} bị khiếu nại và hoàn tiền (95% của ${order.total})`,
+          userId: order.userId,
+          amount: order.total,
+          type: "ORDER_REFUND",
+          note: `Hoàn tiền do khiếu nại thành công đơn #${order.id}`,
         },
-      })
-    );
-  }
+      });
 
-  await prisma.$transaction(txs);
+      if (order.approvedByAdminId) {
+        await tx.user.update({
+          where: { id: order.approvedByAdminId },
+          data: { balance: { decrement: commission } },
+        });
+
+        await tx.transaction.create({
+          data: {
+            userId: order.approvedByAdminId,
+            amount: -commission,
+            type: "ADMIN_ADJUSTMENT",
+            note: `Trừ tiền do đơn #${order.id} bị khiếu nại và hoàn tiền (95% của ${order.total})`,
+          },
+        });
+      }
+    });
+  } catch (error: any) {
+    if (error.message === "ConcurrencyError") {
+      return NextResponse.json({ error: "Thao tác không thành công do khiếu nại đã được xử lý trước đó." }, { status: 409 });
+    }
+    throw error;
+  }
 
   // Notifications
   await createNotification(

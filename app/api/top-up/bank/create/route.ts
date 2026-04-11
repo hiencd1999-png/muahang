@@ -45,19 +45,18 @@ export async function POST(req: Request) {
 
         const deposit = await prisma.$transaction(async (tx) => {
              if (!isAdminSpAdmin) {
-                  const currentAdmin = await tx.user.findUnique({ where: { id: config.adminId }});
                   const lockedCommission = await getLockedAdminCommission(config.adminId, tx);
                   const minRequired = amount + lockedCommission;
                   
-                  if (!currentAdmin || currentAdmin.balance < minRequired) {
-                       throw new Error("Thanh khoản khả dụng của Admin này hiện đang tạm hết (do một phần quỹ đang tạm giữ). Vui lòng giảm số VNĐ hoặc chọn Admin khác.");
-                  }
-                  
                   // ESCROW LOCK: Deduct balance immediately
-                  await tx.user.update({
-                      where: { id: config.adminId },
+                  const updateResult = await tx.user.updateMany({
+                      where: { id: config.adminId, balance: { gte: minRequired } },
                       data: { balance: { decrement: amount } }
                   });
+                  
+                  if (updateResult.count === 0) {
+                       throw new Error("Thanh khoản khả dụng của Admin này hiện đang tạm hết (do một phần quỹ đang tạm giữ). Vui lòng giảm số VNĐ hoặc chọn Admin khác.");
+                  }
                   
                   await tx.transaction.create({
                       data: {

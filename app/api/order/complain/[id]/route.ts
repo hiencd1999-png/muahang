@@ -54,14 +54,18 @@ export async function POST(
     return NextResponse.json({ error: "Chỉ được khiếu nại trong vòng 3 ngày sau khi giao." }, { status: 400 });
   }
 
-  await prisma.order.update({
-    where: { id: order.id },
+  const updateResult = await prisma.order.updateMany({
+    where: { id: order.id, complaintStatus: null },
     data: {
       complaintReason: parsed.data.reason,
       complaintStatus: "PENDING",
       complaintAt: new Date(),
     },
   });
+
+  if (updateResult.count === 0) {
+      return NextResponse.json({ error: "Đơn này đã được khiếu nại trước đó." }, { status: 400 });
+  }
 
   return NextResponse.json({ success: true });
 }

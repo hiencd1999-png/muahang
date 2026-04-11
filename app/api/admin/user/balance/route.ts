@@ -53,17 +53,17 @@ export async function PUT(request: Request) {
   await prisma.$transaction(async (tx) => {
     // 1. Deduct from Admin ONLY if not SPADMIN
     if (!isSpAdmin && amountChange > 0) {
-      const currentAdmin = await tx.user.findUnique({ where: { id: result.user.id } });
       const txLockedCommission = await getLockedAdminCommission(result.user.id, tx);
       const minRequired = amountChange + txLockedCommission;
-      if (!currentAdmin || currentAdmin.balance < minRequired) {
-          throw new Error(`Số dư khả dụng không đủ để chuyển. Cần ${amountChange.toLocaleString()} VND nhưng một phần số dư đang được tạm giữ chờ hết hạn khiếu nại.`);
-      }
 
-      await tx.user.update({
-        where: { id: result.user.id },
+      const updateResult = await tx.user.updateMany({
+        where: { id: result.user.id, balance: { gte: minRequired } },
         data: { balance: { decrement: amountChange } },
       });
+
+      if (updateResult.count === 0) {
+          throw new Error(`Số dư khả dụng không đủ để chuyển (hoặc có giao dịch song song). Cần ${amountChange.toLocaleString()} VND nhưng một phần số dư đang được tạm giữ chờ hết hạn khiếu nại.`);
+      }
 
       // Transaction for Admin
       await tx.transaction.create({
@@ -121,7 +121,7 @@ export async function PUT(request: Request) {
 
   return NextResponse.json({ success: true });
 } catch (error: any) {
-  if (error.message?.includes("Số dư Admin không đủ")) {
+  if (error.message?.includes("Số dư khả dụng không đủ") || error.message?.includes("khiếu nại")) {
      return NextResponse.json({ error: error.message }, { status: 400 });
   }
   return NextResponse.json({ error: "Lỗi hệ thống khi cập nhật số dư" }, { status: 500 });

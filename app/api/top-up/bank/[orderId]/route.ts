@@ -22,9 +22,12 @@ export async function GET(req: Request, props: { params: Promise<{ orderId: stri
             const isTargetAdminSpAdmin = isSpAdminRole(deposit.admin.role);
 
             await prisma.$transaction(async (tx) => {
-                const currentDeposit = await tx.bankDeposit.findUnique({ where: { id: deposit.id }});
-                // Ensure it wasn't already processed by another concurrent request
-                if (currentDeposit && currentDeposit.status === "PENDING") {
+                const updateResult = await tx.bankDeposit.updateMany({
+                    where: { id: deposit.id, status: "PENDING" },
+                    data: { status: "EXPIRED" }
+                });
+
+                if (updateResult.count > 0) {
                     if (!isTargetAdminSpAdmin) {
                         await tx.user.update({
                             where: { id: deposit.adminId },
@@ -39,11 +42,6 @@ export async function GET(req: Request, props: { params: Promise<{ orderId: stri
                             }
                         });
                     }
-                    
-                    await tx.bankDeposit.update({
-                        where: { id: deposit.id },
-                        data: { status: "EXPIRED" }
-                    });
                 }
             });
         }

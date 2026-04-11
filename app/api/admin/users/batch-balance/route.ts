@@ -38,17 +38,17 @@ export async function POST(request: NextRequest) {
     const results = await prisma.$transaction(async (tx) => {
       // 1. Deduct from Admin ONLY if not SPADMIN
       if (!isSpAdmin && amountChange > 0) {
-        const currentAdmin = await tx.user.findUnique({ where: { id: admin.id } });
         const txLockedCommission = await getLockedAdminCommission(admin.id, tx);
         const minRequired = totalTransfer + txLockedCommission;
-        if (!currentAdmin || currentAdmin.balance < minRequired) {
-            throw new Error(`Số dư khả dụng Admin không đủ. Cần ${totalTransfer.toLocaleString()} VND nhưng một phần đang bị tạm giữ khiếu nại.`);
-        }
 
-        await tx.user.update({
-          where: { id: admin.id },
+        const updateResult = await tx.user.updateMany({
+          where: { id: admin.id, balance: { gte: minRequired } },
           data: { balance: { decrement: totalTransfer } },
         });
+
+        if (updateResult.count === 0) {
+            throw new Error(`Số dư khả dụng Admin không đủ (hoặc lỗi giao dịch kép). Cần ${totalTransfer.toLocaleString()} VND nhưng một phần đang bị tạm giữ khiếu nại.`);
+        }
 
         // Add Transaction for Admin
         await tx.transaction.create({
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
       totalTransferred: totalTransfer,
     });
   } catch (error: any) {
-    if (error.message?.includes("Số dư Admin không đủ")) {
+    if (error.message?.includes("Số dư khả dụng Admin không đủ") || error.message?.includes("tạm giữ")) {
         return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error("Batch balance update error:", error);

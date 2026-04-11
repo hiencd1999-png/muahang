@@ -45,10 +45,13 @@ export async function POST(request: NextRequest) {
 
            // Handle refunds when canceling
            if (status === "CANCELED") {
-              const updatedOrder = await tx.order.update({
-                where: { id: currentOrder.id },
+              const updateResult = await tx.order.updateMany({
+                where: { id: currentOrder.id, status: currentOrder.status },
                 data: { status, processingStartedAt: null },
               });
+
+              if (updateResult.count === 0) return null;
+
               await tx.transaction.create({
                 data: {
                   userId: currentOrder.userId,
@@ -61,7 +64,7 @@ export async function POST(request: NextRequest) {
                 where: { id: currentOrder.userId },
                 data: { balance: { increment: currentOrder.total } },
               });
-              return updatedOrder;
+              return currentOrder;
            }
 
            // Chặn cướp đơn Booking đích danh (SPADMIN được phép vượt qua)
@@ -78,10 +81,12 @@ export async function POST(request: NextRequest) {
            // Handle commission when manually marking as DELIVERED
            if (status === "DELIVERED" && currentOrder.approvedByAdminId) {
              const commission = Math.floor(currentOrder.total * 0.95);
-             const updatedOrder = await tx.order.update({
-               where: { id: currentOrder.id },
+             const updateResult = await tx.order.updateMany({
+               where: { id: currentOrder.id, status: currentOrder.status },
                data: { status, processingStartedAt: null },
              });
+
+             if (updateResult.count === 0) return null;
              await tx.user.update({
                where: { id: currentOrder.approvedByAdminId },
                data: { balance: { increment: commission } },
@@ -103,18 +108,21 @@ export async function POST(request: NextRequest) {
                  link: `/admin/orders?orderId=${currentOrder.id}`,
                },
              });
-             return updatedOrder;
+             return currentOrder;
            }
 
            // Regular status update
-           return await tx.order.update({
-             where: { id: currentOrder.id },
+           const updateResult = await tx.order.updateMany({
+             where: { id: currentOrder.id, status: currentOrder.status },
              data: {
                status,
                approvedByAdminId: status === "PROCESSING" ? user.id : status === "PENDING" ? null : currentOrder.approvedByAdminId,
                processingStartedAt: status === "PROCESSING" ? new Date() : null,
              },
            });
+
+           if (updateResult.count === 0) return null;
+           return currentOrder;
         });
       })
     )).filter(Boolean);

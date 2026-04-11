@@ -101,14 +101,22 @@ export async function DELETE(
     );
   }
 
+  const updateResult = await prisma.order.updateMany({
+    where: { id: order.id, status: "PENDING" },
+    data: {
+      status: "CANCELED",
+      cancelReason: "User tự hủy đơn",
+    },
+  });
+
+  if (updateResult.count === 0) {
+    return NextResponse.json(
+      { error: "Đơn hàng đã được xử lý bởi hệ thống hoặc không còn ở trạng thái chờ duyệt." },
+      { status: 409 }
+    );
+  }
+
   await prisma.$transaction([
-    prisma.order.update({
-      where: { id: order.id },
-      data: {
-        status: "CANCELED",
-        cancelReason: "User hủy đơn",
-      },
-    }),
     prisma.user.update({
       where: { id: result.user.id },
       data: { balance: { increment: order.total } },

@@ -24,9 +24,16 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
     try {
 
     const updated = await prisma.$transaction(async (tx) => {
-         const currentDeposit = await tx.bankDeposit.findUnique({ where: { id: deposit.id } });
-         if (!currentDeposit || (currentDeposit.status !== "PENDING" && currentDeposit.status !== "TRANSFERRED")) {
-              throw new Error("Lệnh nạp này đã được xử lý hoặc không thể hủy.");
+         const updateResult = await tx.bankDeposit.updateMany({
+             where: { 
+                 id: deposit.id, 
+                 status: { in: ["PENDING", "TRANSFERRED"] } 
+             },
+             data: { status: "REJECTED" }
+         });
+
+         if (updateResult.count === 0) {
+             throw new Error("Lệnh nạp này đã được xử lý hoặc không thể hủy.");
          }
 
          if (!isTargetAdminSpAdmin) {
@@ -44,10 +51,7 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
              });
          }
          
-         return await tx.bankDeposit.update({
-             where: { id: deposit.id },
-             data: { status: "REJECTED" }
-         });
+         return { status: "REJECTED" };
     });
 
     return NextResponse.json({ success: true, status: updated.status });

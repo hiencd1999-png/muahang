@@ -34,10 +34,14 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === "REJECT") {
-    await prisma.order.update({
-      where: { id: orderId },
+    const updateResult = await prisma.order.updateMany({
+      where: { id: orderId, complaintStatus: "PENDING" },
       data: { complaintStatus: "REJECTED" },
     });
+
+    if (updateResult.count === 0) {
+      return NextResponse.json({ error: "Khiếu nại này đã được xử lý bởi người khác." }, { status: 409 });
+    }
 
     if (order.approvedByAdminId) {
       await createNotification(
@@ -65,15 +69,14 @@ export async function POST(request: NextRequest) {
 
   try {
     await prisma.$transaction(async (tx) => {
-      const currentOrder = await tx.order.findUnique({ where: { id: orderId } });
-      if (!currentOrder || currentOrder.complaintStatus !== "PENDING") {
-        throw new Error("ALREADY_PROCESSED");
-      }
-
-      await tx.order.update({
-        where: { id: orderId },
+      const updateResult = await tx.order.updateMany({
+        where: { id: orderId, complaintStatus: "PENDING" },
         data: { complaintStatus: "APPROVED" },
       });
+
+      if (updateResult.count === 0) {
+        throw new Error("ALREADY_PROCESSED");
+      }
       
       // Trừ 50% tiền User
       await tx.user.update({
