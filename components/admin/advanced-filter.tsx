@@ -8,6 +8,7 @@ export interface AdvancedFilters {
   dateTo?: string;
   status?: string;
   userId?: string;
+  voucherCode?: string;
 }
 
 export function AdvancedFilterPanel({
@@ -25,6 +26,7 @@ export function AdvancedFilterPanel({
   const dateTo = searchParams.get("dateTo") || "";
   const status = searchParams.get("status") || "";
   const userId = searchParams.get("userId") || "";
+  const voucherCode = searchParams.get("voucherCode") || "";
 
   const handleApplyFilters = () => {
     const params = new URLSearchParams(searchParams);
@@ -41,9 +43,12 @@ export function AdvancedFilterPanel({
     if (userId) params.set("userId", userId);
     else params.delete("userId");
 
+    if (voucherCode) params.set("voucherCode", voucherCode);
+    else params.delete("voucherCode");
+
     params.set("page", "1");
 
-    onFilterChange?.({ dateFrom, dateTo, status, userId });
+    onFilterChange?.({ dateFrom, dateTo, status, userId, voucherCode });
     router.push(`?${params.toString()}`);
     setIsOpen(false);
   };
@@ -54,6 +59,7 @@ export function AdvancedFilterPanel({
     params.delete("dateTo");
     params.delete("status");
     params.delete("userId");
+    params.delete("voucherCode");
     params.set("page", "1");
     router.push(`?${params.toString()}`);
     setIsOpen(false);
@@ -107,32 +113,53 @@ export function AdvancedFilterPanel({
             </label>
           </div>
 
-          {/* Status filter for orders */}
+          {/* Status and Voucher filters for orders */}
           {filterType === "orders" && (
-            <label className="block text-sm font-medium text-slate-700">
-              Trạng thái
-              <select
-                value={status}
-                onChange={(e) => {
-                  const newParams = new URLSearchParams(searchParams);
-                  if (e.target.value) {
-                    newParams.set("status", e.target.value);
-                  } else {
-                    newParams.delete("status");
-                  }
-                  router.push(`?${newParams.toString()}`);
-                }}
-                className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-amber-500"
-              >
-                <option value="">Tất cả trạng thái</option>
-                <option value="PENDING">Chờ xử lý</option>
-                <option value="PROCESSING">Đang xử lý</option>
-                <option value="DELIVERED">Đã giao hàng</option>
-                <option value="TRACKING_GENERATED">Đã lên mã VĐ</option>
-                <option value="ORDER_PLACED">Đã đặt đơn</option>
-                <option value="CANCELED">Đã hủy</option>
-              </select>
-            </label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Trạng thái
+                <select
+                  value={status}
+                  onChange={(e) => {
+                    const newParams = new URLSearchParams(searchParams);
+                    if (e.target.value) {
+                      newParams.set("status", e.target.value);
+                    } else {
+                      newParams.delete("status");
+                    }
+                    router.push(`?${newParams.toString()}`);
+                  }}
+                  className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-amber-500"
+                >
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="PENDING">Chờ xử lý</option>
+                  <option value="PROCESSING">Đang xử lý</option>
+                  <option value="DELIVERED">Đã giao hàng</option>
+                  <option value="TRACKING_GENERATED">Đã lên mã VĐ</option>
+                  <option value="ORDER_PLACED">Đã đặt đơn</option>
+                  <option value="CANCELED">Đã hủy</option>
+                </select>
+              </label>
+
+              <label className="block text-sm font-medium text-slate-700">
+                Mã Voucher
+                <input
+                  type="text"
+                  value={voucherCode}
+                  onChange={(e) => {
+                    const newParams = new URLSearchParams(searchParams);
+                    if (e.target.value) {
+                      newParams.set("voucherCode", e.target.value);
+                    } else {
+                      newParams.delete("voucherCode");
+                    }
+                    router.push(`?${newParams.toString()}`);
+                  }}
+                  placeholder="Nhập mã voucher..."
+                  className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-amber-500"
+                />
+              </label>
+            </div>
           )}
 
           {/* User filter for transactions */}

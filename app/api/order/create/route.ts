@@ -267,7 +267,7 @@ export async function POST(request: Request) {
     const adminOrderLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://datdon.otistx.com"}/admin/orders?orderId=${newOrder.id}&action=view`;
 
     await broadcastToAdmins(
-        `📦 *Có đơn hàng mới!*\n- Mã đơn: #${newOrder.id}\n- Sản phẩm: ${mergedProductName}\n- Khách hàng: ${result.user.username}\n- Địa chỉ: ${parsed.address}\n- Link Mua Nháp: ${primaryItem.canonicalProductLink}\n- Mã voucher: ${selectedVoucher.label}\n- *🔗 Mở chi tiết:* [Click để xem và Nhận đơn](${adminOrderLink})`, 
+        `📦 *Có đơn hàng mới!*\n- Mã đơn: #${newOrder.id}\n- Sản phẩm: ${mergedProductName}\n- Link Mua Nháp: ${primaryItem.canonicalProductLink}\n- Mã voucher: ${selectedVoucher.label}\n- *🔗 Mở chi tiết:* [Click để xem và Nhận đơn](${adminOrderLink})`, 
         "ADMIN_ORDER"
     );
 

@@ -13,7 +13,7 @@ const ITEMS_PER_PAGE = 20;
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; page?: string; voucherCode?: string; dateFrom?: string; dateTo?: string }>;
 }) {
   const currentAdmin = await requireUser("ADMIN");
   const canManageAllOrders = isSpAdminRole(currentAdmin.role);
@@ -24,6 +24,9 @@ export default async function AdminOrdersPage({
   const query = params.q || "";
   const statusFilter = params.status || "";
   const page = Math.max(1, parseInt(params.page || "1"));
+  const voucherCodeFilter = params.voucherCode || "";
+  const dateFrom = params.dateFrom || "";
+  const dateTo = params.dateTo || "";
 
   const visibilityWhere = canManageAllOrders
     ? {}
@@ -49,6 +52,13 @@ export default async function AdminOrdersPage({
       where: {
         AND: [visibilityWhere, ...(queryWhere ? [queryWhere] : [])],
         ...(statusFilter && { status: statusFilter as any }),
+        ...(voucherCodeFilter && { voucherCode: { contains: voucherCodeFilter, mode: "insensitive" as const } }),
+        ...((dateFrom || dateTo) && {
+          createdAt: {
+            ...(dateFrom && { gte: new Date(dateFrom) }),
+            ...(dateTo && { lte: new Date(new Date(dateTo).setHours(23, 59, 59, 999)) }),
+          }
+        })
       },
       include: { user: true },
       orderBy: { createdAt: "desc" },
@@ -59,6 +69,13 @@ export default async function AdminOrdersPage({
       where: {
         AND: [visibilityWhere, ...(queryWhere ? [queryWhere] : [])],
         ...(statusFilter && { status: statusFilter as any }),
+        ...(voucherCodeFilter && { voucherCode: { contains: voucherCodeFilter, mode: "insensitive" as const } }),
+        ...((dateFrom || dateTo) && {
+          createdAt: {
+            ...(dateFrom && { gte: new Date(dateFrom) }),
+            ...(dateTo && { lte: new Date(new Date(dateTo).setHours(23, 59, 59, 999)) }),
+          }
+        })
       },
     }),
   ]);

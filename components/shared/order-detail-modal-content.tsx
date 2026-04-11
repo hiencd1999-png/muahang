@@ -200,6 +200,7 @@ export function OrderDetailModalContent({
     typeof currentAdminId === "number" &&
     responsibleAdmin.id !== currentAdminId;
   const responsibleAdminName = responsibleAdmin?.fullName || responsibleAdmin?.username;
+  const canViewSensitiveInfo = !isAdmin || canManageAllOrders || (isAdmin && typeof currentAdminId === "number" && responsibleAdmin?.id === currentAdminId);
 
   return (
     <div className="min-w-0 max-w-full space-y-6 overflow-x-hidden">
@@ -385,29 +386,35 @@ export function OrderDetailModalContent({
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             Thông tin giao hàng
           </h3>
-          <div className="min-w-0 space-y-5 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-700/80/80 dark:bg-slate-950/40 p-6 shadow-inner">
-            <div>
-              <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Số điện thoại</p>
-              <a href={`tel:${order.phone}`} className="mt-2 block font-black text-lg text-amber-700 hover:underline dark:text-amber-400 transition-colors">
-                {order.phone}
-              </a>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Địa chỉ chi tiết</p>
-              <p className="mt-2 font-bold text-slate-800 dark:text-slate-100 leading-relaxed max-w-lg">{order.address}</p>
-            </div>
-            {/* Ẩn ghi chú khỏi dashboard user, chỉ admin xem được */}
-            {order.status === "CANCELED" && cancelReason ? (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-900 dark:bg-rose-950/40">
-                <p className="font-medium text-rose-700 dark:text-rose-300">Lý do hủy đơn</p>
-                <p className="mt-1 break-words text-rose-900 dark:text-rose-200">{cancelReason}</p>
+          {canViewSensitiveInfo ? (
+            <div className="min-w-0 space-y-5 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-700/80/80 dark:bg-slate-950/40 p-6 shadow-inner">
+              <div>
+                <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Số điện thoại</p>
+                <a href={`tel:${order.phone}`} className="mt-2 block font-black text-lg text-amber-700 hover:underline dark:text-amber-400 transition-colors">
+                  {order.phone}
+                </a>
               </div>
-            ) : null}
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-              <Clock size={16} />
-              <span>Ngày tạo: {formattedDate}</span>
+              <div>
+                <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Địa chỉ chi tiết</p>
+                <p className="mt-2 font-bold text-slate-800 dark:text-slate-100 leading-relaxed max-w-lg">{order.address}</p>
+              </div>
+              {/* Ẩn ghi chú khỏi dashboard user, chỉ admin xem được */}
+              {order.status === "CANCELED" && cancelReason ? (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-900 dark:bg-rose-950/40">
+                  <p className="font-medium text-rose-700 dark:text-rose-300">Lý do hủy đơn</p>
+                  <p className="mt-1 break-words text-rose-900 dark:text-rose-200">{cancelReason}</p>
+                </div>
+              ) : null}
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <Clock size={16} />
+                <span>Ngày tạo: {formattedDate}</span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="min-w-0 rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-700/80 dark:bg-slate-950/40 text-slate-500 dark:text-slate-400 italic">
+              Thông tin bị ẩn. Bạn cần nhận Duyệt phụ trách đơn này để có thể xem thông tin giao hàng của khách.
+            </div>
+          )}
         </div>
       </div>
 
@@ -470,7 +477,7 @@ export function OrderDetailModalContent({
       )}
 
       {/* Customer Information */}
-      {user && (
+      {user && canViewSensitiveInfo && (
         <div className="min-w-0 max-w-full">
           <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">
             Thông tin khách hàng
