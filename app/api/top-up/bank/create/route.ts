@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 import { z } from "zod";
 import { getClientIp, verifyRateLimit, verifyIdempotency } from "@/lib/security";
+import { getLockedAdminCommission } from "@/lib/admin-balance";
 
 const createSchema = z.object({
     adminId: z.number(),
@@ -45,8 +46,11 @@ export async function POST(req: Request) {
         const deposit = await prisma.$transaction(async (tx) => {
              if (!isAdminSpAdmin) {
                   const currentAdmin = await tx.user.findUnique({ where: { id: config.adminId }});
-                  if (!currentAdmin || currentAdmin.balance < amount) {
-                       throw new Error("Thanh khoản của Admin này hiện đang tạm hết. Vui lòng giảm số VNĐ hoặc chọn Admin khác.");
+                  const lockedCommission = await getLockedAdminCommission(config.adminId, tx);
+                  const minRequired = amount + lockedCommission;
+                  
+                  if (!currentAdmin || currentAdmin.balance < minRequired) {
+                       throw new Error("Thanh khoản khả dụng của Admin này hiện đang tạm hết (do một phần quỹ đang tạm giữ). Vui lòng giảm số VNĐ hoặc chọn Admin khác.");
                   }
                   
                   // ESCROW LOCK: Deduct balance immediately

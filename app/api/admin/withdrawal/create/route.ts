@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { getLockedAdminCommission, getPendingWithdrawals } from "@/lib/admin-balance";
 import z from "zod";
 import { authenticator } from "otplib";
 
@@ -53,15 +54,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Lọc các request PENDING
-    const pendingWithdrawals = await prisma.withdrawal.aggregate({
-        where: { userId: user.id, status: "PENDING" },
-        _sum: { amount: true }
-    });
-    
-    const totalPending = pendingWithdrawals._sum.amount || 0;
+    const totalPending = await getPendingWithdrawals(user.id);
+    const lockedCommission = await getLockedAdminCommission(user.id);
+    const availableBalance = user.balance - lockedCommission - totalPending;
 
-    if (user.balance < totalPending + data.amount) {
-        return NextResponse.json({ error: `Tài khoản bạn chỉ dư ${user.balance} VNĐ, tổng lệnh chờ: ${totalPending} VNĐ. Rút vượt quá số khả dụng.` }, { status: 400 });
+    if (availableBalance < data.amount) {
+        return NextResponse.json({ 
+          error: `Số dư khả dụng không đủ. Số dư: ${user.balance.toLocaleString()}, Đang chờ rút: ${totalPending.toLocaleString()}, Hoa hồng tạm giữ (chờ hết hạn khiếu nại): ${lockedCommission.toLocaleString()}, Khả dụng: ${Math.max(0, availableBalance).toLocaleString()} VNĐ.` 
+        }, { status: 400 });
     }
 
     const successfulOrdersCount = await prisma.order.count({

@@ -21,12 +21,14 @@ export function WithdrawalsView({
   isSpAdmin,
   currentBalance,
   pendingAmount,
+  lockedCommission = 0,
   is2FAEnabled,
 }: {
   withdrawals: Withdrawal[];
   isSpAdmin: boolean;
   currentBalance: number;
   pendingAmount: number;
+  lockedCommission?: number;
   is2FAEnabled: boolean;
 }) {
   const router = useRouter();
@@ -56,8 +58,10 @@ export function WithdrawalsView({
       return;
     }
 
-    if (val + pendingAmount > currentBalance) {
-      alert(`Vượt quá khả dụng! Đang có: ${formatCurrency(currentBalance)}, Chờ duyệt: ${formatCurrency(pendingAmount)}`);
+    const availableBalance = currentBalance - lockedCommission - pendingAmount;
+
+    if (val > availableBalance) {
+      alert(`Vượt quá khả dụng!\nTổng Số Dư: ${formatCurrency(currentBalance)}\nHoa Hồng Tạm Giữ: ${formatCurrency(lockedCommission)}\nChờ Duyệt: ${formatCurrency(pendingAmount)}\nKhả Dụng Tối Đa: ${formatCurrency(availableBalance)}`);
       return;
     }
 
@@ -151,14 +155,24 @@ export function WithdrawalsView({
              </ul>
           </div>
           
-          <div className="mb-6 grid gap-4 grid-cols-1 md:grid-cols-2">
-             <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-4">
-                 <p className="text-sm font-semibold text-slate-500 dark:text-zinc-400">Số dư khả dụng</p>
-                 <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{formatCurrency(currentBalance)}</p>
+          <div className="mb-6 grid gap-4 grid-cols-1 md:grid-cols-4">
+             <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-4 shrink-0">
+                 <p className="text-sm font-semibold text-slate-500 dark:text-zinc-400">Tổng Số Dư Tồn</p>
+                 <p className="text-xl font-bold text-slate-700 dark:text-slate-300 mt-1">{formatCurrency(currentBalance)}</p>
              </div>
-             <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-4">
+             <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/10 p-4 shrink-0">
+                 <div className="flex items-center gap-1.5 group relative">
+                    <p className="text-sm font-semibold text-amber-600 dark:text-amber-500">Hoa hồng tạm giữ</p>
+                 </div>
+                 <p className="text-xl font-bold text-amber-700 dark:text-amber-400 mt-1">-{formatCurrency(lockedCommission)}</p>
+             </div>
+             <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/40 p-4 shrink-0">
                  <p className="text-sm font-semibold text-slate-500 dark:text-zinc-400">Tiền đang chờ duyệt</p>
-                 <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{formatCurrency(pendingAmount)}</p>
+                 <p className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1">-{formatCurrency(pendingAmount)}</p>
+             </div>
+             <div className="rounded-xl border-2 border-emerald-500/20 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-900/10 p-4 shrink-0">
+                 <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-500">Số dư RÚT KHẢ DỤNG</p>
+                 <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{formatCurrency(Math.max(0, currentBalance - lockedCommission - pendingAmount))}</p>
              </div>
           </div>
 

@@ -5,6 +5,7 @@ import { hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { USER_ROLES, isSpAdminRole, type UserRole } from "@/lib/roles";
 import { requireApiUser } from "@/lib/session";
+import { getLockedAdminCommission } from "@/lib/admin-balance";
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
@@ -133,8 +134,10 @@ export async function PATCH(
       return NextResponse.json({ error: "ADMIN chỉ có thể cộng thêm số dư, không được trừ." }, { status: 400 });
     }
 
-    if (amountChange > 0 && result.user.balance < amountChange) {
-      return NextResponse.json({ error: "Số dư Admin không đủ để cấp cho người dùng." }, { status: 400 });
+    // Quick non-transactional check
+    const lockedCommission = await getLockedAdminCommission(result.user.id);
+    if (amountChange > 0 && result.user.balance - lockedCommission < amountChange) {
+      return NextResponse.json({ error: `Số dư khả dụng Admin không đủ. Cần ${amountChange.toLocaleString()} nhưng bị tạm giữ một phần quỹ từ đơn hàng.` }, { status: 400 });
     }
   }
 
@@ -152,8 +155,11 @@ export async function PATCH(
       // 2. Only deduct from operator if they are NOT SPADMIN
       if (!isSpAdmin && amountChange > 0) {
         const currentAdmin = await tx.user.findUnique({ where: { id: result.user.id } });
-        if (!currentAdmin || currentAdmin.balance < amountChange) {
-            throw new Error(`Số dư Admin không đủ để cấp cho người dùng. Cần ${amountChange.toLocaleString()} VND.`);
+        const txLockedCommission = await getLockedAdminCommission(result.user.id, tx);
+        const minRequired = amountChange + txLockedCommission;
+
+        if (!currentAdmin || currentAdmin.balance < minRequired) {
+            throw new Error(`Số dư khả dụng của Admin không đủ để cấp cho người dùng do một phần bị tạm giữ.`);
         }
 
         await tx.user.update({

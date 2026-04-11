@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { getLockedAdminCommission } from "@/lib/admin-balance";
 import { WithdrawalsView } from "./withdrawals-view";
 
 export default async function WithdrawalsPage() {
@@ -18,12 +19,15 @@ export default async function WithdrawalsPage() {
     ? 0 
     : withdrawals.filter(w => w.status === "PENDING").reduce((a, b) => a + b.amount, 0);
 
+  const lockedCommission = isSpAdmin ? 0 : await getLockedAdminCommission(userObj.id);
+
   return (
     <WithdrawalsView 
       withdrawals={withdrawals} 
       isSpAdmin={isSpAdmin} 
       currentBalance={userObj.balance}
       pendingAmount={pendingAmount}
+      lockedCommission={lockedCommission}
       is2FAEnabled={userObj.twoFactorEnabled}
     />
   );

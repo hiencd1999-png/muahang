@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
+import { getLockedAdminCommission } from "@/lib/admin-balance";
 
 export async function POST(request: NextRequest) {
   const admin = await requireUser("ADMIN");
@@ -22,8 +23,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "ADMIN chỉ có thể chuyển cộng thêm số dư, không được trừ." }, { status: 400 });
     }
     const totalTransfer = amountChange * userIds.length;
-    if (admin.balance < totalTransfer) {
-      return NextResponse.json({ error: `Số dư Admin không đủ. Cần ${totalTransfer.toLocaleString()} VND but only have ${admin.balance.toLocaleString()} VND.` }, { status: 400 });
+    
+    // Quick non-transactional check
+    const lockedCommission = await getLockedAdminCommission(admin.id);
+    if (admin.balance - lockedCommission < totalTransfer) {
+      return NextResponse.json({ error: `Số dư khả dụng Admin không đủ (sau khi trừ tạm giữ). Cần ${totalTransfer.toLocaleString()} VND nhưng chỉ có khả dụng ${(admin.balance - lockedCommission).toLocaleString()} VND.` }, { status: 400 });
     }
   }
 
@@ -35,8 +39,10 @@ export async function POST(request: NextRequest) {
       // 1. Deduct from Admin ONLY if not SPADMIN
       if (!isSpAdmin && amountChange > 0) {
         const currentAdmin = await tx.user.findUnique({ where: { id: admin.id } });
-        if (!currentAdmin || currentAdmin.balance < totalTransfer) {
-            throw new Error(`Số dư Admin không đủ. Cần ${totalTransfer.toLocaleString()} VND nhưng chỉ có ${currentAdmin?.balance.toLocaleString()} VND.`);
+        const txLockedCommission = await getLockedAdminCommission(admin.id, tx);
+        const minRequired = totalTransfer + txLockedCommission;
+        if (!currentAdmin || currentAdmin.balance < minRequired) {
+            throw new Error(`Số dư khả dụng Admin không đủ. Cần ${totalTransfer.toLocaleString()} VND nhưng một phần đang bị tạm giữ khiếu nại.`);
         }
 
         await tx.user.update({

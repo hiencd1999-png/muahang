@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
+import { getLockedAdminCommission } from "@/lib/admin-balance";
 
 const schema = z.object({
   userId: z.number().int().positive(),
@@ -39,8 +40,11 @@ export async function PUT(request: Request) {
     if (parsed.data.mode !== "add") {
       return NextResponse.json({ error: "ADMIN chỉ có thể chuyển cộng thêm tiền, không được trừ." }, { status: 400 });
     }
-    if (result.user.balance < amountChange) {
-      return NextResponse.json({ error: "Số dư Admin không đủ để chuyển cho người dùng." }, { status: 400 });
+    
+    // Quick preliminary check (non-transactional just to fail early)
+    const lockedCommission = await getLockedAdminCommission(result.user.id);
+    if (result.user.balance - lockedCommission < amountChange) {
+      return NextResponse.json({ error: "Số dư khả dụng của Admin (sau khi trừ khoản tạm giữ khiếu nại) không đủ để chuyển cho người dùng." }, { status: 400 });
     }
   }
 
@@ -50,8 +54,10 @@ export async function PUT(request: Request) {
     // 1. Deduct from Admin ONLY if not SPADMIN
     if (!isSpAdmin && amountChange > 0) {
       const currentAdmin = await tx.user.findUnique({ where: { id: result.user.id } });
-      if (!currentAdmin || currentAdmin.balance < amountChange) {
-          throw new Error(`Số dư Admin không đủ để chuyển cho người dùng. Cần ${amountChange.toLocaleString()} VND.`);
+      const txLockedCommission = await getLockedAdminCommission(result.user.id, tx);
+      const minRequired = amountChange + txLockedCommission;
+      if (!currentAdmin || currentAdmin.balance < minRequired) {
+          throw new Error(`Số dư khả dụng không đủ để chuyển. Cần ${amountChange.toLocaleString()} VND nhưng một phần số dư đang được tạm giữ chờ hết hạn khiếu nại.`);
       }
 
       await tx.user.update({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { getLockedAdminCommission } from "@/lib/admin-balance";
 import z from "zod";
 
 const schema = z.object({
@@ -33,8 +34,12 @@ export async function POST(req: NextRequest) {
 
             // Đọc lại balance MỚI NHẤT của Admin bên trong chuỗi giao dịch kín
             const admin = await tx.user.findUnique({ where: { id: currentWithdrawal.userId } });
-            if (!admin || admin.balance < currentWithdrawal.amount) {
-                 throw new Error("Tài khoản admin không đủ số dư để duyệt lệnh rút này lúc này! Giao dịch thất bại.");
+            
+            const lockedCommission = await getLockedAdminCommission(currentWithdrawal.userId, tx);
+            const minimumRequiredBalance = currentWithdrawal.amount + lockedCommission;
+
+            if (!admin || admin.balance < minimumRequiredBalance) {
+                 throw new Error(`Tài khoản admin không đủ số dư khả dụng (do đang bị tạm giữ hoa hồng giải quyết khiếu nại). Giao dịch thất bại.`);
             }
 
             // 1. Cập nhật status lệnh rút
