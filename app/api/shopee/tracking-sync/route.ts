@@ -123,6 +123,28 @@ export async function GET(request: NextRequest) {
     // Cưỡng chế đẩy mốc updatedAt để chốt mốc thời gian cho vòng Smart Polling kế tiếp
     updates.updatedAt = new Date();
 
+    const anyDeliveringSoon = results.some((r: any) => 
+      (r.description || "").includes("Đơn hàng sẽ sớm được giao, vui lòng chú ý điện thoại")
+    );
+    let oldDeliveringSoon = false;
+    try {
+      if (order.shopeeTrackingData) {
+        const oldResults = JSON.parse(order.shopeeTrackingData);
+        oldDeliveringSoon = oldResults.some((r: any) => 
+          (r.description || "").includes("Đơn hàng sẽ sớm được giao, vui lòng chú ý điện thoại")
+        );
+      }
+    } catch {}
+
+    if (anyDeliveringSoon && !oldDeliveringSoon) {
+       const { sendTelegramNotification } = await import("@/lib/telegram");
+       await sendTelegramNotification(
+          order.userId,
+          `🚚 *Đơn Hàng Tới Nơi*\nĐơn hàng #${order.id} sẽ sớm được giao. Vui lòng chú ý điện thoại và chuẩn bị quay video khi nhận hàng bạn nhé!`,
+          "USER_ORDER"
+       ).catch(() => {});
+    }
+
     if (Object.keys(updates).length > 0) {
       if (updates.status === "DELIVERED" && order.approvedByAdminId) {
         const commission = Math.floor(order.total * 0.95);
