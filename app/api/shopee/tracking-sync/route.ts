@@ -145,14 +145,38 @@ export async function GET(request: NextRequest) {
        ).catch(() => {});
     }
 
-    if (order.productName === "Sản phẩm Shopee" && order.productLink && order.spcCookie) {
-      try {
-        const { fetchShopeeProductDetails } = await import("@/lib/shopee");
-        const details = await fetchShopeeProductDetails(order.productLink, order.spcCookie);
-        if (details.productName && details.productName !== "Sản phẩm Shopee") {
-           updates.productName = details.productName;
-        }
-      } catch (e) {}
+    if (order.productName === "Sản phẩm Shopee") {
+      let foundName = "";
+      if (results && results.length > 0) {
+         let matchedNames: string[] = [];
+         const trackingsToMatch = (newTrackingNo || order.trackingNo || "").split("\n").map(t => t.trim()).filter(Boolean);
+         
+         if (trackingsToMatch.length > 0) {
+             for (const t of trackingsToMatch) {
+                 const matching = results.find((r: any) => r.tracking_number && r.tracking_number === t && r.name && r.name.trim().length > 3);
+                 if (matching && !matchedNames.includes(matching.name.trim())) {
+                     matchedNames.push(matching.name.trim());
+                 }
+             }
+         }
+
+         if (matchedNames.length === 0) {
+             const fallbackMatch = results.find((r: any) => r.name && r.name.trim().length > 3);
+             if (fallbackMatch) matchedNames.push(fallbackMatch.name.trim());
+         }
+         foundName = matchedNames.join(" / ");
+      }
+      if (foundName) {
+         updates.productName = foundName;
+      } else if (order.productLink && order.spcCookie) {
+        try {
+          const { fetchShopeeProductDetails } = await import("@/lib/shopee");
+          const details = await fetchShopeeProductDetails(order.productLink, order.spcCookie);
+          if (details.productName && details.productName !== "Sản phẩm Shopee") {
+             updates.productName = details.productName;
+          }
+        } catch (e) {}
+      }
     }
 
     if (Object.keys(updates).length > 0) {
