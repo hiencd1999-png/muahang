@@ -169,9 +169,9 @@ async function fetchProductData(shopId: string, itemId: string, cookie: string) 
   }
 }
 
-export async function fetchShopeeProductDetails(productLink: string): Promise<ShopeeProductDetails> {
+export async function fetchShopeeProductDetails(productLink: string, overrideCookie?: string): Promise<ShopeeProductDetails> {
   const sysConfig = await prisma.systemConfig.findUnique({ where: { key: "SHOPEE_SPC_ST" } });
-  const cookie = (sysConfig?.value || process.env.COOKIE || "").trim();
+  const cookie = overrideCookie || (sysConfig?.value || process.env.COOKIE || "").trim();
   const { shopId, itemId, resolvedLink } = await resolveShopAndItemIds(productLink, cookie);
 
   if (!shopId || !itemId) {
@@ -182,17 +182,29 @@ export async function fetchShopeeProductDetails(productLink: string): Promise<Sh
   let productName = prodData?.productName || "Sản phẩm Shopee";
 
   if (!prodData || productName === "Sản phẩm Shopee") {
-    try {
-      const url = new URL(resolvedLink);
-      const pathSegments = url.pathname.split("/").filter(Boolean);
-      if (pathSegments.length >= 2) {
-        const candidate = decodeURIComponent(pathSegments[0].replace(/-/g, " "));
-        if (candidate && !candidate.toLowerCase().includes("product") && !candidate.toLowerCase().includes("i.")) {
-          productName = candidate;
+    // Try to parse from BOTH original link and resolved link
+    const fixedProductLink = productLink.trim().startsWith("http") ? productLink.trim() : `https://${productLink.trim()}`;
+    const urlsToTry = [fixedProductLink, resolvedLink];
+    for (const link of urlsToTry) {
+      try {
+        const urlObj = new URL(link);
+        const pathSegments = urlObj.pathname.split("/").filter(Boolean);
+        if (pathSegments.length >= 1) {
+          let candidate = decodeURIComponent(pathSegments[0]);
+          if (candidate.toLowerCase() !== "product") {
+            if (candidate.includes("-i.")) {
+               candidate = candidate.split("-i.")[0];
+            }
+            candidate = candidate.replace(/-/g, " ").trim();
+            if (candidate && candidate.length > 5) {
+               productName = candidate;
+               break; // found name, exit loop
+            }
+          }
         }
+      } catch {
+        // ignore invalid URL parsing for this specific link
       }
-    } catch {
-      // ignore invalid URL parsing
     }
   }
 

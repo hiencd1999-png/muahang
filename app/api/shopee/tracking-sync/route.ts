@@ -145,6 +145,16 @@ export async function GET(request: NextRequest) {
        ).catch(() => {});
     }
 
+    if (order.productName === "Sản phẩm Shopee" && order.productLink && order.spcCookie) {
+      try {
+        const { fetchShopeeProductDetails } = await import("@/lib/shopee");
+        const details = await fetchShopeeProductDetails(order.productLink, order.spcCookie);
+        if (details.productName && details.productName !== "Sản phẩm Shopee") {
+           updates.productName = details.productName;
+        }
+      } catch (e) {}
+    }
+
     if (Object.keys(updates).length > 0) {
       if (updates.status === "DELIVERED" && order.approvedByAdminId) {
         const commission = Math.floor(order.total * 0.95);
