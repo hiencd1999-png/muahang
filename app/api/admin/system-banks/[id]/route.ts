@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 import { isSpAdminRole } from "@/lib/roles";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
     const result = await requireApiUser();
     if ("error" in result) return NextResponse.json({ error: result.error }, { status: result.status });
 
@@ -11,6 +11,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const params = await props.params;
     const { isActive } = await req.json();
 
     await prisma.adminBankConfig.update({

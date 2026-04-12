@@ -42,6 +42,10 @@ graph TD
   - Bách phân vị 95 (p95) < 500ms cho các Giao dịch Ghi khép kín (Write / Txn).
 * **Tính Bền Vững Của Dữ Liệu:** Đảm bảo chuẩn ACID 100% cho Sổ Cái Kế Toán (Ledger). "Zero Tolerance" (Tuyệt đối không nhân nhượng) đối với các lỗi Chi tiêu kép (Double-spend) hoặc thất thoát dữ liệu.
 
+### Chức năng vượt trội chuyên sâu
+* **Tự Động Xuất Mã VietQR:** Khách hàng nạp tiền không cần gõ biên lai dài dòng, API tự động tạo hình tĩnh VietQR theo chuẩn Napas247, ghim sẵn mã nội dung chuẩn, quét 1 giây để chuyển khoản.
+* **Super Admin Tối Thượng (SPADMIN):** Trang bị bảng mạch tổng kiểm soát trạng thái Cổng Nạp (System Banks). Một cú nháy chuột (click) là có thể cúp cầu dao Cổng thanh toán của mọi Admin cấp dưới đang hoạt động trên Server.
+
 ## 3. Lõi Tài Chính & Kiểm Soát Concurrency
 
 DatDon áp dụng quy chuẩn Sổ Nhập Kép (Double-Entry Ledger) để quản trị dòng tiền, được chống lưng bởi hệ thống kiểm soát đồng thời (Concurrency Control) cấp độ Database.
