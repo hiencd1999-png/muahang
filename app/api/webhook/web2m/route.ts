@@ -123,8 +123,9 @@ export async function POST(req: NextRequest) {
                                 break;
                             }
                         }
+                    }
+                }
             }
-        }
 
         // Webhook của hãng yêu cầu trả lời "OK" kèm status = true
         return NextResponse.json({ status: true, msg: "Ok" }, { status: 200 });
