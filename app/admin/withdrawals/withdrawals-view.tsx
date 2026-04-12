@@ -23,6 +23,7 @@ export function WithdrawalsView({
   pendingAmount,
   lockedCommission = 0,
   is2FAEnabled,
+  usdtRate
 }: {
   withdrawals: Withdrawal[];
   isSpAdmin: boolean;
@@ -30,6 +31,7 @@ export function WithdrawalsView({
   pendingAmount: number;
   lockedCommission?: number;
   is2FAEnabled: boolean;
+  usdtRate: number;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -52,7 +54,7 @@ export function WithdrawalsView({
     e.preventDefault();
     if (loading) return;
 
-    const val = parseInt(amountInput.replace(/\D/g, ""), 10);
+    const val = parseInt(amountInput, 10);
     if (!val || val < 10000) {
       alert("Số tiền tối thiểu là 10.000 VNĐ.");
       return;
@@ -178,16 +180,22 @@ export function WithdrawalsView({
 
           <form onSubmit={handleRequestWithdrawal} className="space-y-4 max-w-xl">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-2">Số tiền muốn rút (VNĐ)</label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-2">
+                 Số tiền muốn rút (VNĐ)
+                 {amountInput && !isNaN(parseInt(amountInput, 10)) && (
+                    <span className="ml-2 text-emerald-600 dark:text-emerald-400 font-bold">
+                       (~{(parseInt(amountInput, 10) / usdtRate).toFixed(2)} USDT)
+                    </span>
+                 )}
+              </label>
               <input
-                type="text"
+                type="number"
                 required
+                min="10000"
+                step="1000"
                 value={amountInput}
-                onChange={(e) => {
-                  const num = parseInt(e.target.value.replace(/\D/g, ""), 10);
-                  setAmountInput(isNaN(num) ? "" : formatCurrency(num));
-                }}
-                placeholder="VD: 500.000 đ"
+                onChange={(e) => setAmountInput(e.target.value)}
+                placeholder={`Tối thiểu 10.000 đ (Tỷ giá: 1 USDT = ${new Intl.NumberFormat('vi-VN').format(usdtRate)} VNĐ)`}
                 className="w-full rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-3 outline-none focus:border-amber-500 font-bold dark:text-white"
               />
             </div>
@@ -256,7 +264,10 @@ export function WithdrawalsView({
                       <p className="font-semibold text-slate-900 dark:text-white whitespace-nowrap">{item.user.fullName || item.user.username}</p>
                       <p className="text-xs text-slate-400 whitespace-nowrap">@{item.user.username}</p>
                     </td>
-                    <td className="px-4 py-4 font-bold text-slate-900 dark:text-white">{formatCurrency(item.amount)}</td>
+                    <td className="px-4 py-4">
+                       <p className="font-bold text-slate-900 dark:text-white">{formatCurrency(item.amount)}</p>
+                       {item.status === 'PENDING' && <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1">~{(item.amount / usdtRate).toFixed(2)} USDT</p>}
+                    </td>
                     <td className="px-4 py-4">
                       <div className="space-y-1">
                         <div 

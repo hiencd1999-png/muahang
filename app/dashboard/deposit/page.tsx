@@ -12,9 +12,12 @@ export default async function DepositPage() {
     take: 10,
   });
 
+  const rateConfig = await prisma.systemConfig.findUnique({ where: { key: "USDT_RATE" } });
+  const usdtRate = rateConfig?.value ? parseInt(rateConfig.value.replace(/[^0-9]/g, ''), 10) || 25500 : 25500;
+
   return (
     <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-      <DepositForm />
+      <DepositForm usdtRate={usdtRate} />
       <section className="panel rounded-[1.75rem] p-6">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Lịch sử nạp tiền</p>

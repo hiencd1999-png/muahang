@@ -45,7 +45,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
 
         // Lấy USDT RATE
         const rateConfig = await prisma.systemConfig.findUnique({ where: { key: "USDT_RATE" } });
-        const USDT_RATE = rateConfig?.value ? parseInt(rateConfig.value, 10) : 25500;
+        const USDT_RATE = rateConfig?.value ? parseInt(rateConfig.value.replace(/[^0-9]/g, ''), 10) || 25500 : 25500;
 
         // APPROVE: Cộng tiền VND cho User
         const convertedVND = deposit.amount * USDT_RATE;
@@ -73,7 +73,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
                      userId: deposit.userId,
                      amount: convertedVND,
                      type: "DEPOSIT",
-                     note: `Nạp ${deposit.amount} USDT thành công (Quy đổi: ${USDT_RATE}đ/USDT). Duyệt bởi SPAdmin ${result.user.username}`
+                     note: `Nạp ${deposit.amount} USDT thành công (Quy đổi: ${new Intl.NumberFormat('vi-VN').format(USDT_RATE)}đ/USDT). Duyệt bởi SPAdmin ${result.user.username}`
                  }
              });
         });

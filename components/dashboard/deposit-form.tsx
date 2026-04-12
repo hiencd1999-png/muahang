@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/shared/toast";
 import { Copy, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 
-export function DepositForm() {
+export function DepositForm({ usdtRate = 25500 }: { usdtRate?: number }) {
   const router = useRouter();
   const { addToast } = useToast();
   
@@ -18,6 +18,7 @@ export function DepositForm() {
   const [usdtNetwork, setUsdtNetwork] = useState<"BSC" | "TRX">("BSC");
   const usdtInputRef = useRef<HTMLInputElement>(null);
   const [usdtOrder, setUsdtOrder] = useState<any>(null);
+  const [usdtAmount, setUsdtAmount] = useState<number | "">("");
 
   const presetsVnd = [
     { label: "100k", value: 100000 },
@@ -41,6 +42,7 @@ export function DepositForm() {
   };
 
   const handlePresetUsdt = (amount: number) => {
+    setUsdtAmount(amount);
     if (usdtInputRef.current) {
       usdtInputRef.current.value = amount.toString();
       usdtInputRef.current.focus();
@@ -585,8 +587,21 @@ export function DepositForm() {
 
            <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-300">
              <span>Số lượng USDT</span>
-             <input ref={usdtInputRef} name="amount" type="number" min={5} step={1} required placeholder="Ví dụ: 50" className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"/>
+             <input value={usdtAmount} onChange={(e) => setUsdtAmount(e.target.value === "" ? "" : Number(e.target.value))} ref={usdtInputRef} name="amount" type="number" min={5} step={1} required placeholder="Ví dụ: 50" className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"/>
            </label>
+
+           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/80 dark:bg-amber-900/20">
+             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+               <p className="text-sm font-medium text-amber-800 dark:text-amber-400">
+                 Tỷ giá: <span className="font-bold">1 USDT = {new Intl.NumberFormat('vi-VN').format(usdtRate)} VNĐ</span>
+               </p>
+               {usdtAmount && Number(usdtAmount) >= 5 ? (
+                 <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                   Thực nhận: <span className="font-bold text-emerald-600 dark:text-emerald-400">~{new Intl.NumberFormat('vi-VN').format(Number(usdtAmount) * usdtRate)} VNĐ</span>
+                 </p>
+               ) : null}
+             </div>
+           </div>
 
            <button type="submit" disabled={loadingUsdt} className="w-full sm:w-auto rounded-2xl bg-amber-500 px-8 py-4 text-sm font-bold text-white transition hover:bg-amber-600 active:scale-[0.98] disabled:opacity-60 shadow-lg shadow-amber-200 dark:shadow-none">
              {loadingUsdt ? "Đang tạo lệnh..." : "Xác nhận & Lấy thông tin thanh toán"}
@@ -636,9 +651,16 @@ export function DepositForm() {
 
                <div className="rounded-xl bg-amber-100/80 border border-amber-300 p-5 shadow-sm dark:bg-amber-900/40 dark:border-amber-800/50 relative overflow-hidden">
                   <div className="absolute right-0 top-0 w-32 h-32 bg-amber-400/20 dark:bg-amber-400/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5 opacity-90">
-                     <AlertCircle size={16}/> LƯỢNG USDT PHẢI CHUYỂN
-                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 justify-between items-start sm:items-center">
+                      <p className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5 opacity-90">
+                         <AlertCircle size={16}/> LƯỢNG USDT PHẢI CHUYỂN
+                      </p>
+                      {usdtOrder.amount ? (
+                        <p className="text-xs font-semibold px-2 py-1 rounded bg-amber-200/50 dark:bg-amber-800/50 text-amber-800 dark:text-amber-300 border border-amber-300/50 dark:border-amber-700/50">
+                            Thực nhận: ~{new Intl.NumberFormat('vi-VN').format(usdtOrder.amount * usdtRate)} VNĐ
+                        </p>
+                      ) : null}
+                  </div>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-3">
                     <p className="font-mono text-4xl font-black text-amber-600 dark:text-amber-400 tracking-tight">{usdtOrder.expectedAmount}</p>
                     <button onClick={() => copyToClipboard(usdtOrder.expectedAmount.toString(), "Đã copy số tiền")} className="p-3 shrink-0 rounded-xl bg-amber-500 hover:bg-amber-600 text-white active:scale-95 transition shadow-md shadow-amber-500/30 flex justify-center items-center gap-2 font-medium text-sm">

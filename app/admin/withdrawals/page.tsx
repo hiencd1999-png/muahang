@@ -21,6 +21,9 @@ export default async function WithdrawalsPage() {
 
   const lockedCommission = isSpAdmin ? 0 : await getLockedAdminCommission(userObj.id);
 
+  const rateConfig = await prisma.systemConfig.findUnique({ where: { key: "USDT_RATE" } });
+  const usdtRate = rateConfig?.value ? parseInt(rateConfig.value.replace(/[^0-9]/g, ''), 10) || 25500 : 25500;
+
   return (
     <WithdrawalsView 
       withdrawals={withdrawals} 
@@ -29,6 +32,7 @@ export default async function WithdrawalsPage() {
       pendingAmount={pendingAmount}
       lockedCommission={lockedCommission}
       is2FAEnabled={userObj.twoFactorEnabled}
+      usdtRate={usdtRate}
     />
   );
 }

@@ -99,8 +99,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const rateConfig = await prisma.systemConfig.findUnique({ where: { key: "USDT_RATE" } });
+    const USDT_RATE = rateConfig?.value ? parseInt(rateConfig.value.replace(/[^0-9]/g, ''), 10) || 25500 : 25500;
+    const usdtReceived = (data.amount / USDT_RATE).toFixed(2);
+
     const { broadcastToAdmins } = await import("@/lib/telegram");
-    await broadcastToAdmins(`💸 *Yêu Cầu Rút USDT Mới*\nAdmin: ${user.username}\nSố tiền: ${data.amount.toLocaleString()} VND\nMạng: ${data.network}`, "ADMIN_WITHDRAWAL");
+    await broadcastToAdmins(`💸 *Yêu Cầu Rút USDT Mới*\nAdmin: ${user.username}\nSố tiền: ${data.amount.toLocaleString()} VNĐ (~${usdtReceived} USDT)\nMạng: ${data.network}`, "ADMIN_WITHDRAWAL");
 
     return NextResponse.json(withdrawal);
   } catch (error: any) {

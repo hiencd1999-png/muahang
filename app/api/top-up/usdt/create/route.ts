@@ -62,14 +62,19 @@ export async function POST(req: Request) {
             }
         });
 
+        const rateConfig = await prisma.systemConfig.findUnique({ where: { key: "USDT_RATE" } });
+        const USDT_RATE = rateConfig?.value ? parseInt(rateConfig.value.replace(/[^0-9]/g, ''), 10) || 25500 : 25500;
+        const convertedVND = new Intl.NumberFormat('vi-VN').format(expectedAmount * USDT_RATE);
+
         const { broadcastToAdmins } = await import("@/lib/telegram");
-        await broadcastToAdmins(`🔔 *Yêu Cầu Nạp Crypto Mới*\nKhách hàng: ${result.user.username}\nSố tiền: ${expectedAmount} USDT\nMạng: ${network}`, "ADMIN_DEPOSIT");
+        await broadcastToAdmins(`🔔 *Yêu Cầu Nạp Crypto Mới*\nKhách hàng: ${result.user.username}\nSố tiền: ${expectedAmount} USDT (~${convertedVND} VNĐ)\nMạng: ${network}`, "ADMIN_DEPOSIT");
 
 
         return NextResponse.json({
             orderId: deposit.id,
             network: deposit.network,
             address: deposit.address,
+            amount: deposit.amount,
             expectedAmount: deposit.expectedAmount,
             expiresAt: deposit.expiresAt,
             status: deposit.status

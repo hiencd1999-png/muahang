@@ -115,7 +115,7 @@ export async function runBinanceUSDTTracker() {
         let dbBinanceProxy = "";
         
         for (const c of sysConfigs) {
-            if (c.key === "USDT_RATE") USDT_RATE = parseInt(c.value, 10) || 25500;
+            if (c.key === "USDT_RATE") USDT_RATE = parseInt(c.value.replace(/[^0-9]/g, ''), 10) || 25500;
             if (c.key === "BINANCE_PROXY") dbBinanceProxy = c.value;
         }
 
@@ -207,7 +207,7 @@ export async function runBinanceUSDTTracker() {
                                     userId: deposit.userId,
                                     amount: vndAmount,
                                     type: "DEPOSIT",
-                                    note: `Nạp ${deposit.expectedAmount} USDT mạng ${deposit.network} (Tx: ${txId})`
+                                    note: `Nạp ${deposit.expectedAmount} USDT mạng ${deposit.network} (Tỷ giá: ${new Intl.NumberFormat('vi-VN').format(USDT_RATE)}đ/USDT, Tx: ${txId})`
                                 }
                             });
 
@@ -217,7 +217,7 @@ export async function runBinanceUSDTTracker() {
                                     type: "DEPOSIT_SUCCESS",
                                     title: "Nạp USDT thành công",
                                     message: `Bạn đã nạp thành công ${deposit.expectedAmount} USDT. +${vndAmount.toLocaleString("vi-VN")} đ.`,
-                                    link: "/dashboard/deposit/history"
+                                    link: "/dashboard/deposit"
                                 }
                             });
                         });

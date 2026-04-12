@@ -21,7 +21,11 @@ export async function POST(req: NextRequest) {
     const spadminId = result.user.id;
 
     if (data.action === "APPROVE") {
-        // Sử dụng Interactive Transaction để chống Race Condition (Tránh Admin tạo nhiều lệnh cùng lúc rút lố tiền)
+        // Fix: get rate config before to ensure correct log
+        const rateConfig = await prisma.systemConfig.findUnique({ where: { key: "USDT_RATE" } });
+        const USDT_RATE = rateConfig?.value ? parseInt(rateConfig.value.replace(/[^0-9]/g, ''), 10) || 25500 : 25500;
+
+        // Sử dụng Interactive Transaction để chống Race Condition
         await prisma.$transaction(async (tx) => {
             const currentWithdrawal = await tx.withdrawal.findUnique({ where: { id: data.id }, include: { user: true } });
             
@@ -35,7 +39,7 @@ export async function POST(req: NextRequest) {
             const lockedCommission = await getLockedAdminCommission(currentWithdrawal.userId, tx);
             const minimumRequiredBalance = currentWithdrawal.amount + lockedCommission;
 
-            // 1. Cập nhật status lệnh rút (kết hợp Optimistic Concurrency Control)
+            // 1. Cập nhật status lệnh rút
             const updateResult = await tx.withdrawal.updateMany({
                 where: { id: data.id, status: "PENDING" },
                 data: { status: "APPROVED", processedById: spadminId }
@@ -56,12 +60,13 @@ export async function POST(req: NextRequest) {
             }
 
             // 3. Lưu vết Giao dịch hệ thống 
+            const usdtReceived = (currentWithdrawal.amount / USDT_RATE).toFixed(2);
             await tx.transaction.create({
                 data: {
                     userId: currentWithdrawal.userId,
                     amount: -currentWithdrawal.amount,
                     type: "WITHDRAWAL",
-                    note: `Rút tiền Crypto (Ví: ${currentWithdrawal.walletAddress.substring(0, 8)}...) - KHỚP LỆNH: ${result.user.username}`
+                    note: `Rút Crypto ~${usdtReceived} USDT (Ví: ${currentWithdrawal.walletAddress.substring(0, 8)}...) - Tỷ giá: ${new Intl.NumberFormat('vi-VN').format(USDT_RATE)}đ - KHỚP: ${result.user.username}`
                 }
             });
 
@@ -71,7 +76,7 @@ export async function POST(req: NextRequest) {
                     userId: currentWithdrawal.userId,
                     type: "BALANCE_CHANGED",
                     title: "Lệnh Rút Được Cấp Phép",
-                    message: `Lệnh rút ${currentWithdrawal.amount} đã được SPAdmin xuất khoản. Tiền trong balance đã được trừ.`,
+                    message: `Lệnh rút ${currentWithdrawal.amount.toLocaleString("vi-VN")} VNĐ (~${usdtReceived} USDT) đã được SPAdmin xuất khoản. Tiền trong balance đã được trừ.`,
                 }
             });
         });
@@ -80,7 +85,10 @@ export async function POST(req: NextRequest) {
         const withdrawal = await prisma.withdrawal.findUnique({ where: { id: data.id } });
         if (withdrawal) {
             const { sendTelegramNotification } = await import("@/lib/telegram");
-            await sendTelegramNotification(withdrawal.userId, `✅ *Rút USDT Thành Công*\nLệnh rút ${withdrawal.amount.toLocaleString()} USDT đã được duyệt và xuất khoản!`, "USER_DEPOSIT");
+            const rateConfig = await prisma.systemConfig.findUnique({ where: { key: "USDT_RATE" } });
+            const USDT_RATE = rateConfig?.value ? parseInt(rateConfig.value.replace(/[^0-9]/g, ''), 10) || 25500 : 25500;
+            const usdtReceived = (withdrawal.amount / USDT_RATE).toFixed(2);
+            await sendTelegramNotification(withdrawal.userId, `✅ *Rút USDT Thành Công*\nLệnh rút ${withdrawal.amount.toLocaleString("vi-VN")} VNĐ (~${usdtReceived} USDT) đã được duyệt và xuất khoản!`, "USER_DEPOSIT");
         }
 
     } else {
@@ -102,7 +110,7 @@ export async function POST(req: NextRequest) {
                         userId: withdrawal.userId,
                         type: "ADMIN_MESSAGE",
                         title: "Lệnh Rút Tiền Bị Hủy",
-                        message: `Lệnh rút ${withdrawal.amount} đã bị Hủy bỏ. Lý do: ${data.rejectReason || "Không xác định"}.`,
+                        message: `Lệnh rút ${withdrawal.amount.toLocaleString("vi-VN")} VNĐ đã bị Hủy bỏ. Lý do: ${data.rejectReason || "Không xác định"}.`,
                     }
                 });
             }
@@ -110,7 +118,7 @@ export async function POST(req: NextRequest) {
         
         // Telegram Notify
         const { sendTelegramNotification } = await import("@/lib/telegram");
-        await sendTelegramNotification(withdrawal.userId, `❌ *Rút USDT Bị Từ Chối*\nLệnh rút ${withdrawal.amount.toLocaleString()} USDT đã bị hủy.\nLý do: ${data.rejectReason || "Vui lòng liên hệ SPAdmin."}`, "USER_DEPOSIT");
+        await sendTelegramNotification(withdrawal.userId, `❌ *Rút USDT Bị Từ Chối*\nLệnh rút ${withdrawal.amount.toLocaleString()} VNĐ của bạn đã bị hủy.\nLý do: ${data.rejectReason || "Vui lòng liên hệ SPAdmin."}`, "USER_DEPOSIT");
     }
 
     return NextResponse.json({ success: true });

@@ -5,7 +5,7 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { Check, X, Loader2, RefreshCcw } from "lucide-react";
 import { useToast } from "@/components/shared/toast";
 
-export function CryptoManagementTable() {
+export function CryptoManagementTable({ usdtRate = 25500 }: { usdtRate?: number }) {
     const { addToast } = useToast();
     const [deposits, setDeposits] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -107,7 +107,7 @@ export function CryptoManagementTable() {
                                     {d.network}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap font-semibold text-emerald-600">
-                                    {formatCurrency(d.amount * 25500)}
+                                    {d.status === "PENDING" ? formatCurrency(d.amount * usdtRate) : <span className="text-slate-400 font-normal italic text-xs">Theo Tỷ giá lúc chuyển</span>}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-slate-200">
                                     {formatDate(d.createdAt)}
