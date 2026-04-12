@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Hàm chuẩn hóa chuỗi: Bỏ dấu tiếng Việt, in hoa, xóa khoảng trắng thừa
+function normalizeString(str: string): string {
+    if (!str) return "";
+    return String(str)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // Xóa dấu
+        .replace(/đ/g, "d").replace(/Đ/g, "D")
+        .toUpperCase()
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
 export async function POST(req: NextRequest) {
     // 1. Kiểm tra header Authorization
     const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
@@ -29,7 +41,7 @@ export async function POST(req: NextRequest) {
                 // Chỉ xử lý giao dịch nhận tiền (IN)
                 if (tx.type === "IN") {
                     const txAmount = parseInt(tx.amount, 10);
-                    const txDesc = String(tx.description).toUpperCase();
+                    const txDesc = normalizeString(tx.description);
 
                     if (!isNaN(txAmount)) {
                         // 4. Tìm kiếm Lệnh nạp tiền PENDING khớp cú pháp
@@ -46,7 +58,7 @@ export async function POST(req: NextRequest) {
 
                         // Xác định xem Description có chứa mã nào không
                         for (const deposit of pendingDeposits) {
-                            if (deposit.transferCode && txDesc.includes(deposit.transferCode.toUpperCase())) {
+                            if (deposit.transferCode && txDesc.includes(normalizeString(deposit.transferCode))) {
                                 // KHỚP MÃ CÚ PHÁP VÀ SỐ TIỀN -> DUYỆT TỰ ĐỘNG
                                 try {
                                     await prisma.$transaction(async (dbTx) => {

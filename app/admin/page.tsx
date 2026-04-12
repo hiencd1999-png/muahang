@@ -8,9 +8,12 @@ export default async function AdminPage() {
   const [totalUsers, totalOrders, revenue] = await Promise.all([
     prisma.user.count(),
     prisma.order.count(),
-    prisma.transaction.aggregate({
-      _sum: { amount: true },
-      where: { type: "ORDER_DEBIT" },
+    prisma.order.aggregate({
+      _sum: { total: true },
+      where: { 
+        status: "DELIVERED",
+        complaintStatus: { not: "APPROVED" }
+      },
     }),
   ]);
 
@@ -26,7 +29,7 @@ export default async function AdminPage() {
       </article>
       <article className="panel rounded-[1.75rem] p-6">
         <p className="text-sm text-slate-500 dark:text-slate-400">Doanh thu</p>
-        <p className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{formatCurrency(Math.abs(revenue._sum.amount ?? 0))}</p>
+        <p className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{formatCurrency(revenue._sum.total ?? 0)}</p>
       </article>
     </section>
   );
