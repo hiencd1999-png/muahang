@@ -26,6 +26,7 @@ interface Order {
   createdAt: Date;
   variant: string | null;
   address: string;
+  isLockerPickup?: boolean;
 }
 
 interface AssignableAdmin {
@@ -306,6 +307,9 @@ export function AdminOrdersView({
                       ) : (
                         <p className="font-medium text-amber-600 italic whitespace-nowrap truncate max-w-[280px]">Nhận đơn để xem địa chỉ</p>
                       )}
+                      {order.isLockerPickup && (
+                        <span className="mt-1 mb-1 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 w-fit">📦 Tủ nhận hàng / Điểm GS</span>
+                      )}
                       {!order.productName?.includes("Đơn gộp") && (
                         <p className="mt-1 truncate text-xs text-slate-500 max-w-[250px]">{order.productName || order.productLink}</p>
                       )}
@@ -365,6 +369,9 @@ export function AdminOrdersView({
                     <p className="mt-2 font-semibold text-slate-900 whitespace-nowrap truncate">{getShortAddress(order.address)}</p>
                   ) : (
                     <p className="mt-2 font-medium text-amber-600 italic whitespace-nowrap truncate">Nhận đơn để xem địa chỉ</p>
+                  )}
+                  {order.isLockerPickup && (
+                    <span className="mt-1 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 w-fit">📦 Nhận tại Tủ / Điểm nhận hàng</span>
                   )}
                   {!order.productName?.includes("Đơn gộp") && (
                     <p className="mt-1 text-xs text-slate-500 truncate">{order.productName || order.productLink}</p>

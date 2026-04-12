@@ -21,6 +21,7 @@ interface Order {
   complaintStatus?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  isLockerPickup?: boolean;
 }
 
 export function UserOrdersView({ orders }: { orders: Order[] }) {
@@ -245,6 +246,9 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                   <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-300">
                     <div className="flex flex-col items-center">
                       <p className="font-medium text-slate-900 dark:text-white whitespace-nowrap truncate max-w-[280px]">{getShortAddress(order.address)}</p>
+                      {order.isLockerPickup && (
+                        <span className="mt-1 mb-1 inline-flex items-center gap-1 rounded bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400 w-fit">📦 Tủ nhận hàng / Điểm GS</span>
+                      )}
                       {!order.productName?.includes("Đơn gộp") && (
                         <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-300 max-w-[250px]">{order.productName || order.productLink}</p>
                       )}
@@ -301,6 +305,9 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
               <div className="mt-4 rounded-3xl bg-slate-50/50 dark:bg-slate-800/40 p-5 border border-slate-100 dark:border-slate-700/80">
                 <p className="text-[10px] text-slate-400 dark:text-slate-300 font-bold uppercase tracking-wider">Địa chỉ giao hàng</p>
                 <p className="mt-2 font-bold text-slate-900 dark:text-slate-100 text-sm leading-snug">{getShortAddress(order.address)}</p>
+                {order.isLockerPickup && (
+                  <span className="mt-1 inline-block rounded bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400 w-fit">📦 Nhận tại Tủ / Điểm nhận hàng</span>
+                )}
                 {!order.productName?.includes("Đơn gộp") && (
                   <p className="mt-2 text-xs text-slate-500 dark:text-slate-300 line-clamp-1 italic">{order.productName || order.productLink}</p>
                 )}
