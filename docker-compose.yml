@@ -34,7 +34,7 @@ services:
     networks:
       - datdon_net
     command: >
-      sh -c "npx prisma db push --skip-generate && node server.js"
+      sh -c "npx prisma db push --skip-generate --accept-data-loss && node server.js"
 
 volumes:
   datdon_db_data:
