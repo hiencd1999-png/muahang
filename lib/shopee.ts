@@ -1,4 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import nodeFetch from "node-fetch";
+import { HttpsProxyAgent } from "https-proxy-agent";
+
+async function getRandomSysProxy() {
+  const proxies = await prisma.systemProxy.findMany({ where: { isActive: true } });
+  if (proxies.length === 0) return undefined;
+  const target = proxies[Math.floor(Math.random() * proxies.length)];
+  return new HttpsProxyAgent(`http://${target.username}:${target.password}@${target.host}:${target.port}`);
+}
 
 export interface ShopeeVariant {
   modelId: number;
@@ -36,7 +45,7 @@ function extractShopAndItemIds(url: string) {
   return { shopId: undefined, itemId: undefined };
 }
 
-async function resolveRedirectLink(productLink: string, cookie?: string) {
+async function resolveRedirectLink(productLink: string, cookie?: string, proxyAgent?: any) {
   try {
     const fixed = productLink.trim().startsWith("http") ? productLink.trim() : `https://${productLink.trim()}`;
     
@@ -63,19 +72,23 @@ async function resolveRedirectLink(productLink: string, cookie?: string) {
       headers.Cookie = cookie;
     }
 
-    const response = await fetch(fixed, {
+    const options: any = {
       method: "GET",
-      redirect: "follow",
-      cache: "no-store",
+      follow: 5,
       headers,
-    });
+    };
+    if (proxyAgent) {
+      options.agent = proxyAgent;
+    }
+
+    const response = await nodeFetch(fixed, options);
     return response.url || fixed;
   } catch {
     return productLink.trim();
   }
 }
 
-async function fetchSharingLink(productLink: string, cookie?: string) {
+async function fetchSharingLink(productLink: string, cookie?: string, proxyAgent?: any) {
   const encoded = encodeURIComponent(productLink.trim());
   const url = `https://mall.shopee.vn/api/v4/generic_sharing/get_sharing_link_for_non_affiliate?url=${encoded}`;
   const headers: Record<string, string> = {
@@ -88,20 +101,24 @@ async function fetchSharingLink(productLink: string, cookie?: string) {
     Referer: "https://mall.shopee.vn/",
   };
 
-  const response = await fetch(url, {
+  const options: any = {
     method: "GET",
     headers,
-    cache: "no-store",
-  });
+  };
+  if (proxyAgent) {
+    options.agent = proxyAgent;
+  }
+
+  const response = await nodeFetch(url, options);
   if (!response.ok) {
     throw new Error(`Shopee share API phản hồi ${response.status}`);
   }
 
-  const payload = await response.json();
+  const payload: any = await response.json();
   return String(payload?.data?.short_url || "");
 }
 
-async function resolveShopAndItemIds(productLink: string, cookie?: string) {
+async function resolveShopAndItemIds(productLink: string, cookie?: string, proxyAgent?: any) {
   const direct = extractShopAndItemIds(productLink);
   if (direct.shopId && direct.itemId) {
     return {
@@ -110,7 +127,7 @@ async function resolveShopAndItemIds(productLink: string, cookie?: string) {
     };
   }
 
-  const resolved = await resolveRedirectLink(productLink, cookie);
+  const resolved = await resolveRedirectLink(productLink, cookie, proxyAgent);
   const second = extractShopAndItemIds(resolved);
   if (second.shopId && second.itemId) {
     return {
@@ -120,8 +137,8 @@ async function resolveShopAndItemIds(productLink: string, cookie?: string) {
   }
 
   try {
-    const sharedLink = await fetchSharingLink(productLink, cookie);
-    const sharedResolved = await resolveRedirectLink(sharedLink, cookie);
+    const sharedLink = await fetchSharingLink(productLink, cookie, proxyAgent);
+    const sharedResolved = await resolveRedirectLink(sharedLink, cookie, proxyAgent);
     const third = extractShopAndItemIds(sharedResolved);
     if (third.shopId && third.itemId) {
       return {
@@ -136,7 +153,7 @@ async function resolveShopAndItemIds(productLink: string, cookie?: string) {
   return { shopId: undefined, itemId: undefined, resolvedLink: resolved };
 }
 
-async function fetchProductData(shopId: string, itemId: string, cookie: string) {
+async function fetchProductData(shopId: string, itemId: string, cookie: string, proxyAgent?: any) {
   const url = `https://shopee.vn/api/v4/item/get?itemid=${itemId}&shopid=${shopId}`;
   const headers = {
     Host: "shopee.vn",
@@ -147,9 +164,14 @@ async function fetchProductData(shopId: string, itemId: string, cookie: string) 
   };
 
   try {
-    const res = await fetch(url, { headers, cache: "no-store" });
+    const options: any = { headers };
+    if (proxyAgent) {
+      options.agent = proxyAgent;
+    }
+
+    const res = await nodeFetch(url, options);
     if (!res.ok) return null;
-    const body = await res.json();
+    const body: any = await res.json();
     if (body.error && body.error !== 0) return null;
 
     const data = body.data || {};
@@ -194,13 +216,15 @@ export async function fetchShopeeProductDetails(productLink: string, overrideCoo
     cookie = `SPC_ST=${cookie}`;
   }
 
-  const { shopId, itemId, resolvedLink } = await resolveShopAndItemIds(productLink, cookie);
+  const proxyAgent = await getRandomSysProxy();
+
+  const { shopId, itemId, resolvedLink } = await resolveShopAndItemIds(productLink, cookie, proxyAgent);
 
   if (!shopId || !itemId) {
     throw new Error("Không tìm thấy shopId hoặc itemId từ link Shopee.");
   }
 
-  const prodData = await fetchProductData(shopId, itemId, cookie);
+  const prodData = await fetchProductData(shopId, itemId, cookie, proxyAgent);
   let productName = prodData?.productName || "Sản phẩm Shopee";
 
   if (!prodData || productName === "Sản phẩm Shopee") {
