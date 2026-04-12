@@ -67,5 +67,23 @@ export async function POST(
       return NextResponse.json({ error: "Đơn này đã được khiếu nại trước đó." }, { status: 400 });
   }
 
+  try {
+      const { sendTelegramNotification } = await import("@/lib/telegram");
+      await sendTelegramNotification(
+          result.user.id,
+          `📝 *Khiếu nại đang được xử lý*\nBạn vừa tạo khiếu nại cho đơn hàng #${order.id} với lý do: "${parsed.data.reason}". Quản trị viên sẽ sớm kiểm tra và hỗ trợ bạn.`,
+          "USER_ORDER"
+      );
+      if (order.approvedByAdminId) {
+          await sendTelegramNotification(
+              order.approvedByAdminId,
+              `🚨 *Có Khiếu Nại Đơn Hàng*\nKhách hàng vừa tạo khiếu nại cho Đơn Đã Giao #${order.id}!\n- Lý do: ${parsed.data.reason}\n- Vui lòng vào trang quản trị để kiểm tra và xử lý.`,
+              "ADMIN_ORDER"
+          );
+      }
+  } catch (e) {
+      console.error("Order Complain Telegram notify error:", e);
+  }
+
   return NextResponse.json({ success: true });
 }

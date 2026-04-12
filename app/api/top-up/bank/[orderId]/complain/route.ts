@@ -46,6 +46,22 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
             }
         });
 
+        try {
+            const { sendTelegramNotification } = await import("@/lib/telegram");
+            await sendTelegramNotification(
+                result.user.id,
+                `📝 *Lệnh nạp tiền đang được xử lý khiếu nại*\nLệnh nạp ${deposit.amount.toLocaleString("vi-VN")}đ của bạn đã được Admin ghi nhận khiếu nại cùng hình ảnh hóa đơn. Vui lòng chờ xử lý.`,
+                "USER_DEPOSIT"
+            );
+            await sendTelegramNotification(
+                deposit.adminId,
+                `🚨 *Có Khiếu Nại Nạp Tiền Mới*\nUser ${result.user.username} vừa tải lên hình ảnh xác minh cho Lệnh nạp qua thẻ ngân hàng!\n- Số tiền: ${deposit.amount.toLocaleString("vi-VN")}đ\n- Mã: ${deposit.id.substring(0, 8).toUpperCase()}`,
+                "ADMIN_DEPOSIT"
+            );
+        } catch (err) {
+            console.error(err);
+        }
+
         return NextResponse.json({ success: true, status: updated.status });
     } catch (e: any) {
         return NextResponse.json({ error: "Lỗi xử lý dữ liệu ảnh." }, { status: 500 });

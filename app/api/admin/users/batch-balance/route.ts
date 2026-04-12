@@ -78,15 +78,27 @@ export async function POST(request: NextRequest) {
           data: { balance: { increment: amountChange } },
         });
         
+        const operatorName = admin.fullName || admin.username;
+        const opNote = isSpAdmin 
+               ? `Điều chỉnh số dư hàng loạt bởi Hệ thống (SPADMIN ${operatorName}): ${amountChange > 0 ? "+" : ""}${amountChange.toLocaleString()} VND`
+               : `Nhận tiền hàng loạt từ QTV (${operatorName}): +${amountChange.toLocaleString()} VND`;
+
         await tx.transaction.create({
           data: {
             userId,
             amount: amountChange,
             type: "ADMIN_ADJUSTMENT",
-            note: isSpAdmin 
-               ? `Điều chỉnh số dư hàng loạt bởi SPADMIN ${admin.username}: ${amountChange > 0 ? "+" : ""}${amountChange} VND`
-               : `Nhận tiền hàng loạt từ Admin ${admin.username}: +${amountChange} VND`,
+            note: opNote,
           },
+        });
+        
+        await tx.notification.create({
+          data: {
+            userId,
+            type: "BALANCE_CHANGED",
+            title: "Cập nhật số dư",
+            message: opNote,
+          }
         });
         updatedUsers.push(u);
       }
@@ -109,6 +121,19 @@ export async function POST(request: NextRequest) {
 
       return updatedUsers;
     });
+
+    try {
+      const { sendTelegramNotification } = await import("@/lib/telegram");
+      for (const userId of userIds) {
+          const sign = amountChange > 0 ? "+" : "";
+          await sendTelegramNotification(
+              userId,
+              `💰 *Biến Động Số Dư*\nSố dư của bạn vừa được cập nhật: ${sign}${amountChange.toLocaleString("vi-VN")}đ\nThao tác bởi: Quản trị viên hệ thống.`,
+              "USER_DEPOSIT"
+          );
+      }
+    } catch(e) {}
+
 
     return NextResponse.json({
       message: `Đã chuyển tiền cho ${results.length} người dùng thành công.`,
