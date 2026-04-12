@@ -228,7 +228,9 @@ export function CreateOrderForm({
         resolvedLink: data.resolvedLink || currentLink,
         variantOptions: variants,
         selectedVariant: variants.length > 0 ? variants[0].name : (item.selectedVariant || ""),
-        analysisMessage: "Link đã được phân tích thành công. Chọn phân loại sản phẩm của bạn.",
+        analysisMessage: variants.length > 0 
+          ? "Link đã được phân tích thành công. Chọn phân loại sản phẩm của bạn."
+          : "Đã trích xuất số Shop/Sản phẩm thành công. Vui lòng nhập phân loại của bạn do API lấy Giá đang bị Shopee chặn.",
         analysisError: "",
         isAnalyzing: false,
       }));
@@ -614,7 +616,7 @@ export function CreateOrderForm({
                             <option value="">Chọn phân loại</option>
                             {item.variantOptions.map((v) => (
                               <option key={v.modelId} value={v.name}>
-                                {v.name} - Giá: {formatCurrency(v.price)} (Còn: {v.stock} sp)
+                                {v.name} - Giá: {formatCurrency(v.price)} (Còn: {v.stock} sp){v.stock <= 0 ? " - HẾT HÀNG" : ""}
                               </option>
                             ))}
                           </select>
