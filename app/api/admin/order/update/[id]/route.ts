@@ -102,6 +102,28 @@ export async function PATCH(
   revalidatePath("/admin/orders");
   revalidatePath("/dashboard/orders");
 
+  try {
+    const { sendTelegramNotification } = await import("@/lib/telegram");
+    let notifyMsg = `📦 *Cập nhật đơn hàng #${orderId}*\n`;
+    if (nextTrackingNo !== (order.trackingNo || "")) {
+      notifyMsg += `- Mã vận đơn: ${nextTrackingNo || "Chưa có"}\n`;
+    }
+    if (nextNote !== (order.note || null)) {
+      notifyMsg += `- Ghi chú mới: ${nextNote || "Không có"}\n`;
+    }
+    
+    // Only send if there are actual changes we want to notify
+    if (notifyMsg !== `📦 *Cập nhật đơn hàng #${orderId}*\n`) {
+      await sendTelegramNotification(order.userId, notifyMsg, "USER_ORDER");
+      const assignedAdminId = approvedByAdminId ?? result.user.id;
+      if (assignedAdminId) {
+        await sendTelegramNotification(assignedAdminId, notifyMsg, "ADMIN_ORDER");
+      }
+    }
+  } catch (error) {
+    console.error("Failed to send telegram notification for order logistics update", error);
+  }
+
   return NextResponse.json({ success: true });
 }
 

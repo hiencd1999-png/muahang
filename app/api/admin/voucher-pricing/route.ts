@@ -17,22 +17,39 @@ const updateVoucherPricingSchema = z.object({
 });
 
 export async function GET() {
-  const result = await requireApiUser("SPADMIN");
+  const result = await requireApiUser("ADMIN");
 
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  const configs = await ensureVoucherPricingConfigs();
+  let configs = await ensureVoucherPricingConfigs();
+
+  if (result.user.role !== "SPADMIN") {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: result.user.id },
+      select: { disabledVouchers: true },
+    });
+    const disabledVouchers = dbUser?.disabledVouchers || [];
+
+    configs = configs.map(c => ({
+      ...c,
+      // Hiển thị bảo trì nếu hệ thống đang bảo trì VÀ/HOẶC admin đó tự tắt nhận đơn
+      isMaintenance: c.isMaintenance || disabledVouchers.includes(c.code),
+    }));
+  }
+
   return NextResponse.json({ configs });
 }
 
 export async function PATCH(request: Request) {
-  const result = await requireApiUser("SPADMIN");
+  const result = await requireApiUser("ADMIN");
 
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
+
+  const isSpAdmin = result.user.role === "SPADMIN";
 
   const body = await request.json();
   const parsed = updateVoucherPricingSchema.safeParse(body);
@@ -46,8 +63,55 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Mã voucher bị trùng." }, { status: 400 });
   }
 
-  await ensureVoucherPricingConfigs();
+  const existingConfigs = await ensureVoucherPricingConfigs();
 
+  if (!isSpAdmin) {
+    const incomingCodesSet = new Set(normalizedCodes);
+    const existingCodes = existingConfigs.map(c => c.code);
+    
+    // Đảm bảo không chỉnh sửa linh tinh
+    if (incomingCodesSet.size !== existingCodes.length || !existingCodes.every(c => incomingCodesSet.has(c))) {
+      return NextResponse.json({ error: "Bạn không có quyền Thêm hoặc Xóa các cấu hình nhận đơn." }, { status: 403 });
+    }
+
+    const disabledVouchers: string[] = [];
+    
+    for (const config of parsed.data.configs) {
+      const existing = existingConfigs.find(c => c.code === config.code);
+      if (
+        !existing || 
+        existing.label !== config.label || 
+        existing.unitPrice !== config.unitPrice
+      ) {
+        return NextResponse.json({ error: "Bạn chỉ có thể Bật/Tắt nhận đơn, không được sửa tên hoặc giá." }, { status: 403 });
+      }
+      if (config.isMaintenance) {
+        disabledVouchers.push(config.code);
+      }
+    }
+
+    // Save personal toggle preference
+    await prisma.user.update({
+      where: { id: result.user.id },
+      data: { disabledVouchers }
+    });
+
+    await createAuditLog({
+      actorId: result.user.id,
+      action: "ADMIN_UPDATE_VOUCHER_PREFERENCE",
+      targetType: "USER",
+      details: { disabledVouchers },
+    });
+
+    const customizedConfigs = existingConfigs.map(c => ({
+      ...c,
+      isMaintenance: c.isMaintenance || disabledVouchers.includes(c.code)
+    }));
+
+    return NextResponse.json({ success: true, configs: customizedConfigs });
+  }
+
+  // LƯU Ý: Phần dưới này chỉ chạy khi isSpAdmin === true
   await prisma.$transaction(async (tx) => {
     const incomingCodes = parsed.data.configs.map((config) => config.code);
 

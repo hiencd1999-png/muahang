@@ -12,7 +12,7 @@ interface VoucherConfigItem {
   isMaintenance: boolean;
 }
 
-export function VoucherPricingManager({ initialConfigs }: { initialConfigs: VoucherConfigItem[] }) {
+export function VoucherPricingManager({ initialConfigs, isSpAdmin = true }: { initialConfigs: VoucherConfigItem[], isSpAdmin?: boolean }) {
   const router = useRouter();
   const { addToast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -125,18 +125,22 @@ export function VoucherPricingManager({ initialConfigs }: { initialConfigs: Vouc
     <section className="space-y-6">
       <div className="grid gap-4 xl:grid-cols-[1.4fr_0.8fr]">
         <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">SPADMIN</p>
-          <h2 className="mt-3 text-2xl font-semibold text-slate-950">Cấu hình giá đơn theo loại voucher</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">{isSpAdmin ? "SPADMIN" : "ADMIN"}</p>
+          <h2 className="mt-3 text-2xl font-semibold text-slate-950">Cấu hình nhận đơn từng mảng (Voucher)</h2>
           <p className="mt-2 text-sm text-slate-600">
-            Cập nhật mã hiển thị, tên hiển thị, đơn giá và trạng thái bảo trì. Có thể thêm voucher mới trực tiếp tại đây.
+            {isSpAdmin 
+              ? "Cập nhật mã, tên hiển thị, đơn giá và trạng thái bảo trì. Có thể thêm voucher tĩnh trực tiếp tại đây." 
+              : "Bạn có thể bật/tắt nhận đơn cho từng loại voucher. Việc chỉnh sửa giá, xóa hay thêm thể loại mới chỉ dành cho Quản trị viên cấp cao."}
           </p>
-          <button
-            type="button"
-            onClick={handleAddConfig}
-            className="mt-4 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-          >
-            + Thêm cấu hình voucher
-          </button>
+          {isSpAdmin && (
+            <button
+              type="button"
+              onClick={handleAddConfig}
+              className="mt-4 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              + Thêm cấu hình voucher
+            </button>
+          )}
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
           <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 shadow-sm">
@@ -173,7 +177,8 @@ export function VoucherPricingManager({ initialConfigs }: { initialConfigs: Vouc
                     type="text"
                     value={config.code}
                     onChange={(event) => handleCodeChange(config.code, event.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm uppercase outline-none transition focus:border-amber-500"
+                    disabled={!isSpAdmin}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm uppercase outline-none transition focus:border-amber-500 disabled:opacity-60 disabled:bg-slate-100"
                   />
                 </label>
 
@@ -183,20 +188,23 @@ export function VoucherPricingManager({ initialConfigs }: { initialConfigs: Vouc
                     type="text"
                     value={config.label}
                     onChange={(event) => handleLabelChange(config.code, event.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-amber-500"
+                    disabled={!isSpAdmin}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-amber-500 disabled:opacity-60 disabled:bg-slate-100"
                   />
                 </label>
               </div>
 
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => handleRemoveConfig(config.code)}
-                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
-                >
-                  Xóa cấu hình
-                </button>
-              </div>
+              {isSpAdmin && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveConfig(config.code)}
+                    className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+                  >
+                    Xóa cấu hình
+                  </button>
+                </div>
+              )}
 
               <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
               <label className="space-y-2 text-sm font-medium text-slate-700">
@@ -207,7 +215,8 @@ export function VoucherPricingManager({ initialConfigs }: { initialConfigs: Vouc
                   step={1000}
                   value={config.unitPrice}
                   onChange={(event) => handleUnitPriceChange(config.code, event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-amber-500"
+                  disabled={!isSpAdmin}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-amber-500 disabled:opacity-60 disabled:bg-slate-100"
                 />
               </label>
 
@@ -227,7 +236,9 @@ export function VoucherPricingManager({ initialConfigs }: { initialConfigs: Vouc
       </div>
 
       <div className="flex flex-col gap-3 rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-600">User chỉ tạo được đơn với các voucher đang hoạt động. Giá mới chỉ áp dụng cho các đơn tạo sau khi lưu.</p>
+        <p className="text-sm text-slate-600">
+          User chỉ tạo được đơn với các mảng đang hoạt động. {isSpAdmin ? "Giá mới chỉ áp dụng cho các đơn tạo sau khi lưu." : ""}
+        </p>
         <button
           type="button"
           onClick={handleSave}

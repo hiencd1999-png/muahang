@@ -60,6 +60,11 @@ export async function POST(request: NextRequest) {
       details: { reason: order.complaintReason }
     });
 
+    try {
+      const { sendTelegramNotification } = await import("@/lib/telegram");
+      await sendTelegramNotification(order.userId, `❌ *Khiếu nại bị từ chối*\nKhiếu nại đơn #${order.id} của bạn đã bị từ chối bởi Ban quản trị.`, "USER_ORDER");
+    } catch {}
+
     return NextResponse.json({ success: true, message: "Đã từ chối khiếu nại." });
   }
 
@@ -140,6 +145,14 @@ export async function POST(request: NextRequest) {
     targetId: order.id,
     details: { reason: order.complaintReason }
   });
+
+  try {
+    const { sendTelegramNotification } = await import("@/lib/telegram");
+    await sendTelegramNotification(order.userId, `✅ *Khiếu nại thành công*\nKhiếu nại đơn #${order.id} của bạn đã được chấp thuận. Hoàn trả ${order.total.toLocaleString("vi-VN")}đ.`, "USER_ORDER");
+    if (order.approvedByAdminId) {
+      await sendTelegramNotification(order.approvedByAdminId, `⚠️ *Trừ phí khiếu nại*\nĐơn #${order.id} do bạn phụ trách bị user khiếu nại thành công. Hệ thống thu hồi ${commission.toLocaleString("vi-VN")}đ hoa hồng.`, "ADMIN_ORDER");
+    }
+  } catch {}
 
   return NextResponse.json({ success: true, message: "Đã duyệt khiếu nại và hoàn tiền/thu hồi phí." });
 }

@@ -84,5 +84,20 @@ export async function PATCH(request: Request) {
   revalidatePath("/admin/orders");
   revalidatePath("/dashboard/orders");
 
+  try {
+    const { sendTelegramNotification } = await import("@/lib/telegram");
+    const notifyOldAdminMsg = `♻️ *Đơn hàng #${order.id} được đổi phụ trách*\nĐơn này đã được chuyển khỏi danh sách của bạn.`;
+    const notifyNewAdminMsg = `♻️ *Bạn được phân công Đơn hàng #${order.id}*\nĐơn đã được chuyển qua bạn phụ trách. Vui lòng vào xử lý.`;
+    const notifyUserMsg = `♻️ *Đơn hàng #${order.id}*\nĐơn của bạn đã được chuyển cho nhân viên xử lý mới: ${nextAdmin.fullName || nextAdmin.username}.`;
+    
+    await sendTelegramNotification(order.userId, notifyUserMsg, "USER_ORDER");
+    await sendTelegramNotification(nextAdmin.id, notifyNewAdminMsg, "ADMIN_ORDER");
+    if (previousAdminId) {
+      await sendTelegramNotification(previousAdminId, notifyOldAdminMsg, "ADMIN_ORDER");
+    }
+  } catch (error) {
+    console.error("Failed to send telegram notification for order reassign", error);
+  }
+
   return NextResponse.json({ success: true });
 }

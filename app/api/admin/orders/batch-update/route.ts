@@ -138,6 +138,35 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Bắn thông báo Telegram cho hàng loạt đơn đã cập nhật
+    if (results.length > 0) {
+        try {
+            const { sendTelegramNotification } = await import("@/lib/telegram");
+            const statusToVi: Record<string, string> = {
+                "PROCESSING": "Đang Xử Lý",
+                "ORDER_PLACED": "Đã Đặt Đơn",
+                "TRACKING_GENERATED": "Có Mã Vận Đơn",
+                "DELIVERED": "Đã Giao Về Kho",
+                "CANCELED": "Đã Hủy"
+            };
+            const humanStatus = statusToVi[status] || status.replace(/_/g, ' ');
+            
+            for (const order of results) {
+                if (!order) continue;
+                let teleMsg = `📦 *Cập nhật hàng loạt: Đơn #${order.id}*\nTrạng thái mới: ${humanStatus}`;
+                await sendTelegramNotification(order.userId, teleMsg, "USER_ORDER");
+                
+                // Nếu đơn đang có admin phụ trách (kể cả admin vừa nhận đơn (PROCESSING) hoặc admin cũ)
+                const targetAdminId = status === "PROCESSING" ? user.id : order.approvedByAdminId;
+                if (targetAdminId) {
+                    await sendTelegramNotification(targetAdminId, teleMsg, "ADMIN_ORDER");
+                }
+            }
+        } catch (error) {
+            console.error("Batch update Telegram notify error:", error);
+        }
+    }
+
     return NextResponse.json({
       message: `Updated ${results.length} orders`,
       updated: results.length,

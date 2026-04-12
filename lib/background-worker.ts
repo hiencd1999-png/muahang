@@ -82,8 +82,11 @@ async function syncGroup(orders: any[], proxies: any[]) {
                 const { sendTelegramNotification } = await import("@/lib/telegram");
                 let teleMsg = `📦 *Cập nhật vận chuyển*\nĐơn hàng #${order.id}\nTrạng thái mới: ${newStatus}`;
                 if (updates.status === 'DELIVERED') teleMsg = `🎉 *Đơn #${order.id} Giao Thành Công*\nShopee đã cập nhật giao hàng thành công!`;
-                if (updates.status === 'CANCELED') teleMsg = `🚫 *Đơn #${order.id} Đã Bị Hoàn/Hủy*\nHệ thống Shopee cập nhật trạng thái hủy. Hệ thống đã hoàn ${order.total.toLocaleString("vi-VN")}đ vào ví của bạn.`;
+                if (updates.status === 'CANCELED') teleMsg = `🚫 *Đơn #${order.id} Đã Bị Hoàn/Hủy*\nHệ thống Shopee cập nhật trạng thái hủy. Hệ thống đã hoàn tiền vào ví khách hàng.`;
                 await sendTelegramNotification(order.userId, teleMsg, "USER_ORDER");
+                if (order.approvedByAdminId) {
+                    await sendTelegramNotification(order.approvedByAdminId, teleMsg, "ADMIN_ORDER");
+                }
 
                 console.log(`📦 [AutoSyncWorker] Đơn #${order.id}: ${order.status} -> ${newStatus}. ${updates.status === 'DELIVERED' ? '💰 CỘNG TIỀN CHO ADMIN!' : updates.status === 'CANCELED' ? '🔄 ĐÃ HOÀN TIỀN CHO USER!' : ''}`);
             }
@@ -172,6 +175,21 @@ export async function runBackgroundCron() {
                 })
             ]);
             console.log(`[AutoSyncWorker] Đã tự động HUỶ đơn #${expOrder.id} vì Admin được chỉ định ngâm quá 6 tiếng.`);
+            
+            const { sendTelegramNotification } = await import("@/lib/telegram");
+            await sendTelegramNotification(
+                expOrder.userId,
+                `🚫 *Đơn Hàng #${expOrder.id} Bị Hủy Tự Động*\nĐơn hàng của bạn đã bị huỷ và hoàn lại ${expOrder.total.toLocaleString("vi-VN")}đ do Admin phụ trách kiểm tra chưa vào kịp hệ thống trong 6 tiếng.`,
+                "USER_ORDER"
+            );
+            
+            if (expOrder.approvedByAdminId) {
+                await sendTelegramNotification(
+                    expOrder.approvedByAdminId,
+                    `⚠️ *Cảnh Báo: Quá Hạn Xử Lý Đơn*\nĐơn hàng #${expOrder.id} mà bạn phụ trách đã bị hệ thống HỦY TỰ ĐỘNG do quá 6 tiếng chưa được lên đơn.`,
+                    "ADMIN_ORDER"
+                );
+            }
         }
 
         // --- 2. THEO DÕI MÃ VẬN ĐƠN NGẦM ---

@@ -78,6 +78,7 @@ model User {
   balance        Int               @default(0)
   twoFactorSecret  String?         
   twoFactorEnabled Boolean         @default(false)
+  disabledVouchers String[]        @default([])
   orders         Order[]
   transactions   Transaction[]
   auditLogs      AuditLog[]        @relation("AuditLogAdmin")

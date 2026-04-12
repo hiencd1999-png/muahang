@@ -289,6 +289,23 @@ export async function GET(request: NextRequest) {
           data: updates,
         });
       }
+
+      if (updates.status) {
+         try {
+             const { sendTelegramNotification } = await import("@/lib/telegram");
+             let teleMsg = `📦 *Cập nhật vận chuyển*\nĐơn hàng #${order.id}\nTrạng thái gốc Shopee: ${updates.status}`;
+             if (updates.status === 'DELIVERED') teleMsg = `🎉 *Đơn #${order.id} Giao Thành Công*\nShopee đã cập nhật giao hàng (Qua thao tác làm mới cục bộ)!`;
+             if (updates.status === 'CANCELED') teleMsg = `🚫 *Đơn #${order.id} Đã Bị Hoàn/Hủy*\nHệ thống Shopee vừa chốt cập nhật HỦY. Hệ thống đã hoàn tiền.`;
+             if (updates.status === 'TRACKING_GENERATED') teleMsg = `📦 *Đơn #${order.id} Có Mã Vận Đơn*\nShopee vừa gắn mã vận đơn mới cho đơn hàng!`;
+             
+             await sendTelegramNotification(order.userId, teleMsg, "USER_ORDER");
+             if (order.approvedByAdminId) {
+                 await sendTelegramNotification(order.approvedByAdminId, teleMsg, "ADMIN_ORDER");
+             }
+         } catch (e) {
+             console.error("Tracking Sync Telegram notify error:", e);
+         }
+      }
     }
 
     return NextResponse.json({ tracking: results, autoUpdatedStatus: newStatus });

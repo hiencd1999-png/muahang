@@ -148,6 +148,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Voucher ${selectedVoucher.label} đang bảo trì.` }, { status: 400 });
     }
 
+    if (parsed.requestedAdminId) {
+      const requestedAdmin = await prisma.user.findUnique({
+        where: { id: parsed.requestedAdminId },
+        select: { role: true, disabledVouchers: true }
+      });
+      if (!requestedAdmin || (requestedAdmin.role !== "ADMIN" && requestedAdmin.role !== "SPADMIN")) {
+        return NextResponse.json({ error: "Admin phụ trách không hợp lệ." }, { status: 400 });
+      }
+      if (requestedAdmin.disabledVouchers && requestedAdmin.disabledVouchers.includes(selectedVoucher.code)) {
+        return NextResponse.json({ error: `Admin được chọn hiện đã tắt nhận đơn cho loại mã ${selectedVoucher.label}.` }, { status: 400 });
+      }
+    }
+
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const pendingInWard = await prisma.order.count({
       where: {
@@ -262,13 +275,28 @@ export async function POST(request: Request) {
       "/dashboard/orders"
     );
 
-    const { broadcastToAdmins } = await import("@/lib/telegram");
+    const { broadcastToAdmins, sendTelegramNotification } = await import("@/lib/telegram");
     
     const adminOrderLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://datdon.otistx.com"}/admin/orders?orderId=${newOrder.id}&action=view`;
 
-    await broadcastToAdmins(
-        `📦 *Có đơn hàng mới!*\n- Mã đơn: #${newOrder.id}\n- Sản phẩm: ${mergedProductName}\n- Link Mua Nháp: ${primaryItem.canonicalProductLink}\n- Mã voucher: ${selectedVoucher.label}\n- *🔗 Mở chi tiết:* [Click để xem và Nhận đơn](${adminOrderLink})`, 
-        "ADMIN_ORDER"
+    if (parsed.requestedAdminId) {
+        await sendTelegramNotification(
+           parsed.requestedAdminId, 
+           `🎯 *Bạn nhận được Booking đích danh!*\n- Đơn hàng mới: #${newOrder.id}\n- Khách hàng: ${result.user.username}\n- Sản phẩm: ${mergedProductName}\n- Mã voucher: ${selectedVoucher.label}\n- *🔗 Mở chi tiết:* [Click để xem](${adminOrderLink})`,
+           "ADMIN_ORDER"
+        );
+    } else {
+        await broadcastToAdmins(
+            `📦 *Có đơn hàng mới!*\n- Mã đơn: #${newOrder.id}\n- Sản phẩm: ${mergedProductName}\n- Link Mua Nháp: ${primaryItem.canonicalProductLink}\n- Mã voucher: ${selectedVoucher.label}\n- *🔗 Mở chi tiết:* [Click để xem và Nhận đơn](${adminOrderLink})`, 
+            "ADMIN_ORDER"
+        );
+    }
+
+    // Gửi Telegram xác nhận cho User
+    await sendTelegramNotification(
+       result.user.id,
+       `✅ *Tạo đơn thành công*\nĐơn hàng #${newOrder.id} của bạn vừa được khởi tạo.\n- Sản phẩm: ${mergedProductName}\n- Voucher: ${selectedVoucher.label}\n- Phí dự tính: ${(total/1000).toFixed(0)}k`,
+       "USER_ORDER"
     );
 
     revalidatePath("/dashboard");

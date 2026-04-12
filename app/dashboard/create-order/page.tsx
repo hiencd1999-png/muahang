@@ -9,13 +9,13 @@ export default async function CreateOrderPage() {
   
   const rawAdmins = await prisma.user.findMany({
     where: { role: { in: ["ADMIN", "SPADMIN"] } },
-    select: { id: true, fullName: true },
+    select: { id: true, fullName: true, disabledVouchers: true },
   });
 
   const adminIds = rawAdmins.map(a => a.id);
 
   const stats = await prisma.order.groupBy({
-    by: ['approvedByAdminId', 'status'],
+    by: ['approvedByAdminId', 'status', 'cancelReason'],
     where: {
       approvedByAdminId: { in: adminIds },
       status: { in: ["DELIVERED", "CANCELED"] }
@@ -29,8 +29,14 @@ export default async function CreateOrderPage() {
     if (!statsMap.has(s.approvedByAdminId)) statsMap.set(s.approvedByAdminId, { delivered: 0, canceled: 0 });
     
     const entry = statsMap.get(s.approvedByAdminId)!;
-    if (s.status === "DELIVERED") entry.delivered += s._count;
-    if (s.status === "CANCELED") entry.canceled += s._count;
+    if (s.status === "DELIVERED") {
+      entry.delivered += s._count;
+    } else if (s.status === "CANCELED") {
+      // Chỉ tính vào tỉ lệ huỷ nếu đó là đơn Shopee tự huỷ (không có cancelReason báo cáo bởi admin/hệ thống hoặc có nhắc tới shopee)
+      if (!s.cancelReason || s.cancelReason.toLowerCase().includes("shopee")) {
+        entry.canceled += s._count;
+      }
+    }
   }
 
   const safeAdmins = rawAdmins.map(a => {
@@ -44,7 +50,8 @@ export default async function CreateOrderPage() {
       delivered: s.delivered,
       canceled: s.canceled,
       rate: rate,
-      total: total
+      total: total,
+      disabledVouchers: a.disabledVouchers || []
     };
   });
 

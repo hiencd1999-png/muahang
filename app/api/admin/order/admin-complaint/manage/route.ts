@@ -61,6 +61,17 @@ export async function POST(request: NextRequest) {
       details: { reason: order.complaintReason }
     });
 
+    try {
+      const { sendTelegramNotification } = await import("@/lib/telegram");
+      if (order.approvedByAdminId) {
+        await sendTelegramNotification(
+          order.approvedByAdminId, 
+          `❌ *Khiếu nại khách hàng bị từ chối*\nKhiếu nại của bạn đối với đơn #${order.id} đã bị SPADMIN từ chối.`, 
+          "ADMIN_ORDER"
+        );
+      }
+    } catch {}
+
     return NextResponse.json({ success: true, message: "Đã từ chối khiếu nại của Admin." });
   }
 
@@ -141,6 +152,22 @@ export async function POST(request: NextRequest) {
     targetId: order.id,
     details: { reason: order.complaintReason }
   });
+
+  try {
+    const { sendTelegramNotification } = await import("@/lib/telegram");
+    await sendTelegramNotification(
+      order.userId, 
+      `⚠️ *Trừ tiền vi phạm*\nBạn bị trừ ${penaltyAmount.toLocaleString("vi-VN")}đ do khiếu nại cố tình không nhận hàng tại đơn #${order.id}.`, 
+      "USER_ORDER"
+    );
+    if (order.approvedByAdminId) {
+      await sendTelegramNotification(
+        order.approvedByAdminId, 
+        `✅ *Khiếu nại khách thành công*\nBạn được cộng ${penaltyAmount.toLocaleString("vi-VN")}đ đền bù từ đơn #${order.id} bị hủy.`, 
+        "ADMIN_ORDER"
+      );
+    }
+  } catch {}
 
   return NextResponse.json({ success: true, message: "Đã duyệt phạt khách và đền bù cho Admin." });
 }

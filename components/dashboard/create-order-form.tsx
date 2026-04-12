@@ -56,7 +56,7 @@ export function CreateOrderForm({
 }: {
   balance: number;
   voucherConfigs: VoucherOption[];
-  admins: { id: number; displayName: string; delivered?: number; canceled?: number; rate?: number; total?: number }[];
+  admins: { id: number; displayName: string; delivered?: number; canceled?: number; rate?: number; total?: number; disabledVouchers?: string[] }[];
 }) {
   const router = useRouter();
   const { addToast } = useToast();
@@ -101,9 +101,12 @@ export function CreateOrderForm({
 
   const filteredAdmins = useMemo(() => {
     if (!admins) return [];
-    let filtered = admins;
+    
+    // Chỉ hiển thị admin nếu list disabledVouchers của họ không chứa voucher đang chọn.
+    let filtered = admins.filter(a => !a.disabledVouchers || !a.disabledVouchers.includes(selectedVoucherCode));
+    
     if (searchRequestedAdmin) {
-      filtered = admins.filter((admin) =>
+      filtered = filtered.filter((admin) =>
         admin.displayName?.toLowerCase().includes(searchRequestedAdmin.toLowerCase() || "")
       );
     }

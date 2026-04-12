@@ -201,6 +201,11 @@ export async function PUT(request: Request) {
       teleMsg += `\nLý do: ${parsed.data.cancelReason?.trim()}`;
   }
   await sendTelegramNotification(order.userId, teleMsg, "USER_ORDER");
+  
+  const currentAdminAssignedId = updateData.approvedByAdminId ?? order.approvedByAdminId;
+  if (currentAdminAssignedId) {
+      await sendTelegramNotification(currentAdminAssignedId, teleMsg, "ADMIN_ORDER");
+  }
 
   await createAuditLog({
     actorId: result.user.id,
