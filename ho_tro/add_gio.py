@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib import error, parse, request
 
 GET_RATINGS_URL = "https://shopee.vn/api/v2/item/get_ratings"
+GET_ITEM_URL = "https://shopee.vn/api/v4/item/get"
 ADD_TO_CART_URL = "https://shopee.vn/api/v4/cart/add_to_cart"
 SHARING_API_URL = "https://mall.shopee.vn/api/v4/generic_sharing/get_sharing_link_for_non_affiliate"
 DEFAULT_TIMEOUT = 60
@@ -16,6 +17,8 @@ class ProductVariant:
     modelid: int
     model_name: str
     item_name: str
+    price: int = 0
+    has_stock: bool = True
 
 
 def normalize_spc_st(cookie: str) -> str:
@@ -130,11 +133,10 @@ def parse_product_link(product_link: str, cookie: str) -> Tuple[str, str, str]:
 
 def get_variants(shopid: str, itemid: str, cookie: str) -> Tuple[str, List[ProductVariant]]:
     query = parse.urlencode({
-        "limit": 25,
-        "shopid": shopid,
         "itemid": itemid,
+        "shopid": shopid
     })
-    url = f"{GET_RATINGS_URL}?{query}"
+    url = f"{GET_ITEM_URL}?{query}"
 
     status, payload = request_json(
         url,
@@ -144,50 +146,53 @@ def get_variants(shopid: str, itemid: str, cookie: str) -> Tuple[str, List[Produ
             "Cookie": cookie,
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "User-Agent": "Android app Shopee appver=28320 app_type=1",
+            "User-Agent": "Android app Shopee appver=28320 app_type=1"
         },
     )
 
     if status != 200:
-        raise RuntimeError(f"get_ratings HTTP {status}: {payload}")
+        raise RuntimeError(f"get_item HTTP {status}: {payload}")
 
     if payload.get("error") not in (None, 0):
-        raise RuntimeError(payload.get("error_msg") or f"Shopee error: {payload.get('error')}")
+        # Fallback to check error_msg, since error 90309999 could be here if WAF blocks
+        err_msg = payload.get("error_msg")
+        err_code = payload.get("error")
+        raise RuntimeError(err_msg or f"Shopee error: {err_code} (co the bi WAF chan)")
 
-    ratings = ((payload.get("data") or {}).get("ratings") or [])
-    product_name = "San pham"
-    variants: Dict[int, ProductVariant] = {}
+    # The mobile API puts everything inside `data` directly, not `data.item`
+    item_data = payload.get("data") or {}
+    product_name = item_data.get("name") or "San pham"
+    models = item_data.get("models") or []
+    
+    variants: List[ProductVariant] = []
 
-    if ratings and ratings[0].get("product_items"):
-        first_item = ratings[0]["product_items"][0] if ratings[0]["product_items"] else {}
-        product_name = first_item.get("name") or product_name
-
-    for rating in ratings:
-        product_items = rating.get("product_items") or []
-        for item in product_items:
-            modelid = item.get("modelid")
-            if modelid is None:
-                continue
-            if int(modelid) in variants:
-                continue
-            model_name = item.get("model_name")
-            if not model_name:
-                options = item.get("options")
-                if isinstance(options, list) and options:
-                    model_name = " - ".join(str(v) for v in options)
-                else:
-                    model_name = "Phan loai"
-
-            variants[int(modelid)] = ProductVariant(
-                modelid=int(modelid),
-                model_name=str(model_name),
-                item_name=str(item.get("name") or product_name),
-            )
+    for item in models:
+        modelid = item.get("modelid")
+        if modelid is None:
+            continue
+        
+        model_name = item.get("name") or "Phan loai"
+        price_raw = item.get("price") or 0
+        price = price_raw // 100000
+        
+        # Determine stock availability
+        stock_val = item.get("stock")
+        if stock_val is None:
+            stock_val = item.get("normal_stock") or 0
+        has_stock = int(stock_val) > 0
+        
+        variants.append(ProductVariant(
+            modelid=int(modelid),
+            model_name=str(model_name),
+            item_name=str(product_name),
+            price=price,
+            has_stock=bool(has_stock)
+        ))
 
     if not variants:
-        variants[0] = ProductVariant(modelid=0, model_name="Mac dinh", item_name=product_name)
+        variants.append(ProductVariant(modelid=0, model_name="Mac dinh", item_name=product_name))
 
-    ordered = sorted(variants.values(), key=lambda x: x.modelid)
+    ordered = sorted(variants, key=lambda x: x.modelid)
     return product_name, ordered
 
 
@@ -234,7 +239,9 @@ def add_to_cart(
 def choose_variant(variants: List[ProductVariant]) -> ProductVariant:
     print("\nDanh sach phan loai:")
     for idx, variant in enumerate(variants, start=1):
-        print(f"{idx}. modelid={variant.modelid} | {variant.model_name}")
+        stock_str = "Con hang" if variant.has_stock else "Het hang"
+        price_str = f"{variant.price:,}đ" if variant.price > 0 else "N/A"
+        print(f"{idx:<2}. {variant.model_name:<20} | Gia: {price_str:<12} | {stock_str:<10} | {variant.modelid}")
 
     while True:
         value = input("Chon so thu tu san pham can add: ").strip()

@@ -11,6 +11,13 @@ import {
 import { calculateVoucherOrderTotal, type VoucherOption } from "@/lib/voucher";
 import { useToast } from "@/components/shared/toast";
 
+interface ShopeeVariant {
+  modelId: number;
+  name: string;
+  price: number;
+  stock: number;
+}
+
 interface OrderDraftItem {
   id: string;
   productLink: string;
@@ -18,7 +25,7 @@ interface OrderDraftItem {
   productName: string;
   shopId: string;
   quantity: string;
-  variantOptions: string[];
+  variantOptions: ShopeeVariant[];
   selectedVariant: string;
   analysisError: string;
   analysisMessage: string;
@@ -93,9 +100,23 @@ export function CreateOrderForm({
     [nonEmptyItems]
   );
 
+  const productPricesTotal = useMemo(() => {
+    return nonEmptyItems.reduce((acc, item) => {
+      const qty = Math.max(1, item.quantity === "" ? 1 : Number(item.quantity));
+      const variant = item.variantOptions?.find(v => v.name === item.selectedVariant);
+      const price = variant ? variant.price : 0;
+      return acc + (price * qty);
+    }, 0);
+  }, [nonEmptyItems]);
+
   const total = useMemo(
-    () => calculateVoucherOrderTotal(selectedVoucher?.unitPrice ?? 0, totalQuantity),
-    [selectedVoucher, totalQuantity]
+    () => selectedVoucher?.unitPrice ?? 0,
+    [selectedVoucher]
+  );
+
+  const estimatedCOD = useMemo(
+    () => Math.max(0, productPricesTotal - (selectedVoucher?.unitPrice ?? 0)),
+    [selectedVoucher, productPricesTotal]
   );
 
   const activeVoucherCount = activeVoucherConfigs.length;
@@ -197,17 +218,17 @@ export function CreateOrderForm({
       }
 
       const variants = Array.isArray(data.variants) && data.variants.length > 0
-        ? data.variants.filter((value: unknown): value is string => typeof value === "string" && value.trim().length > 0)
-        : parsed.variants;
+        ? data.variants
+        : [];
 
       updateOrderItem(itemId, (item) => ({
         ...item,
         productName: data.productName || parsed.productName,
         shopId: data.shopId || parsed.shopId || "",
         resolvedLink: data.resolvedLink || currentLink,
-        variantOptions: [],
-        selectedVariant: item.selectedVariant || "",
-        analysisMessage: "Link đã được phân tích thành công. Vui lòng nhập phân loại cho link này.",
+        variantOptions: variants,
+        selectedVariant: variants.length > 0 ? variants[0].name : (item.selectedVariant || ""),
+        analysisMessage: "Link đã được phân tích thành công. Chọn phân loại sản phẩm của bạn.",
         analysisError: "",
         isAnalyzing: false,
       }));
@@ -323,7 +344,7 @@ export function CreateOrderForm({
       }
 
       if (item.selectedVariant.trim() === "") {
-        addToast("error", `Dòng ${index + 1} chưa nhập phân loại sản phẩm.`);
+        addToast("error", `Dòng ${index + 1} chưa chọn phân loại sản phẩm.`);
         return;
       }
 
@@ -346,14 +367,18 @@ export function CreateOrderForm({
     setLoading(true);
 
     const payload = {
-      items: itemsToSubmit.map((item) => ({
-        productLink: item.productLink.trim(),
-        resolvedLink: item.resolvedLink.trim() || item.productLink.trim(),
-        productName: item.productName.trim(),
-        shopId: item.shopId.trim(),
-        variant: item.selectedVariant.trim(),
-        quantity: item.quantity === "" ? 1 : Math.max(1, Number(item.quantity)),
-      })),
+      items: itemsToSubmit.map((item) => {
+        const variantObj = item.variantOptions?.find(v => v.name === item.selectedVariant);
+        return {
+          productLink: item.productLink.trim(),
+          resolvedLink: item.resolvedLink.trim() || item.productLink.trim(),
+          productName: item.productName.trim(),
+          shopId: item.shopId.trim(),
+          variant: item.selectedVariant.trim(),
+          quantity: item.quantity === "" ? 1 : Math.max(1, Number(item.quantity)),
+          productPrice: variantObj ? variantObj.price : 0,
+        };
+      }),
       voucherCode: selectedVoucher.code,
       phone: note.trim() || "Không cung cấp",
       address: normalizedAddress,
@@ -576,16 +601,35 @@ export function CreateOrderForm({
 
                       <div className="mt-4">
                         <p className="text-sm text-slate-600 dark:text-slate-300">Phân loại sản phẩm cho link này</p>
-                        <input
-                          value={item.selectedVariant}
-                          onChange={(event) => updateOrderItem(item.id, (current) => ({
-                            ...current,
-                            selectedVariant: event.target.value,
-                          }))}
-                          className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
-                          placeholder="Ví dụ: Đỏ, Size M, Mặc định"
-                          required
-                        />
+                        {item.variantOptions && item.variantOptions.length > 0 ? (
+                          <select
+                            value={item.selectedVariant}
+                            onChange={(event) => updateOrderItem(item.id, (current) => ({
+                              ...current,
+                              selectedVariant: event.target.value,
+                            }))}
+                            className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+                            required
+                          >
+                            <option value="">Chọn phân loại</option>
+                            {item.variantOptions.map((v) => (
+                              <option key={v.modelId} value={v.name}>
+                                {v.name} - Giá: {formatCurrency(v.price)} (Còn: {v.stock} sp)
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            value={item.selectedVariant}
+                            onChange={(event) => updateOrderItem(item.id, (current) => ({
+                              ...current,
+                              selectedVariant: event.target.value,
+                            }))}
+                            className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-white outline-none transition focus:border-amber-500"
+                            placeholder="Ví dụ: Đỏ, Size M, Mặc định"
+                            required
+                          />
+                        )}
                       </div>
 
                       <div className="mt-4">
@@ -726,9 +770,23 @@ export function CreateOrderForm({
             <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-200">{formatCurrency(total)}</p>
           </div>
           <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-4">
-            <p className="text-sm text-slate-500 dark:text-slate-300">Số dư hiện tại</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(balance)}</p>
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+            <p className="text-sm text-slate-500 dark:text-slate-300">Tổng tiền sản phẩm: <span className="font-semibold text-slate-900 dark:text-white">{formatCurrency(productPricesTotal)}</span></p>
+            <p className="text-sm text-slate-500 dark:text-slate-300 mt-1">Trừ Voucher: <span className="font-semibold text-emerald-600 dark:text-emerald-400">-{formatCurrency(selectedVoucher?.unitPrice ?? 0)}</span></p>
+            <p className="text-sm text-amber-600 dark:text-amber-500 mt-2 font-semibold bg-amber-50 dark:bg-amber-900/10 p-2 rounded-lg">Dự kiến thanh toán (COD): {formatCurrency(estimatedCOD)}</p>
+            
+            <hr className="my-4 border-slate-200 dark:border-slate-700" />
+            
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 mb-2">Thanh toán ví DatDon</p>
+            <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg">
+               <p className="text-sm text-slate-600 dark:text-slate-300">Phí lên đơn:</p>
+               <p className="text-base font-semibold text-rose-600 dark:text-rose-400">-{formatCurrency(total)}</p>
+            </div>
+            <div className="flex justify-between items-center p-2">
+               <p className="text-sm text-slate-500 dark:text-slate-300">Số dư hiện tại:</p>
+               <p className="text-base font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(balance)}</p>
+            </div>
+            
+            <p className="mt-2 text-xs text-center text-slate-600 dark:text-slate-300">
               {balance >= total ? "Số dư đủ để tạo đơn." : "Số dư chưa đủ, vui lòng nạp thêm tiền trước khi đặt đơn."}
             </p>
           </div>

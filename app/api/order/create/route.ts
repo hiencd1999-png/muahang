@@ -15,6 +15,7 @@ const batchItemShape = {
   shopId: z.string().trim().min(1).max(50),
   variant: z.string().trim().min(1).max(300),
   quantity: z.number().int().min(1).max(100).optional(),
+  productPrice: z.number().min(0).optional(),
 };
 
 const sharedShape = {
@@ -60,6 +61,7 @@ type PreparedItem = {
   shopId: string;
   variant: string;
   quantity: number;
+  productPrice: number;
 };
 
 function normalizeOrderRequest(body: unknown): NormalizedOrderRequest | null {
@@ -93,6 +95,7 @@ function normalizeOrderRequest(body: unknown): NormalizedOrderRequest | null {
         shopId,
         variant,
         quantity: quantity ?? 1,
+        productPrice: 0,
       },
     ],
     voucherCode,
@@ -201,11 +204,14 @@ export async function POST(request: Request) {
         shopId: item.shopId,
         variant: item.variant,
         quantity: item.quantity,
+        productPrice: item.productPrice ?? 0,
       };
     });
 
     const totalQuantity = preparedItems.reduce((sum, item) => sum + item.quantity, 0);
-    // Tổng tiền chỉ tính giá của 1 đơn, không nhân số lượng
+    
+    // Tính số tiền phí dịch vụ tạo đơn (Trừ vào ví Datdon)
+    // Backend cũ chỉ tính giá của 1 đơn, không nhân số lượng
     const total = selectedVoucher.unitPrice;
 
     if (result.user.balance < total) {

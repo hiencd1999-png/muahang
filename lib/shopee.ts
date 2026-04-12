@@ -1,10 +1,17 @@
 import { prisma } from "@/lib/prisma";
 
+export interface ShopeeVariant {
+  modelId: number;
+  name: string;
+  price: number;
+  stock: number;
+}
+
 export interface ShopeeProductDetails {
   shopId: string;
   itemId: string;
   productName: string;
-  variants: string[];
+  variants: ShopeeVariant[];
   resolvedLink: string;
 }
 
@@ -130,7 +137,7 @@ async function resolveShopAndItemIds(productLink: string, cookie?: string) {
 }
 
 async function fetchProductData(shopId: string, itemId: string, cookie: string) {
-  const url = `https://shopee.vn/api/v2/item/get_ratings?limit=25&shopid=${shopId}&itemid=${itemId}`;
+  const url = `https://shopee.vn/api/v4/item/get?itemid=${itemId}&shopid=${shopId}`;
   const headers = {
     Host: "shopee.vn",
     Cookie: cookie,
@@ -145,25 +152,37 @@ async function fetchProductData(shopId: string, itemId: string, cookie: string) 
     const body = await res.json();
     if (body.error && body.error !== 0) return null;
 
-    const ratings = body.data?.ratings || [];
-    let productName = "Sản phẩm Shopee";
-    const variantsMap = new Map<number, string>();
-
-    if (ratings.length > 0 && ratings[0].product_items?.length > 0) {
-       productName = ratings[0].product_items[0].name || productName;
+    const data = body.data || {};
+    const productName = data.name || "Sản phẩm Shopee";
+    const models = data.models || [];
+    
+    const variants: ShopeeVariant[] = [];
+    for (const item of models) {
+      const modelId = item.modelid;
+      if (!modelId) continue;
+      
+      const stock = item.stock ?? item.normal_stock ?? 0;
+      if (stock > 0) {
+         variants.push({
+           modelId: Number(modelId),
+           name: String(item.name || "Phân loại"),
+           price: Math.floor((item.price || 0) / 100000), // convert to standard VND
+           stock: Number(stock)
+         });
+      }
+    }
+    
+    if (variants.length === 0 && (data.stock ?? data.normal_stock ?? 0) > 0) {
+      // Default fallback variant if no models but product has stock
+      variants.push({
+         modelId: 0,
+         name: "Mặc định",
+         price: Math.floor((data.price || data.price_min || 0) / 100000),
+         stock: Number(data.stock ?? data.normal_stock ?? 1)
+      });
     }
 
-    for (const rating of ratings) {
-       const items = rating.product_items || [];
-       for (const item of items) {
-           let modelName = item.model_name;
-           if (!modelName && Array.isArray(item.options) && item.options.length > 0) {
-               modelName = item.options.join(" - ");
-           }
-       }
-    }
-
-    return { productName };
+    return { productName, variants };
   } catch (err) {
     return null;
   }
@@ -212,7 +231,7 @@ export async function fetchShopeeProductDetails(productLink: string, overrideCoo
     shopId,
     itemId,
     productName,
-    variants: [],
+    variants: prodData?.variants || [],
     resolvedLink,
   };
 }
