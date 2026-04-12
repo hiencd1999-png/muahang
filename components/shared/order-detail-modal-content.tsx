@@ -22,6 +22,7 @@ interface Order {
   variant?: string;
   note?: string;
   cancelReason?: string;
+  isLockerPickup?: boolean;
   status: "PENDING" | "PROCESSING" | "ORDER_PLACED" | "TRACKING_GENERATED" | "DELIVERED" | "CANCELED";
   spcCookie?: string;
   trackingNo?: string;
@@ -397,6 +398,11 @@ export function OrderDetailModalContent({
               <div>
                 <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Địa chỉ chi tiết</p>
                 <p className="mt-2 font-bold text-slate-800 dark:text-slate-100 leading-relaxed max-w-lg">{order.address}</p>
+                {order.isLockerPickup && (
+                  <span className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                    📦 Nhận hàng ở Tủ / Điểm nhận hàng
+                  </span>
+                )}
               </div>
               {/* Ẩn ghi chú khỏi dashboard user, chỉ admin xem được */}
               {order.status === "CANCELED" && cancelReason ? (

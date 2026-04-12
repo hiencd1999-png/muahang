@@ -22,6 +22,7 @@ interface OrderData {
   variant?: string;
   note?: string;
   cancelReason?: string;
+  isLockerPickup?: boolean;
   status: "PENDING" | "PROCESSING" | "ORDER_PLACED" | "TRACKING_GENERATED" | "DELIVERED" | "CANCELED";
   spcCookie?: string;
   trackingNo?: string;
@@ -83,6 +84,7 @@ export function UserOrderActions({ orderId, status, complaintStatus, updatedAt, 
       variant: order.variant,
       note: order.note,
       cancelReason: order.cancelReason,
+      isLockerPickup: order.isLockerPickup,
       status: order.status,
       spcCookie: order.spcCookie,
       trackingNo: order.trackingNo,

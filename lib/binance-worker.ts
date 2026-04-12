@@ -3,9 +3,7 @@ import crypto from "crypto";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import fetch from "node-fetch";
 
-const BINANCE_KEY = process.env.BINANCE_KEY;
-const BINANCE_SECRET = process.env.BINANCE_SECRET;
-const BINANCE_PROXY = process.env.BINANCE_PROXY;
+// Removed static env reads, we will read from DB dynamically
 
 let timeOffset = 0;
 
@@ -21,8 +19,8 @@ async function syncBinanceTime() {
     }
 }
 
-async function binanceApiRequest(endpoint: string, params: Record<string, any>, dynamicProxy?: string) {
-    if (!BINANCE_KEY || !BINANCE_SECRET) return null;
+async function binanceApiRequest(endpoint: string, params: Record<string, any>, options: { binanceKey: string; binanceSecret: string; dynamicProxy?: string }) {
+    if (!options.binanceKey || !options.binanceSecret) return null;
 
     if (timeOffset === 0) {
         await syncBinanceTime();
@@ -35,13 +33,13 @@ async function binanceApiRequest(endpoint: string, params: Record<string, any>, 
         timestamp: timestamp.toString()
     });
 
-    const signature = crypto.createHmac("sha256", BINANCE_SECRET).update(queryParams.toString()).digest("hex");
+    const signature = crypto.createHmac("sha256", options.binanceSecret).update(queryParams.toString()).digest("hex");
     queryParams.append("signature", signature);
 
     const url = `https://api.binance.com${endpoint}?${queryParams.toString()}`;
     
     let agent;
-    const finalProxy = dynamicProxy || BINANCE_PROXY;
+    const finalProxy = options.dynamicProxy;
     if (finalProxy) {
         let proxyUrl = finalProxy.trim();
         if (!proxyUrl.startsWith("http")) {
@@ -70,7 +68,7 @@ async function binanceApiRequest(endpoint: string, params: Record<string, any>, 
     const response = await fetch(url, {
         method: "GET",
         headers: {
-            "X-MBX-APIKEY": BINANCE_KEY
+            "X-MBX-APIKEY": options.binanceKey
         },
         agent: agent as any
     });
@@ -93,7 +91,6 @@ let isUSDTTrackerRunning = false;
 
 export async function runBinanceUSDTTracker() {
     if (isUSDTTrackerRunning) return;
-    if (!BINANCE_KEY || !BINANCE_SECRET) return;
 
     isUSDTTrackerRunning = true;
 
@@ -106,17 +103,25 @@ export async function runBinanceUSDTTracker() {
 
         if (pendingDeposits.length === 0) return;
 
-        // Lấy config từ DB
         const sysConfigs = await prisma.systemConfig.findMany({ 
-            where: { key: { in: ["USDT_RATE", "BINANCE_PROXY"] } } 
+            where: { key: { in: ["USDT_RATE", "BINANCE_PROXY", "BINANCE_KEY", "BINANCE_SECRET"] } } 
         });
         
         let USDT_RATE = 25500;
         let dbBinanceProxy = "";
+        let binanceKey = "";
+        let binanceSecret = "";
         
         for (const c of sysConfigs) {
             if (c.key === "USDT_RATE") USDT_RATE = parseInt(c.value.replace(/[^0-9]/g, ''), 10) || 25500;
             if (c.key === "BINANCE_PROXY") dbBinanceProxy = c.value;
+            if (c.key === "BINANCE_KEY") binanceKey = c.value;
+            if (c.key === "BINANCE_SECRET") binanceSecret = c.value;
+        }
+
+        if (!binanceKey || !binanceSecret) {
+            isUSDTTrackerRunning = false;
+            return;
         }
 
         // Cập nhật trạng thái những lệnh đã hết hạn
@@ -157,7 +162,11 @@ export async function runBinanceUSDTTracker() {
                 startTime,
                 endTime,
                 status: 1 // Chỉ lấy giao dịch thành công
-            }, dbBinanceProxy);
+            }, {
+                binanceKey,
+                binanceSecret,
+                dynamicProxy: dbBinanceProxy
+            });
 
             if (!Array.isArray(records)) continue;
 

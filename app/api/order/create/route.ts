@@ -25,6 +25,7 @@ const sharedShape = {
   ward: z.string().trim().min(1, "Vui lòng phân tích địa chỉ trước khi tạo đơn").max(100),
   note: z.string().trim().max(2000).optional(),
   requestedAdminId: z.number().int().optional(),
+  isLockerPickup: z.boolean().optional(),
 };
 
 const batchItemSchema = z.object(batchItemShape);
@@ -50,6 +51,7 @@ type NormalizedOrderRequest = {
   note?: string;
   items: Array<z.infer<typeof batchItemSchema> & { quantity: number }>;
   requestedAdminId?: number;
+  isLockerPickup?: boolean;
 };
 
 type PreparedItem = {
@@ -70,7 +72,8 @@ function normalizeOrderRequest(body: unknown): NormalizedOrderRequest | null {
         ...item,
         quantity: item.quantity ?? fallbackQuantity,
       })),
-      requestedAdminId: batchParsed.data.requestedAdminId
+      requestedAdminId: batchParsed.data.requestedAdminId,
+      isLockerPickup: batchParsed.data.isLockerPickup
     };
   }
 
@@ -79,7 +82,7 @@ function normalizeOrderRequest(body: unknown): NormalizedOrderRequest | null {
     return null;
   }
 
-  const { productLink, resolvedLink, productName, shopId, variant, voucherCode, quantity, phone, address, ward, note } = legacyParsed.data;
+  const { productLink, resolvedLink, productName, shopId, variant, voucherCode, quantity, phone, address, ward, note, isLockerPickup } = legacyParsed.data;
 
   return {
     items: [
@@ -97,7 +100,8 @@ function normalizeOrderRequest(body: unknown): NormalizedOrderRequest | null {
     address,
     ward,
     note,
-    requestedAdminId: legacyParsed.data.requestedAdminId
+    requestedAdminId: legacyParsed.data.requestedAdminId,
+    isLockerPickup
   };
 }
 
@@ -246,6 +250,7 @@ export async function POST(request: Request) {
           total,
           status: "PENDING",
           approvedByAdminId: parsed.requestedAdminId || null,
+          isLockerPickup: parsed.isLockerPickup || false,
         },
       });
 

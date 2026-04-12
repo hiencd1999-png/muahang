@@ -76,6 +76,7 @@ export function CreateOrderForm({
   const [isAnalyzingAddress, setIsAnalyzingAddress] = useState(false);
   const [loading, setLoading] = useState(false);
   const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
+  const [isLockerPickup, setIsLockerPickup] = useState(false);
 
   const selectedVoucher = useMemo(
     () => activeVoucherConfigs.find((voucher) => voucher.code === selectedVoucherCode) ?? null,
@@ -359,6 +360,7 @@ export function CreateOrderForm({
       ward: ward,
       note: note.trim(),
       requestedAdminId: requestedAdminId ? parseInt(requestedAdminId, 10) : undefined,
+      isLockerPickup,
     };
 
     try {
@@ -385,6 +387,7 @@ export function CreateOrderForm({
       setWard("");
       setAddressSuggestions([]);
       setShowAddressSuggestions(false);
+      setIsLockerPickup(false);
       router.push("/dashboard/orders");
       router.refresh();
     } finally {
@@ -662,6 +665,18 @@ export function CreateOrderForm({
             >
               {isAnalyzingAddress ? "Đang phân tích..." : "Phân tích địa chỉ"}
             </button>
+          </label>
+
+          <label className="flex items-center gap-3 mt-2 cursor-pointer w-fit">
+            <input
+              type="checkbox"
+              checked={isLockerPickup}
+              onChange={(e) => setIsLockerPickup(e.target.checked)}
+              className="h-5 w-5 rounded border-slate-300 text-amber-600 focus:ring-amber-600"
+            />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+               Nhận hàng ở Tủ tự động hoặc Điểm nhận hàng của Shopee
+            </span>
           </label>
 
           {showAddressSuggestions && addressSuggestions.length > 0 ? (

@@ -20,6 +20,8 @@ export default function SettingsPage() {
     cryptoWalletTrx: "",
     usdtRate: "25500",
     binanceProxy: "",
+    binanceKey: "",
+    binanceSecret: "",
     shopeeSpcSt: "",
   });
 
@@ -41,6 +43,8 @@ export default function SettingsPage() {
             cryptoWalletTrx: data.cryptoWalletTrx || "",
             usdtRate: data.usdtRate || "25500",
             binanceProxy: data.binanceProxy || "",
+            binanceKey: data.binanceKey || "",
+            binanceSecret: data.binanceSecret || "",
             shopeeSpcSt: data.shopeeSpcSt || "",
           });
         }
@@ -208,6 +212,28 @@ export default function SettingsPage() {
                 placeholder="Nhập địa chỉ ví TRC20"
                 value={configs.cryptoWalletTrx}
                 onChange={e => setConfigs({...configs, cryptoWalletTrx: e.target.value})}
+                className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Binance API Key</span>
+              <input
+                type="password"
+                placeholder="Nhập Binance API Key"
+                value={configs.binanceKey}
+                onChange={e => setConfigs({...configs, binanceKey: e.target.value})}
+                className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Binance API Secret</span>
+              <input
+                type="password"
+                placeholder="Nhập Binance API Secret"
+                value={configs.binanceSecret}
+                onChange={e => setConfigs({...configs, binanceSecret: e.target.value})}
                 className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-slate-100 outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
               />
             </label>

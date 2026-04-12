@@ -112,6 +112,7 @@ model Order {
   phone         String
   address       String
   note          String?
+  isLockerPickup Boolean    @default(false)
   voucherCode   String?     @map("voucherType")
   voucherLabel  String?
   unitPrice     Int?
