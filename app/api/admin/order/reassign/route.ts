@@ -59,14 +59,18 @@ export async function PATCH(request: Request) {
   const isPendingOrder = order.status === "PENDING";
   const isProcessingOrder = order.status === "PROCESSING";
 
-  await prisma.order.update({
-    where: { id: order.id },
+  const updateResult = await prisma.order.updateMany({
+    where: { id: order.id, status: order.status },
     data: {
       approvedByAdminId: nextAdmin.id,
       status: isPendingOrder ? "PROCESSING" : order.status,
       processingStartedAt: isPendingOrder || isProcessingOrder ? new Date() : null,
     },
   });
+
+  if (updateResult.count === 0) {
+    return NextResponse.json({ error: "Lỗi! Trạng thái đơn đã bị thay đổi trong lúc thao tác, hãy tải lại trang." }, { status: 409 });
+  }
 
   await createAuditLog({
     actorId: result.user.id,

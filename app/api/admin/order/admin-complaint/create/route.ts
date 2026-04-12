@@ -46,14 +46,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Chỉ admin xử lý đơn này mới được khiếu nại." }, { status: 403 });
   }
 
-  await prisma.order.update({
-    where: { id: order.id },
+  const updateResult = await prisma.order.updateMany({
+    where: { id: order.id, complaintStatus: null },
     data: {
       complaintReason: reason,
       complaintStatus: "PENDING",
       complaintAt: new Date(),
     },
   });
+
+  if (updateResult.count === 0) {
+    return NextResponse.json({ error: "Đơn này đã được xử lý hoặc được định trạng thái khác." }, { status: 409 });
+  }
 
   await createAuditLog({
     actorId: result.user.id,

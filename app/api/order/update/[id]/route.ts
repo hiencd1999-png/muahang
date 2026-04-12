@@ -101,35 +101,43 @@ export async function DELETE(
     );
   }
 
-  const updateResult = await prisma.order.updateMany({
-    where: { id: order.id, status: "PENDING" },
-    data: {
-      status: "CANCELED",
-      cancelReason: "User tự hủy đơn",
-    },
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      const updateResult = await tx.order.updateMany({
+        where: { id: order.id, status: "PENDING" },
+        data: {
+          status: "CANCELED",
+          cancelReason: "User tự hủy đơn",
+        },
+      });
 
-  if (updateResult.count === 0) {
-    return NextResponse.json(
-      { error: "Đơn hàng đã được xử lý bởi hệ thống hoặc không còn ở trạng thái chờ duyệt." },
-      { status: 409 }
-    );
+      if (updateResult.count === 0) {
+        throw new Error("ConcurrencyError");
+      }
+
+      await tx.user.update({
+        where: { id: result.user.id },
+        data: { balance: { increment: order.total } },
+      });
+      
+      await tx.transaction.create({
+        data: {
+          userId: result.user.id,
+          amount: order.total,
+          type: TransactionType.ORDER_REFUND,
+          note: `User hủy đơn hàng #${order.id}`,
+        },
+      });
+    });
+  } catch (err: any) {
+    if (err.message === "ConcurrencyError") {
+      return NextResponse.json(
+        { error: "Đơn hàng đã được xử lý bởi hệ thống hoặc không còn ở trạng thái chờ duyệt." },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json({ error: "Lỗi hệ thống khi hủy đơn." }, { status: 500 });
   }
-
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: result.user.id },
-      data: { balance: { increment: order.total } },
-    }),
-    prisma.transaction.create({
-      data: {
-        userId: result.user.id,
-        amount: order.total,
-        type: TransactionType.ORDER_REFUND,
-        note: `User hủy đơn hàng #${order.id}`,
-      },
-    }),
-  ]);
 
   await createNotification(
     result.user.id,

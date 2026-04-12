@@ -76,8 +76,8 @@ export async function PATCH(
     }
   }
 
-  await prisma.order.update({
-    where: { id: orderId },
+  const updateResult = await prisma.order.updateMany({
+    where: { id: orderId, status: order.status },
     data: {
       approvedByAdminId: approvedByAdminId ?? result.user.id,
       spcCookie: nextSpcCookie,
@@ -85,6 +85,10 @@ export async function PATCH(
       note: nextNote,
     },
   });
+
+  if (updateResult.count === 0) {
+    return NextResponse.json({ error: "Lỗi! Trạng thái đơn đã bị thay đổi trong lúc lưu, hãy tải lại trang." }, { status: 409 });
+  }
 
   await createAuditLog({
     actorId: result.user.id,
