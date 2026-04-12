@@ -8,6 +8,7 @@ export function AdminBankSettings() {
     const { addToast } = useToast();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [banks, setBanks] = useState<{ id: number, name: string, shortName: string }[]>([]);
     
     const [config, setConfig] = useState({
         bankName: "",
@@ -36,6 +37,14 @@ export function AdminBankSettings() {
                 }
             })
             .finally(() => setLoading(false));
+
+        // Fetch VietQR banks
+        fetch("https://api.vietqr.io/v2/banks")
+            .then(res => res.json())
+            .then(data => {
+                if(data.data) setBanks(data.data);
+            })
+            .catch(() => {});
     }, []);
 
     async function handleSave(e: React.FormEvent) {
@@ -77,7 +86,16 @@ export function AdminBankSettings() {
             <div className="grid sm:grid-cols-2 gap-5">
                 <label className="block space-y-2 text-sm font-medium">
                     <span className="text-slate-700 dark:text-slate-300">Tên ngân hàng (Bank) <span className="text-red-500">*</span></span>
-                    <input required type="text" value={config.bankName} onChange={e => setConfig({...config, bankName: e.target.value})} placeholder="VD: Vietcombank, Techcombank..." className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-amber-500 transition"/>
+                    {banks.length > 0 ? (
+                        <select required value={config.bankName} onChange={e => setConfig({...config, bankName: e.target.value})} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-amber-500 transition">
+                            <option value="">-- Chọn ngân hàng --</option>
+                            {banks.map(bank => (
+                                <option key={bank.id} value={`${bank.shortName} - ${bank.name}`}>{bank.shortName} - {bank.name}</option>
+                            ))}
+                        </select>
+                    ) : (
+                        <input required type="text" value={config.bankName} onChange={e => setConfig({...config, bankName: e.target.value})} placeholder="VD: VCB, MBBank..." className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-amber-500 transition"/>
+                    )}
                 </label>
                 <label className="block space-y-2 text-sm font-medium">
                     <span className="text-slate-700 dark:text-slate-300">Tên chủ tài khoản <span className="text-red-500">*</span></span>
