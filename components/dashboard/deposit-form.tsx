@@ -400,11 +400,11 @@ export function DepositForm() {
                            className="w-full sm:w-64 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-3 py-2 text-sm outline-none transition focus:border-emerald-500"
                        />
                    </div>
-                   <select 
-                      value={selectedAdminId || ""} 
-                      onChange={e => setSelectedAdminId(Number(e.target.value))}
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 px-4 py-3 text-slate-900 dark:text-white outline-none focus:border-emerald-500"
-                   >
+                     <select
+                        value={selectedAdminId || ""}
+                        onChange={(e) => setSelectedAdminId(Number(e.target.value))}
+                        className="w-full appearance-none rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-3 pl-4 pr-10 text-[15px] outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-shadow"
+                     >
                      {filteredBankConfigs.map(c => (
                         <option key={c.adminId} value={c.adminId}>Admin {c.adminName} - Ngân hàng {c.bankName}</option>
                      ))}
