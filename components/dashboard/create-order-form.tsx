@@ -595,25 +595,6 @@ export function CreateOrderForm({
                     <div className="lg:col-span-2 rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/10 p-4">
                       <p className="text-sm font-medium text-amber-900 dark:text-amber-400">Sản phẩm</p>
                       <p className="mt-1 text-base font-semibold text-slate-900 dark:text-slate-100">{item.productName}</p>
-                      <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-950 p-3">
-                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Shop ID</p>
-                        <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{item.shopId || "-"}</p>
-                      </div>
-
-                      {item.resolvedLink ? (
-                        <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
-                          <p className="text-xs font-medium text-slate-500 dark:text-slate-300">Link sau phân tích</p>
-                          <a
-                            href={item.resolvedLink}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                            className="mt-1 block break-words text-sm text-amber-700 dark:text-amber-400 hover:underline"
-                          >
-                            {item.resolvedLink}
-                          </a>
-                        </div>
-                      ) : null}
-
                       {item.analysisMessage ? <p className="mt-3 text-sm text-emerald-700 dark:text-emerald-400">{item.analysisMessage}</p> : null}
 
                       <div className="mt-4">
