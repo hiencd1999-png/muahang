@@ -11,6 +11,7 @@ const bankConfigSchema = z.object({
   accountName: z.string().min(2),
   branch: z.string().optional().nullable(),
   contactInfo: z.string().min(3, "Vui lòng nhập phương thức liên hệ"),
+  web2mToken: z.string().optional().nullable(),
   isActive: z.boolean()
 });
 

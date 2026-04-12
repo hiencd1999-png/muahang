@@ -55,6 +55,7 @@ export async function GET(req: Request, props: { params: Promise<{ orderId: stri
         adminId: deposit.adminId,
         updatedAt: deposit.updatedAt,
         expiresAt: deposit.expiresAt,
+        transferCode: deposit.transferCode,
         adminInfo: deposit.admin?.bankConfig ? {
             bankName: deposit.admin.bankConfig.bankName,
             accountNumber: deposit.admin.bankConfig.accountNumber,

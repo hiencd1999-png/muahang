@@ -38,13 +38,19 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
             return NextResponse.json({ error: "Định dạng ảnh không được hỗ trợ hoặc file có chứa mã độc." }, { status: 400 });
         }
 
-        const updated = await prisma.bankDeposit.update({
-            where: { id: deposit.id },
+        const updateResult = await prisma.bankDeposit.updateMany({
+            where: { id: deposit.id, status: "TRANSFERRED" },
             data: { 
                 status: "COMPLAINED",
                 complaintImage: body.image
             }
         });
+
+        if (updateResult.count === 0) {
+            return NextResponse.json({ error: "Giao dịch đã được duyệt hoặc đã thay đổi trạng thái." }, { status: 400 });
+        }
+        
+        const updatedStatus = "COMPLAINED";
 
         try {
             const { sendTelegramNotification } = await import("@/lib/telegram");
@@ -62,7 +68,7 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
             console.error(err);
         }
 
-        return NextResponse.json({ success: true, status: updated.status });
+        return NextResponse.json({ success: true, status: updatedStatus });
     } catch (e: any) {
         return NextResponse.json({ error: "Lỗi xử lý dữ liệu ảnh." }, { status: 500 });
     }

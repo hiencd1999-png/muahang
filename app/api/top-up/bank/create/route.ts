@@ -5,6 +5,16 @@ import { z } from "zod";
 import { getClientIp, verifyRateLimit, verifyIdempotency } from "@/lib/security";
 import { getLockedAdminCommission } from "@/lib/admin-balance";
 
+function generateVietnameseName() {
+    const HO = ["NGUYEN", "TRAN", "LE", "PHAM", "VO", "VU", "PHAN", "DANG", "BUI", "DO", "HO", "NGO", "DUONG", "LY", "MAI", "TRINH", "CAO", "LAM", "TO", "DIEP", "TON", "THACH", "KIEU", "DINH"];
+    const DEM = ["VAN", "THI", "NGOC", "HOANG", "MINH", "QUANG", "THAI", "XUAN", "THANH", "HAI", "TUAN", "ANH", "GIA", "KIM", "QUOC", "DINH", "HONG", "TIEU", "TRUNG", "TIEN", "PHUC", "CONG", "BA", "DAC", "DAI", "PHI", "KHAC", "HUY", "QUY", "KIEN", "NGUYEN", "CAO", "LAM", "DAN", "DONG", "MANH"];
+    const TEN = ["BANG", "DAT", "HUNG", "HUY", "CUONG", "KHOI", "KHOA", "MANH", "LINH", "TRANG", "MAI", "DUC", "SON", "THANG", "LONG", "DUONG", "TUNG", "BACH", "PHONG", "AN", "HOA", "THUY", "THIEN", "TRI", "TAI", "PHAT", "LOC", "KHOE", "CHAU", "NGAN", "KHANG", "TIN", "BAO", "HANG", "HIEN", "THAO", "OANH", "YEN", "QUYEN", "GIANG", "HAO", "THANH", "LUAN", "TU", "TRONG", "BINH", "BICH", "CHANH", "CUC", "DIEN", "DON", "KY", "LIEN", "MY", "NAM", "NGA", "NHAN", "NHI", "NHU", "NHAT", "PHU", "PHUONG", "QUAN", "SANG", "SINH", "TON", "TRAM", "TOAN", "TUYET", "UYEN", "VI", "XUYEN", "CANG", "CHAN", "DAM"];
+    const ho = HO[Math.floor(Math.random() * HO.length)];
+    const dem = DEM[Math.floor(Math.random() * DEM.length)];
+    const ten = TEN[Math.floor(Math.random() * TEN.length)];
+    return `${ho} ${dem} ${ten}`;
+}
+
 const createSchema = z.object({
     adminId: z.number(),
     amount: z.number().min(1000)
@@ -39,12 +49,26 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Kênh nạp này đang bảo trì hoặc không tồn tại." }, { status: 400 });
         }
         
-        const isSpAdminRole = (role: string) => role === "SPADMIN";
-        const isAdminSpAdmin = isSpAdminRole(config.admin.role);
-        const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 mins
+         const isSpAdminRole = (role: string) => role === "SPADMIN";
+         const isAdminSpAdmin = isSpAdminRole(config.admin.role);
+         const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 mins
 
-        const deposit = await prisma.$transaction(async (tx) => {
-             if (!isAdminSpAdmin) {
+         // Generate Unique Transfer Code
+         let transferCode = "";
+         let isUnique = false;
+         let attempts = 0;
+         while (!isUnique && attempts < 15) {
+             transferCode = generateVietnameseName();
+             if (attempts > 10) {
+                 transferCode += " " + Math.floor(1 + Math.random() * 99);
+             }
+             const existing = await prisma.bankDeposit.findUnique({ where: { transferCode } });
+             if (!existing) isUnique = true;
+             attempts++;
+         }
+
+         const deposit = await prisma.$transaction(async (tx) => {
+              if (!isAdminSpAdmin) {
                   const lockedCommission = await getLockedAdminCommission(config.adminId, tx);
                   const minRequired = amount + lockedCommission;
                   
@@ -74,6 +98,7 @@ export async function POST(req: Request) {
                      adminId,
                      amount,
                      expiresAt,
+                     transferCode,
                      status: "PENDING"
                  }
              });
@@ -84,6 +109,7 @@ export async function POST(req: Request) {
             status: deposit.status,
             amount: deposit.amount,
             adminId: deposit.adminId,
+            transferCode: deposit.transferCode,
             updatedAt: deposit.updatedAt,
             expiresAt: deposit.expiresAt,
             adminInfo: {

@@ -59,6 +59,11 @@ export function PoliciesContent({ role }: { role: UserRole }) {
           </div>
           <ol className="relative border-l border-indigo-200 dark:border-indigo-900 ml-4 space-y-8 pb-4">
             <li className="ml-6">
+                <span className="absolute flex items-center justify-center w-8 h-8 bg-indigo-100 rounded-full -left-4 ring-4 ring-white dark:ring-slate-900 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 font-bold text-sm text-[1.2rem]">!</span>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Cài Đặt Telegram (Bắt Buộc)</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Vào mục <strong>Profile</strong>, lướt xuống dưới cùng và ấn nút <code className="text-sky-600 font-semibold bg-sky-50 px-1 rounded">Liên kết Telegram</code>. Sau đó bấm Mở ứng dụng và Start. Mọi hành trình đơn hàng, thông báo xử lý thành công, và cảnh báo tài khoản sẽ được Bot tự nhận diện và gửi về Telegram 24/7.</p>
+            </li>
+            <li className="ml-6">
                 <span className="absolute flex items-center justify-center w-8 h-8 bg-indigo-100 rounded-full -left-4 ring-4 ring-white dark:ring-slate-900 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 font-bold text-sm">1</span>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Chuẩn bị nội dung</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400">Copy địa chỉ Link sản phẩm trên Shopee mà bạn muốn mua. Ghi chú rõ Tên phân loại (Màu sắc, kích thước...) và số lượng cần mua.</p>
@@ -87,6 +92,13 @@ export function PoliciesContent({ role }: { role: UserRole }) {
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Quy Trình Chuẩn Xử Lý Đơn Dành Cho Admin</h2>
           </div>
           <ol className="relative border-l border-emerald-200 dark:border-emerald-900 ml-4 space-y-8 pb-4">
+            <li className="ml-6">
+                <span className="absolute flex items-center justify-center w-8 h-8 bg-emerald-100 rounded-full -left-4 ring-4 ring-white dark:ring-slate-900 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 font-bold text-sm text-[1.2rem]">!</span>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Bật Khóa Báo Động (Kết Nối Telegram)</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Vào trang <strong>Profile</strong>, lướt xuống dưới cùng và ấn nút <code className="text-sky-600 font-semibold bg-sky-50 px-1 rounded">Liên kết Telegram</code>. Bất cứ khi nào có khách lên đơn Booking, hoặc đơn của bạn đến hạn 30 phút, Bot sẽ réo gọi trên app Telegram giúp bạn không bị tuột mất tiền hoa hồng!
+                </p>
+            </li>
             <li className="ml-6">
                 <span className="absolute flex items-center justify-center w-8 h-8 bg-emerald-100 rounded-full -left-4 ring-4 ring-white dark:ring-slate-900 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 font-bold text-sm">1</span>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Nhận Đơn Trực Tiếp</h3>
@@ -126,7 +138,7 @@ export function PoliciesContent({ role }: { role: UserRole }) {
         <p className="text-slate-400 text-sm mb-6">Mọi thắc mắc về kỹ thuật nền tảng, nạp tiền, rút tiền thưởng, hay khiếu nại thao tác, xin vui lòng trực tiếp liên hệ 24/7 theo phương thức sau:</p>
         
         <div className="grid sm:grid-cols-2 gap-4">
-            <a href="https://t.me/your_telegram_bot" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-slate-800 hover:bg-slate-700 transition p-4 rounded-2xl border border-slate-700">
+            <a href="https://t.me/c/2681850041/50370" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-slate-800 hover:bg-slate-700 transition p-4 rounded-2xl border border-slate-700">
                 <svg className="w-6 h-6 text-sky-400" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
                 <div className="text-left">
                     <strong className="block text-sm">Bot CSKH & Lệnh</strong>

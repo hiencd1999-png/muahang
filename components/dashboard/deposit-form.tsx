@@ -477,6 +477,17 @@ export function DepositForm() {
                         <button onClick={() => copyToClipboard(bankOrder.adminInfo?.accountNumber || "", "Đã copy STK")} className="text-slate-400 hover:text-slate-800"><Copy size={16}/></button>
                       </div>
                   </div>
+                  <div className="sm:col-span-2 space-y-1 mt-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                      <p className="text-xs text-amber-600 dark:text-amber-400 uppercase tracking-widest font-bold">Nội dung chuyển khoản (Bắt buộc)</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-mono text-xl font-black text-amber-700 dark:text-amber-500">{bankOrder.transferCode || "Không yêu cầu"}</p>
+                        {bankOrder.transferCode && (
+                          <button onClick={() => copyToClipboard(bankOrder.transferCode, "Đã copy nội dung")} className="p-2 shrink-0 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-800 dark:hover:bg-amber-700 dark:text-amber-200 active:scale-95 transition">
+                              <Copy size={16} />
+                          </button>
+                        )}
+                      </div>
+                  </div>
                   {bankOrder.adminInfo?.contactInfo && (
                   <div className="sm:col-span-2 space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800 mt-2">
                       <p className="text-xs text-slate-500 uppercase tracking-widest">Liên hệ hỗ trợ</p>

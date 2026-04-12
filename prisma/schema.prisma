@@ -259,6 +259,7 @@ model AdminBankConfig {
   accountName   String
   branch        String?
   contactInfo   String?
+  web2mToken    String?
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -273,6 +274,7 @@ model BankDeposit {
   amount         Int               
   status         BankDepositStatus @default(PENDING)
   complaintImage String?
+  transferCode   String?           @unique
   expiresAt      DateTime
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt

@@ -16,17 +16,18 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
     if (deposit.status !== "PENDING") return NextResponse.json({ error: "Lệnh không ở trạng thái cần chuyển khoản." }, { status: 400 });
 
     if (deposit.expiresAt < new Date()) {
-        await prisma.bankDeposit.update({
-            where: { id: deposit.id },
-            data: { status: "EXPIRED" }
-        });
-        return NextResponse.json({ error: "Lệnh đã hết hạn!" }, { status: 400 });
+        return NextResponse.json({ error: "Lệnh đã hết hạn. Hãy đợi hệ thống tự động hủy và hoàn cọc." }, { status: 400 });
     }
 
-    const updated = await prisma.bankDeposit.update({
-        where: { id: deposit.id },
+    const updateResult = await prisma.bankDeposit.updateMany({
+        where: { id: deposit.id, status: "PENDING" },
         data: { status: "TRANSFERRED" }
     });
+    
+    if (updateResult.count === 0) {
+        return NextResponse.json({ error: "Không thể cập nhật. Lệnh đã bị hủy hoặc đã hoàn tất." }, { status: 400 });
+    }
+    const updatedStatus = "TRANSFERRED";
 
     const { sendTelegramNotification } = await import("@/lib/telegram");
     
@@ -38,5 +39,5 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
         "ADMIN_DEPOSIT"
     );
 
-    return NextResponse.json({ success: true, status: updated.status });
+    return NextResponse.json({ success: true, status: updatedStatus });
 }

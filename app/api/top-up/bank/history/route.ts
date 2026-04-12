@@ -23,6 +23,7 @@ export async function GET(req: Request) {
         createdAt: d.createdAt,
         updatedAt: d.updatedAt,
         expiresAt: d.expiresAt,
+        transferCode: d.transferCode,
         adminInfo: d.admin?.bankConfig ? {
             bankName: d.admin.bankConfig.bankName,
             accountNumber: d.admin.bankConfig.accountNumber,
