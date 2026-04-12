@@ -208,6 +208,43 @@ export async function PATCH(
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/transactions");
 
+  try {
+      const { sendTelegramNotification } = await import("@/lib/telegram");
+      const { createNotification } = await import("@/lib/notifications");
+
+      if (details.passwordUpdated) {
+          await sendTelegramNotification(userId, `🔑 *Cập Nhật Mật Khẩu*\nMật khẩu tài khoản của bạn vừa được Admin quản trị viên cấp cao cập nhật. Nếu bạn không yêu cầu điều này, hãy liên hệ ngay!`, "USER_ORDER");
+      }
+
+      if (typeof details.nextRole !== "undefined") {
+          await sendTelegramNotification(userId, `👔 *Cập Nhật Cấp Bậc*\nQuyền hạn tài khoản của bạn đã thay đổi từ ${details.previousRole} sang ${details.nextRole}.`, "USER_ORDER");
+      }
+
+      if (typeof details.isLocked !== "undefined") {
+          if (details.isLocked) {
+              await sendTelegramNotification(userId, `🚫 *Tài Khoản Bị Khoá*\nTài khoản của bạn đã bị khóa bởi quản trị viên. Liên hệ cskh để được hỗ trợ.`, "USER_ORDER");
+          } else {
+              await sendTelegramNotification(userId, `✅ *Tài Khoản Mở Khoá*\nTài khoản của bạn đã được quản trị viên cấp phép hoạt động trở lại.`, "USER_ORDER");
+          }
+      }
+
+      if (amountChange !== 0) {
+          const sign = amountChange > 0 ? "+" : "";
+          await sendTelegramNotification(
+              userId,
+              `💰 *Biến Động Số Dư*\nSố dư của bạn vừa được cập nhật: ${sign}${amountChange.toLocaleString("vi-VN")}đ\nThao tác bởi: Quản trị viên hệ thống.`,
+              "USER_DEPOSIT"
+          );
+          await createNotification(
+                userId,
+                "BALANCE_CHANGED",
+                "Cập nhật số dư (Chỉnh sửa cá nhân)",
+                `Admin đã cập nhật số dư của bạn: ${sign}${amountChange.toLocaleString("vi-VN")}đ`,
+                "/dashboard"
+          );
+      }
+  } catch (e) {}
+
   return NextResponse.json({ success: true });
 } catch (error: any) {
   if (error.message?.includes("Số dư Admin không đủ")) {

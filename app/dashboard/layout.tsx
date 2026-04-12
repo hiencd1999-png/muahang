@@ -62,6 +62,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <NavLink href="/dashboard/orders" label="Lịch sử đơn" />
             <NavLink href="/dashboard/transactions" label="Lịch sử giao dịch" />
             <NavLink href="/dashboard/profile" label="Profile" />
+            <NavLink href="/dashboard/policies" label="Chính sách & Quy định" />
           </div>
           <MobileNav links={[
             { href: "/dashboard", label: "Tổng quan" },
@@ -70,6 +71,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             { href: "/dashboard/orders", label: "Lịch sử đơn" },
             { href: "/dashboard/transactions", label: "Lịch sử giao dịch" },
             { href: "/dashboard/profile", label: "Profile" },
+            { href: "/dashboard/policies", label: "Chính sách & Quy định" },
           ]} />
         </aside>
         <section className="space-y-6 min-w-0">{children}</section>

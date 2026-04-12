@@ -18,6 +18,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
     const navLinks = [
     { href: "/admin", label: "Tổng quan" },
+    { href: "/admin/policies", label: "Cẩm nang & Chính sách" },
     { href: "/admin/users", label: "Quản lý user" },
     { href: "/admin/orders", label: "Quản lý đơn" },
     { href: "/admin/bank-deposits", label: "Bank (Nội Bộ)" },

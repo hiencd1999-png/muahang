@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export const ORDER_ASSIGNMENT_TIMEOUT_MINUTES = 60;
+export const ORDER_ASSIGNMENT_TIMEOUT_MINUTES = 30;
 
 export function getProcessingTimeoutCutoff(now = new Date()) {
   return new Date(now.getTime() - ORDER_ASSIGNMENT_TIMEOUT_MINUTES * 60 * 1000);

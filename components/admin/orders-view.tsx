@@ -35,6 +35,8 @@ interface AssignableAdmin {
   role: "ADMIN" | "SPADMIN";
 }
 
+import { AdminGuideModal } from "@/components/admin/admin-guide-modal";
+
 export function AdminOrdersView({
   orders,
   totalCount,
@@ -167,11 +169,14 @@ export function AdminOrdersView({
     <section className="min-w-0 space-y-6">
       <div className="mb-6 grid gap-4 lg:grid-cols-[1.5fr_0.9fr] lg:items-end">
         <div className="space-y-3">
-          <div>
-            <h2 className="text-2xl font-black text-slate-950 dark:text-white tracking-tight">Quản lý đơn hàng</h2>
-            <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-200">
-              Xem và xử lý đơn hàng Shopee, lọc theo trạng thái và tìm nhanh theo username hoặc link.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pr-2">
+            <div>
+              <h2 className="text-2xl font-black text-slate-950 dark:text-white tracking-tight">Quản lý đơn hàng</h2>
+              <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-200">
+                Xem và xử lý đơn hàng Shopee, lọc theo trạng thái và tìm nhanh theo username hoặc link.
+              </p>
+            </div>
+            <AdminGuideModal />
           </div>
           <form onSubmit={handleSearch} className="grid gap-3 sm:grid-cols-[1.2fr_0.8fr_0.7fr_0.5fr]">
             <input

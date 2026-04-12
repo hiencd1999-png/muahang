@@ -163,6 +163,13 @@ export async function POST(request: NextRequest) {
             for (const order of results) {
                 if (!order) continue;
                 let teleMsg = `📦 *Cập nhật hàng loạt: Đơn #${order.id}*\nTrạng thái mới: ${humanStatus}`;
+                
+                if (status === 'CANCELED') {
+                    teleMsg = `🚫 *Đơn hàng bị huỷ*\nĐơn #${order.id} đã bị hủy hàng loạt bởi Quản trị viên.\nHệ thống đã hoàn trả ${order.total.toLocaleString("vi-VN")}đ vào ví của bạn.`;
+                } else if (status === 'DELIVERED') {
+                    teleMsg = `🎉 *Đơn #${order.id} Giao Thành Công*\nShopee đã cập nhật giao hàng thành công!`;
+                }
+
                 await sendTelegramNotification(order.userId, teleMsg, "USER_ORDER");
                 
                 // Nếu đơn đang có admin phụ trách (kể cả admin vừa nhận đơn (PROCESSING) hoặc admin cũ)

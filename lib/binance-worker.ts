@@ -222,8 +222,9 @@ export async function runBinanceUSDTTracker() {
                             });
                         });
 
-                        const { sendTelegramNotification } = await import("@/lib/telegram");
+                        const { sendTelegramNotification, broadcastToAdmins } = await import("@/lib/telegram");
                         await sendTelegramNotification(deposit.userId, `🎉 *Nạp Crypto Tự Động Thành Công*\nBạn đã nạp thành công ${deposit.expectedAmount} USDT mạng ${deposit.network}.\nSố dư đã nhận: +${vndAmount.toLocaleString("vi-VN")} đ.`, "USER_DEPOSIT");
+                        await broadcastToAdmins(`✅ *Crypto Auto-Deposit Thành Công*\nKhách hàng ở ID ${deposit.userId} vừa được quy đổi tự động thành công ví USDT.\n- Nạp: ${deposit.expectedAmount} USDT (${deposit.network})\n- Thành tiền: +${vndAmount.toLocaleString("vi-VN")}đ`, "ADMIN_DEPOSIT");
 
                         deposit.status = "COMPLETED" as any; // Đánh dấu để khỏi match lại
                         console.log(`[Binance-USDT] Lệnh ${deposit.id} (nạp ${deposit.expectedAmount} USDT) đã COMPLETED!`);
