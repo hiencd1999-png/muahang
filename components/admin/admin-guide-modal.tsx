@@ -1,6 +1,6 @@
 "use client";
 
-import { X, BookOpen, Clock, ShoppingCart, CheckCircle, Smartphone } from "lucide-react";
+import { X, BookOpen, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export function AdminGuideModal() {
