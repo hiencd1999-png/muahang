@@ -87,12 +87,21 @@ export function AdminBankSettings() {
                 <label className="block space-y-2 text-sm font-medium">
                     <span className="text-slate-700 dark:text-slate-300">Tên ngân hàng (Bank) <span className="text-red-500">*</span></span>
                     {banks.length > 0 ? (
-                        <select required value={config.bankName} onChange={e => setConfig({...config, bankName: e.target.value})} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-amber-500 transition">
-                            <option value="">-- Chọn ngân hàng --</option>
-                            {banks.map(bank => (
-                                <option key={bank.id} value={`${bank.shortName} - ${bank.name}`}>{bank.shortName} - {bank.name}</option>
-                            ))}
-                        </select>
+                        <div className="relative">
+                            <input 
+                                list="bank-list" 
+                                required 
+                                value={config.bankName} 
+                                onChange={e => setConfig({...config, bankName: e.target.value})} 
+                                placeholder="🔍 Nhập kí tự để tìm nhanh Ngân Hàng..." 
+                                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-amber-500 transition"
+                            />
+                            <datalist id="bank-list">
+                                {banks.map(bank => (
+                                    <option key={bank.id} value={`${bank.shortName} - ${bank.name}`} />
+                                ))}
+                            </datalist>
+                        </div>
                     ) : (
                         <input required type="text" value={config.bankName} onChange={e => setConfig({...config, bankName: e.target.value})} placeholder="VD: VCB, MBBank..." className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-amber-500 transition"/>
                     )}

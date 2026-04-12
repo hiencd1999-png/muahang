@@ -496,22 +496,25 @@ export function DepositForm() {
 
                      <div className="h-px w-full bg-slate-100 dark:bg-slate-800"></div>
 
-                     <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start justify-between">
-                         <div className="shrink-0 flex flex-col items-center sm:items-start gap-3">
-                             <p className="text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">Quét mã QR tự động điền</p>
-                             <div className="bg-white p-2 sm:p-3 rounded-2xl ring-1 ring-slate-200 dark:ring-slate-700 shadow-xs relative group w-max mx-auto sm:mx-0">
+                     <div className="flex flex-col gap-6 items-center w-full">
+                         <div className="flex flex-col items-center gap-3">
+                             <p className="text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 text-center">Quét mã QR tự động điền</p>
+                             <div className="bg-white p-2 sm:p-3 rounded-2xl ring-1 ring-slate-200 dark:ring-slate-700 shadow-xs relative group w-max mx-auto">
                                   <img 
                                      src={`https://img.vietqr.io/image/${encodeURIComponent(bankOrder.adminInfo?.bankName?.split(' ')[0] || 'Vcb')}-${encodeURIComponent(bankOrder.adminInfo?.accountNumber || '')}-compact2.png?amount=${bankOrder.amount}&addInfo=${encodeURIComponent(bankOrder.transferCode || 'Naptien')}&accountName=${encodeURIComponent(bankOrder.adminInfo?.accountName || '')}`}
                                      alt="VietQR Auto Fill" 
                                      className="w-48 h-48 sm:w-56 sm:h-56 object-contain rounded-xl transition-transform duration-300 group-hover:scale-[1.02]"
                                   />
                              </div>
-                             <p className="text-[10px] text-slate-400 text-center sm:text-left max-w-[220px]">Hãy kiểm tra lại số Tài Khoản & Nội Dung trước khi bấm Chuyển.</p>
+                             <p className="text-[10px] text-slate-400 text-center max-w-[220px]">Hãy kiểm tra lại số Tài Khoản & Nội Dung trước khi bấm Chuyển.</p>
                          </div>
 
                          {bankOrder.adminInfo?.contactInfo && (
-                         <div className="space-y-1 w-full sm:w-auto text-center sm:text-right mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
-                             <p className="text-xs text-slate-500 uppercase tracking-widest">Liên hệ hỗ trợ</p>
+                         <div className="space-y-2 w-full text-center pt-5 border-t border-slate-100 dark:border-slate-800">
+                             <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold flex justify-center items-center gap-2">
+                                <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+                                Liên hệ hỗ trợ
+                             </p>
                              <p className="font-medium text-sm text-blue-600 dark:text-blue-400 hover:underline cursor-pointer break-all">{bankOrder.adminInfo?.contactInfo}</p>
                          </div>
                          )}
