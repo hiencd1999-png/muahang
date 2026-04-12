@@ -32,7 +32,10 @@ export default async function AdminOrdersPage({
     ? {}
     : {
         OR: [
-          { status: "PENDING" as const },
+          { 
+            status: "PENDING" as const,
+            approvedByAdminId: null 
+          },
           { approvedByAdminId: currentAdmin.id },
         ],
       };

@@ -42,6 +42,14 @@ export async function POST(req: Request) {
         }
     });
 
+    try {
+        const { broadcastToAdmins } = await import("@/lib/telegram");
+        await broadcastToAdmins(
+            `👔 *Yêu Cầu Nâng Cấp Admin*\nKhách hàng ${user.username} vừa gửi yêu cầu nâng cấp lên quyền Quản trị viên (Admin).\n- Tài khoản: ${user.fullName || user.username}\n- Yêu cầu đang đợi phê duyệt từ SPADMIN.`,
+            "ADMIN_ORDER" // Sending to main channel
+        );
+    } catch(e) {}
+
     return NextResponse.json({ success: true, request: newReq });
   } catch (error: any) {
     return NextResponse.json({ error: "Đã xảy ra lỗi: " + error.message }, { status: 500 });

@@ -78,6 +78,15 @@ export async function POST(request: NextRequest) {
              return currentOrder;
            }
 
+           // Chặn hành vi sửa hàng loạt đơn của người khác
+           if (
+             user.role !== "SPADMIN" && 
+             currentOrder.approvedByAdminId && 
+             currentOrder.approvedByAdminId !== user.id
+           ) {
+             return currentOrder;
+           }
+
            // Handle commission when manually marking as DELIVERED
            if (status === "DELIVERED" && currentOrder.approvedByAdminId) {
              const commission = Math.floor(currentOrder.total * 0.95);

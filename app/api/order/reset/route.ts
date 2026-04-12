@@ -78,6 +78,32 @@ export async function POST(request: NextRequest) {
       `/dashboard/orders?orderId=${order.id}`
     );
 
+    try {
+        const { sendTelegramNotification, broadcastToAdmins } = await import("@/lib/telegram");
+        const adminOrderLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://datdon.otistx.com"}/admin/orders?orderId=${order.id}&action=view`;
+        
+        await sendTelegramNotification(
+            result.user.id,
+            `♻️ *Khôi phục đơn thành công*\nĐơn hàng bị huỷ #${order.id} của bạn đã được đặt lại thành công.\n- Phân bổ lại phí dịch vụ: ${(order.total/1000).toFixed(0)}k\n- Đang chờ Quản trị viên duyệt lại.`,
+            "USER_ORDER"
+        );
+
+        if (order.approvedByAdminId) {
+            await sendTelegramNotification(
+                order.approvedByAdminId,
+                `♻️ *Đơn hàng được Khôi phục!*\nKhách hàng ${result.user.username} vừa bấm Đặt Lại / Khôi phục đơn bị huỷ #${order.id}.\nVì đơn này bạn đang phụ trách, hệ thống đã ném lại vào hàng đợi của bạn.\n- *🔗 Mở chi tiết:* [Click để xem](${adminOrderLink})`,
+                "ADMIN_ORDER"
+            );
+        } else {
+            await broadcastToAdmins(
+                `♻️ *Đơn hàng bị huỷ vừa được đặt lại*\n- Mã đơn: #${order.id}\n- Sản phẩm: ${order.productName}\n- *🔗 Mở chi tiết:* [Click để xem và Nhận đơn](${adminOrderLink})`, 
+                "ADMIN_ORDER"
+            );
+        }
+    } catch (e) {
+        console.error("Reset order Telegram notify error:", e);
+    }
+
     revalidatePath("/dashboard");
     revalidatePath("/admin/orders");
 
