@@ -114,10 +114,25 @@ export function CreateOrderForm({
     [selectedVoucher]
   );
 
-  const estimatedCOD = useMemo(
-    () => Math.max(0, productPricesTotal - (selectedVoucher?.unitPrice ?? 0)),
-    [selectedVoucher, productPricesTotal]
-  );
+  const estimatedCOD = useMemo(() => {
+    if (!selectedVoucher) return productPricesTotal;
+    const lbl = selectedVoucher.label.toLowerCase();
+    
+    // Parse discount value from the voucher label (e.g. "Mã 80k", "Mã 50%/100k")
+    let discountAmount = 0;
+    if (lbl.includes("50%")) {
+      const maxMatch = lbl.match(/(\d+)k/);
+      const maxDiscount = maxMatch ? parseInt(maxMatch[1], 10) * 1000 : 0;
+      discountAmount = Math.min(maxDiscount, productPricesTotal * 0.5);
+    } else {
+      const fixedMatch = lbl.match(/(\d+)k/);
+      if (fixedMatch) {
+        discountAmount = parseInt(fixedMatch[1], 10) * 1000;
+      }
+    }
+    
+    return Math.max(0, productPricesTotal - discountAmount);
+  }, [selectedVoucher, productPricesTotal]);
 
   const activeVoucherCount = activeVoucherConfigs.length;
 
@@ -616,7 +631,7 @@ export function CreateOrderForm({
                             <option value="">Chọn phân loại</option>
                             {item.variantOptions.map((v) => (
                               <option key={v.modelId} value={v.name}>
-                                {v.name} - Giá: {formatCurrency(v.price)} (Còn: {v.stock} sp){v.stock <= 0 ? " - HẾT HÀNG" : ""}
+                                {v.name} - Giá: {formatCurrency(v.price)} (Còn: {v.stock} sp)
                               </option>
                             ))}
                           </select>
@@ -773,7 +788,9 @@ export function CreateOrderForm({
           </div>
           <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-4">
             <p className="text-sm text-slate-500 dark:text-slate-300">Tổng tiền sản phẩm: <span className="font-semibold text-slate-900 dark:text-white">{formatCurrency(productPricesTotal)}</span></p>
-            <p className="text-sm text-slate-500 dark:text-slate-300 mt-1">Trừ Voucher: <span className="font-semibold text-emerald-600 dark:text-emerald-400">-{formatCurrency(selectedVoucher?.unitPrice ?? 0)}</span></p>
+            <p className="text-sm text-slate-500 dark:text-slate-300 mt-1">
+              Trừ Voucher: <span className="font-semibold text-emerald-600 dark:text-emerald-400">-{formatCurrency(productPricesTotal - estimatedCOD)}</span>
+            </p>
             <p className="text-sm text-amber-600 dark:text-amber-500 mt-2 font-semibold bg-amber-50 dark:bg-amber-900/10 p-2 rounded-lg">Dự kiến thanh toán (COD): {formatCurrency(estimatedCOD)}</p>
             
             <hr className="my-4 border-slate-200 dark:border-slate-700" />

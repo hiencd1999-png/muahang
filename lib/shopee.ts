@@ -184,21 +184,23 @@ async function fetchProductData(shopId: string, itemId: string, cookie: string, 
       if (!modelId) continue;
       
       const stock = item.stock ?? item.normal_stock ?? 0;
-      variants.push({
-         modelId: Number(modelId),
-         name: String(item.name || "Phân loại"),
-         price: Math.floor((item.price || 0) / 100000), // convert to standard VND
-         stock: Number(stock)
-      });
+      if (stock > 0) {
+         variants.push({
+           modelId: Number(modelId),
+           name: String(item.name || "Phân loại"),
+           price: Math.floor((item.price || 0) / 100000), // convert to standard VND
+           stock: Number(stock)
+         });
+      }
     }
     
-    if (variants.length === 0) {
-      // Default fallback variant if no models are returned
+    if (variants.length === 0 && (data.stock ?? data.normal_stock ?? 0) > 0) {
+      // Default fallback variant if no models but product has stock
       variants.push({
          modelId: 0,
          name: "Mặc định",
          price: Math.floor((data.price || data.price_min || 0) / 100000),
-         stock: Number(data.stock ?? data.normal_stock ?? 0)
+         stock: Number(data.stock ?? data.normal_stock ?? 1)
       });
     }
 
