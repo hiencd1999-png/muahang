@@ -457,43 +457,61 @@ export function DepositForm() {
                   <p className="font-mono text-3xl font-black text-emerald-600 dark:text-emerald-400">{new Intl.NumberFormat('vi-VN').format(bankOrder.amount)} VNĐ</p>
                </div>
 
-               <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-900 border border-slate-100 dark:border-slate-800 grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                      <p className="text-xs text-slate-500 uppercase tracking-widest">Ngân hàng</p>
-                      <p className="font-bold">{bankOrder.adminInfo?.bankName}</p>
-                  </div>
-                  <div className="space-y-1">
-                      <p className="text-xs text-slate-500 uppercase tracking-widest">Chi nhánh</p>
-                      <p className="font-medium text-sm">{bankOrder.adminInfo?.branch || "Không ghi rõ"}</p>
-                  </div>
-                  <div className="space-y-1">
-                      <p className="text-xs text-slate-500 uppercase tracking-widest">Chủ tài khoản</p>
-                      <p className="font-bold">{bankOrder.adminInfo?.accountName}</p>
-                  </div>
-                  <div className="space-y-1">
-                      <p className="text-xs text-slate-500 uppercase tracking-widest">Số tài khoản</p>
-                      <div className="flex items-center gap-2">
-                        <p className="font-mono font-black text-emerald-700 dark:text-emerald-400">{bankOrder.adminInfo?.accountNumber}</p>
-                        <button onClick={() => copyToClipboard(bankOrder.adminInfo?.accountNumber || "", "Đã copy STK")} className="text-slate-400 hover:text-slate-800"><Copy size={16}/></button>
-                      </div>
-                  </div>
-                  <div className="sm:col-span-2 space-y-1 mt-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                      <p className="text-xs text-amber-600 dark:text-amber-400 uppercase tracking-widest font-bold">Nội dung chuyển khoản (Bắt buộc)</p>
-                      <div className="flex items-center gap-2">
-                        <p className="font-mono text-xl font-black text-amber-700 dark:text-amber-500">{bankOrder.transferCode || "Không yêu cầu"}</p>
-                        {bankOrder.transferCode && (
-                          <button onClick={() => copyToClipboard(bankOrder.transferCode, "Đã copy nội dung")} className="p-2 shrink-0 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-800 dark:hover:bg-amber-700 dark:text-amber-200 active:scale-95 transition">
-                              <Copy size={16} />
-                          </button>
+               <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                  <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+                     <div className="shrink-0 flex flex-col items-center gap-3">
+                         <p className="text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">Quét mã QR tự động điền</p>
+                         <div className="bg-white p-2 sm:p-3 rounded-2xl ring-1 ring-slate-200 dark:ring-slate-700 shadow-xs relative group w-max">
+                              <img 
+                                 src={`https://img.vietqr.io/image/${encodeURIComponent(bankOrder.adminInfo?.bankName?.split(' ')[0] || 'Vcb')}-${encodeURIComponent(bankOrder.adminInfo?.accountNumber || '')}-compact2.png?amount=${bankOrder.amount}&addInfo=${encodeURIComponent(bankOrder.transferCode || 'Naptien')}&accountName=${encodeURIComponent(bankOrder.adminInfo?.accountName || '')}`}
+                                 alt="VietQR Auto Fill" 
+                                 className="w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 object-contain rounded-xl transition-transform duration-300 group-hover:scale-[1.02]"
+                              />
+                         </div>
+                         <p className="text-[10px] text-slate-400 text-center max-w-[200px]">Hãy kiểm tra lại số Tài Khoản & Nội Dung trước khi bấm Chuyển.</p>
+                     </div>
+
+                     <div className="w-full flex-1 grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <p className="text-xs text-slate-500 uppercase tracking-widest">Ngân hàng</p>
+                            <p className="font-bold">{bankOrder.adminInfo?.bankName}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-xs text-slate-500 uppercase tracking-widest">Chi nhánh</p>
+                            <p className="font-medium text-sm">{bankOrder.adminInfo?.branch || "Không ghi rõ"}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-xs text-slate-500 uppercase tracking-widest">Chủ tài khoản</p>
+                            <p className="font-bold">{bankOrder.adminInfo?.accountName}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-xs text-slate-500 uppercase tracking-widest">Số tài khoản</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-mono font-black text-emerald-700 dark:text-emerald-400">{bankOrder.adminInfo?.accountNumber}</p>
+                              <button onClick={() => copyToClipboard(bankOrder.adminInfo?.accountNumber || "", "Đã copy STK")} className="text-slate-400 hover:text-slate-800"><Copy size={16}/></button>
+                            </div>
+                        </div>
+                        
+                        <div className="sm:col-span-2 space-y-2 mt-2 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/80 rounded-xl relative overflow-hidden">
+                            <div className="absolute right-0 top-0 w-24 h-24 bg-amber-500/10 rounded-full blur-xl -mr-10 -mt-10 pointer-events-none"></div>
+                            <p className="text-xs text-amber-700 dark:text-amber-400 uppercase tracking-widest font-bold">Nội dung chuyển khoản (Bắt buộc chính xác chữ)</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-mono text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-500 tracking-tight">{bankOrder.transferCode || "Không yêu cầu"}</p>
+                              {bankOrder.transferCode && (
+                                <button onClick={() => copyToClipboard(bankOrder.transferCode, "Đã copy nội dung")} className="ml-2 p-2.5 shrink-0 rounded-xl bg-amber-200/50 hover:bg-amber-300/50 text-amber-800 dark:bg-amber-800/80 dark:hover:bg-amber-700 dark:text-amber-200 active:scale-95 transition shadow-sm">
+                                    <Copy size={20} />
+                                </button>
+                              )}
+                            </div>
+                        </div>
+                        {bankOrder.adminInfo?.contactInfo && (
+                        <div className="sm:col-span-2 space-y-1 pt-3 border-t border-slate-100 dark:border-slate-800 mt-2">
+                            <p className="text-xs text-slate-500 uppercase tracking-widest">Liên hệ hỗ trợ</p>
+                            <p className="font-medium text-sm text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">{bankOrder.adminInfo?.contactInfo}</p>
+                        </div>
                         )}
-                      </div>
+                     </div>
                   </div>
-                  {bankOrder.adminInfo?.contactInfo && (
-                  <div className="sm:col-span-2 space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800 mt-2">
-                      <p className="text-xs text-slate-500 uppercase tracking-widest">Liên hệ hỗ trợ</p>
-                      <p className="font-medium text-sm">{bankOrder.adminInfo?.contactInfo}</p>
-                  </div>
-                  )}
                </div>
             </div>
 

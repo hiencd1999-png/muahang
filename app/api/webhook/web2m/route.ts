@@ -35,29 +35,40 @@ export async function POST(req: NextRequest) {
 
         // 3. Phân tích Dữ liệu từ Webhook
         const body = await req.json();
-        
-        if (body.status === true && Array.isArray(body.data)) {
-            for (const tx of body.data) {
-                // Chỉ xử lý giao dịch nhận tiền (IN)
-                if (tx.type === "IN") {
-                    const txAmount = parseInt(tx.amount, 10);
-                    const txDesc = normalizeString(tx.description);
+        console.log("Web2M Payload Receieved:", JSON.stringify(body));
 
-                    if (!isNaN(txAmount)) {
+        let transactions: any[] = [];
+        if (Array.isArray(body)) {
+            transactions = body;
+        } else if (body.data && Array.isArray(body.data)) {
+            transactions = body.data;
+        } else if (body.transactions && Array.isArray(body.transactions)) {
+            transactions = body.transactions;
+        }
+
+        for (const tx of transactions) {
+            // Web2M thường có type là IN/OUT, +/-, hoặc không có
+            const typeStr = String(tx.type || tx.transactionType || "IN").toUpperCase();
+            
+            if (typeStr === "IN" || typeStr === "+" || typeStr === "CREDIT") {
+                const txAmount = Number(tx.amount || tx.tien_vao || 0);
+                const txDesc = normalizeString(tx.description || tx.noi_dung || "");
+
+                if (txAmount > 0) {
                         // 4. Tìm kiếm Lệnh nạp tiền PENDING khớp cú pháp
                         // Mã transferCode có dạng "DDxxxxxx", ta tìm xem BankDeposit nào của admin này đang chờ duyệt
                         // Thường TransferCode sẽ nằm nguyên vẹn trong nội dung chuyển khoản
-                        const pendingDeposits = await prisma.bankDeposit.findMany({
+                        const targetDeposits = await prisma.bankDeposit.findMany({
                             where: {
                                 adminId: adminConfig.adminId,
                                 amount: txAmount, // Số tiền gửi đến phải khớp số tiền tạo lệnh để tránh fake
-                                status: "PENDING",
+                                status: { in: ["PENDING", "TRANSFERRED", "COMPLAINED"] },
                                 transferCode: { not: null }
                             }
                         });
 
                         // Xác định xem Description có chứa mã nào không
-                        for (const deposit of pendingDeposits) {
+                        for (const deposit of targetDeposits) {
                             if (deposit.transferCode && txDesc.includes(normalizeString(deposit.transferCode))) {
                                 // KHỚP MÃ CÚ PHÁP VÀ SỐ TIỀN -> DUYỆT TỰ ĐỘNG
                                 try {
@@ -66,7 +77,7 @@ export async function POST(req: NextRequest) {
                                         const updateResult = await dbTx.bankDeposit.updateMany({
                                             where: { 
                                                 id: deposit.id, 
-                                                status: "PENDING"
+                                                status: deposit.status
                                             },
                                             data: { status: "COMPLETED", complaintImage: null, updatedAt: new Date() }
                                         });
@@ -112,8 +123,6 @@ export async function POST(req: NextRequest) {
                                 break;
                             }
                         }
-                    }
-                }
             }
         }
 
