@@ -81,6 +81,22 @@ textarea {
   background: rgba(217, 119, 6, 0.2);
 }
 
+::placeholder {
+  color: #94a3b8; /* slate-400 */
+  opacity: 1; /* Override Firefox default */
+  font-weight: 400;
+  transition: opacity 0.3s ease;
+}
+
+html.dark ::placeholder {
+  color: #71717a; /* zinc-500 */
+}
+
+input:focus::placeholder,
+textarea:focus::placeholder {
+  opacity: 0.4;
+}
+
 .shell {
   width: min(1180px, calc(100vw - 32px));
   margin: 0 auto;
