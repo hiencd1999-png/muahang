@@ -41,7 +41,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  const { notificationId } = await request.json();
+  const { notificationId, markAll } = await request.json();
+
+  if (markAll) {
+    await prisma.notification.updateMany({
+      where: { userId: result.user.id, read: false },
+      data: { read: true },
+    });
+    return NextResponse.json({ success: true });
+  }
 
   if (!notificationId) {
     return NextResponse.json({ error: "notificationId required" }, { status: 400 });

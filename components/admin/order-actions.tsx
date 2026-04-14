@@ -79,6 +79,7 @@ export function OrderActions({
   approvedByAdminId,
   approvedByAdminName,
   assignableAdmins,
+  hideViewDetails = false,
 }: {
   orderId: number;
   status: string;
@@ -88,6 +89,7 @@ export function OrderActions({
   approvedByAdminId: number | null;
   approvedByAdminName: string | null;
   assignableAdmins: AssignableAdmin[];
+  hideViewDetails?: boolean;
 }) {
   const router = useRouter();
   const { addToast } = useToast();
@@ -344,15 +346,17 @@ export function OrderActions({
   return (
     <>
       <div className="flex items-center gap-2 whitespace-nowrap overflow-x-auto">
-        <button
-          type="button"
-          onClick={handleViewDetails}
-          disabled={isLoadingDetails}
-          className="shrink-0 rounded-xl bg-slate-500 hover:bg-slate-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors flex items-center gap-1"
-          title="Xem chi tiết"
-        >
-          {isLoadingDetails ? "..." : <><Eye size={14} /> Chi tiết</>}
-        </button>
+        {!hideViewDetails && (
+          <button
+            type="button"
+            onClick={handleViewDetails}
+            disabled={isLoadingDetails}
+            className="shrink-0 rounded-xl bg-slate-500 hover:bg-slate-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-colors flex items-center gap-1"
+            title="Xem chi tiết"
+          >
+            {isLoadingDetails ? "..." : <><Eye size={14} /> Chi tiết</>}
+          </button>
+        )}
         {status === "PENDING" ? (
           <button
             type="button"

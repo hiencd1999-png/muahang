@@ -8,6 +8,8 @@ import { OrderActions } from "@/components/admin/order-actions";
 import { AdvancedFilterPanel } from "@/components/admin/advanced-filter";
 import { Pagination } from "@/components/shared/pagination";
 import { useToast } from "@/components/shared/toast";
+import { ViewOrderDetailsButton } from "@/components/admin/view-order-details-button";
+import { Eye } from "lucide-react";
 
 interface Order {
   id: number;
@@ -266,15 +268,17 @@ export function AdminOrdersView({
           <table className="min-w-[1400px] text-center text-sm border-collapse">
             <thead className="bg-slate-100 text-slate-500">
               <tr>
-                <th className="px-4 py-3 w-10">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.length === orders.length && orders.length > 0}
-                    onChange={(e) => (e.target.checked ? selectAll() : clearAll())}
-                    className="rounded"
-                  />
+                <th className="px-4 py-3 sticky left-0 z-20 bg-slate-100 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] border-r border-slate-200" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.length === orders.length && orders.length > 0}
+                      onChange={(e) => (e.target.checked ? selectAll() : clearAll())}
+                      className="rounded shrink-0"
+                    />
+                    <Eye size={16} className="text-slate-500 shrink-0" />
+                  </div>
                 </th>
-                <th className="px-4 py-3 whitespace-nowrap">ID</th>
                 <th className="px-4 py-3 whitespace-nowrap">User</th>
                 <th className="px-4 py-3 whitespace-nowrap min-w-[300px]">Địa chỉ</th>
                 <th className="px-4 py-3 whitespace-nowrap min-w-[150px]">Phân loại</th>
@@ -287,16 +291,22 @@ export function AdminOrdersView({
             </thead>
             <tbody>
               {orders.map((order) => (
-                <tr key={order.id} className="border-t border-slate-200 hover:bg-slate-50">
-                  <td className="px-4 py-4 align-top">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(order.id)}
-                      onChange={() => toggleSelect(order.id)}
-                      className="rounded"
-                    />
+                <tr key={order.id} className="group border-t border-slate-200 hover:bg-slate-50">
+                  <td className="px-4 py-4 align-middle sticky left-0 z-10 bg-white group-hover:bg-slate-50 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] border-r border-slate-200" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
+                    <div className="flex items-center justify-between gap-3 h-full">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(order.id)}
+                        onChange={() => toggleSelect(order.id)}
+                        className="rounded shrink-0"
+                      />
+                      <ViewOrderDetailsButton 
+                        orderId={order.id} 
+                        currentAdminId={currentAdminId} 
+                        canManageAllOrders={canManageAllOrders} 
+                      />
+                    </div>
                   </td>
-                  <td className="px-4 py-4 font-semibold text-slate-900 whitespace-nowrap">#{order.id}</td>
                   <td className="px-4 py-4 text-slate-700 text-sm whitespace-nowrap">
                     {canManageAllOrders || order.approvedByAdminId === currentAdminId ? (order.user.fullName || order.user.username) : "***"}
                   </td>
@@ -343,6 +353,7 @@ export function AdminOrdersView({
                         approvedByAdminId={order.approvedByAdminId}
                         approvedByAdminName={order.approvedByAdminName}
                         assignableAdmins={assignableAdmins}
+                        hideViewDetails={true}
                       />
                     </div>
                   </td>
@@ -357,9 +368,16 @@ export function AdminOrdersView({
             <div key={order.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">#{order.id}</p>
-                    <p className="text-xs text-slate-500" suppressHydrationWarning>{formatDate(order.createdAt)}</p>
+                  <div className="flex items-center gap-3">
+                    <ViewOrderDetailsButton 
+                      orderId={order.id} 
+                      currentAdminId={currentAdminId} 
+                      canManageAllOrders={canManageAllOrders} 
+                    />
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">#{order.id}</p>
+                      <p className="text-xs text-slate-500" suppressHydrationWarning>{formatDate(order.createdAt)}</p>
+                    </div>
                   </div>
                   <StatusPill status={order.status} />
                 </div>
@@ -425,6 +443,7 @@ export function AdminOrdersView({
                       approvedByAdminId={order.approvedByAdminId}
                       approvedByAdminName={order.approvedByAdminName}
                       assignableAdmins={assignableAdmins}
+                      hideViewDetails={true}
                     />
                   </div>
                 </div>

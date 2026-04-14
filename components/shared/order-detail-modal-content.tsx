@@ -321,6 +321,10 @@ export function OrderDetailModalContent({
                 <p className="mt-1.5 font-black text-amber-700 dark:text-amber-500 text-lg">{typeof order.unitPrice === "number" ? formatCurrency(order.unitPrice) : "-"}</p>
               </div>
             </div>
+            
+            <p className="text-sm text-amber-600 dark:text-amber-500 mt-2 font-semibold bg-amber-50 dark:bg-amber-900/10 p-2 rounded-lg">
+              Dự kiến thanh toán (COD): 0 ₫
+            </p>
             {order.trackingNo ? (
               <div className="rounded-2xl border border-indigo-100 bg-indigo-50/30 p-4 dark:border-indigo-900/40 dark:bg-indigo-950/20">
                 <p className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider mb-1">Mã vận đơn</p>

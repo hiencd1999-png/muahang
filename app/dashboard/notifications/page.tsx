@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/format";
+import { MarkAllReadButton } from "@/components/dashboard/mark-all-read-button";
 
 export default async function NotificationsPage() {
   const user = await requireUser();
@@ -10,9 +11,14 @@ export default async function NotificationsPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const hasUnread = notifications.some((n) => !n.read);
+
   return (
     <section className="panel rounded-[1.75rem] p-4 sm:p-6">
-      <h2 className="text-xl font-semibold text-slate-950">Tất cả thông báo</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+        <h2 className="text-xl font-semibold text-slate-950">Tất cả thông báo</h2>
+        {hasUnread && <MarkAllReadButton />}
+      </div>
 
       <div className="mt-6 space-y-3">
         {notifications.length === 0 ? (

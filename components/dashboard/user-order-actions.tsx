@@ -39,7 +39,21 @@ interface OrderData {
   } | null;
 }
 
-export function UserOrderActions({ orderId, status, complaintStatus, updatedAt, buttonClassName }: { orderId: number; status: string; complaintStatus?: string | null; updatedAt: Date; buttonClassName?: string }) {
+export function UserOrderActions({
+  orderId,
+  status,
+  complaintStatus,
+  updatedAt,
+  buttonClassName,
+  hideViewDetails = false,
+}: {
+  orderId: number;
+  status: string;
+  complaintStatus?: string | null;
+  updatedAt: Date;
+  buttonClassName?: string;
+  hideViewDetails?: boolean;
+}) {
   const router = useRouter();
   const { addToast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -272,17 +286,19 @@ export function UserOrderActions({ orderId, status, complaintStatus, updatedAt, 
   return (
     <>
       <div className="flex flex-row gap-2 flex-nowrap items-center">
-        <button
-          type="button"
-          onClick={handleViewDetails}
-          disabled={isLoadingDetails}
-          className={
-            `rounded-xl bg-amber-600 hover:bg-amber-700 font-semibold text-white disabled:opacity-60 transition-colors inline-flex items-center gap-1.5 ${buttonClassName ?? 'px-3 py-2 text-xs'}`
-          }
-          title="Xem chi tiết"
-        >
-          {isLoadingDetails ? "..." : <><Eye size={14} /> Chi tiết</>}
-        </button>
+        {!hideViewDetails && (
+          <button
+            type="button"
+            onClick={handleViewDetails}
+            disabled={isLoadingDetails}
+            className={
+              `rounded-xl bg-amber-600 hover:bg-amber-700 font-semibold text-white disabled:opacity-60 transition-colors inline-flex items-center gap-1.5 ${buttonClassName ?? 'px-3 py-2 text-xs'}`
+            }
+            title="Xem chi tiết"
+          >
+            {isLoadingDetails ? "..." : <><Eye size={14} /> Chi tiết</>}
+          </button>
+        )}
         {status === "PENDING" ? (
           <button
             type="button"

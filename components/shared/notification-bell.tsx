@@ -69,6 +69,28 @@ export function NotificationBell() {
     }
   }
 
+  async function markAllAsRead() {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/user/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAll: true }),
+      });
+
+      if (response.ok) {
+        setNotifications((prev) =>
+          prev.map((n) => ({ ...n, read: true }))
+        );
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      addToast("error", "Lỗi cập nhật thông báo");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function resolveNotificationLink(notif: Notification) {
     if (notif.link && notif.link.trim()) {
       const orderIdMatch = /#(\d+)/.exec(notif.title) || /#(\d+)/.exec(notif.message);
@@ -126,10 +148,21 @@ export function NotificationBell() {
                 className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] max-w-[420px] max-h-[85vh] bg-white dark:bg-slate-950 shadow-2xl z-[9999] animate-rise rounded-[2.5rem] border border-slate-200 dark:border-slate-700/80 overflow-hidden flex flex-col sm:w-[400px] sm:max-h-[600px]"
               >
                 <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700/80 p-5 sm:p-6">
-                  <h3 className="font-black text-slate-900 dark:text-white text-xl tracking-tight">Thông báo</h3>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                    <h3 className="font-black text-slate-900 dark:text-white text-xl tracking-tight">Thông báo</h3>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={markAllAsRead}
+                        disabled={loading}
+                        className="text-[11px] sm:text-xs font-bold text-amber-600 hover:text-amber-700 disabled:opacity-50 transition w-fit"
+                      >
+                        Đánh dấu tất cả đã đọc
+                      </button>
+                    )}
+                  </div>
                   <button 
                     onClick={() => setIsOpen(false)}
-                    className="p-2.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
+                    className="p-2.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors flex-shrink-0"
                   >
                     <svg className="w-6 h-6 text-slate-500 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />

@@ -6,6 +6,8 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { StatusPill } from "@/components/shared/status-pill";
 import { UserOrderActions } from "@/components/dashboard/user-order-actions";
 import { useToast } from "@/components/shared/toast";
+import { ViewUserOrderDetailsButton } from "@/components/dashboard/view-user-order-details-button";
+import { Eye } from "lucide-react";
 
 interface Order {
   id: number;
@@ -29,6 +31,22 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
   const { addToast } = useToast();
   const [focusedOrderId, setFocusedOrderId] = useState<number | null>(null);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const filteredOrders = orders.filter((order) => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !q || 
+      order.id.toString() === q ||
+      order.productLink.toLowerCase().includes(q) ||
+      (order.productName && order.productName.toLowerCase().includes(q)) ||
+      (order.address && order.address.toLowerCase().includes(q));
+      
+    const matchesStatus = !statusFilter || order.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
   const getShortAddress = (fullAddress: string) => {
     if (!fullAddress) return "-";
     const cleanAddress = fullAddress.replace(/\n/g, " ").trim();
@@ -49,7 +67,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
   };
 
   const toggleSelectAll = () => {
-    setSelectedIds((prev) => (prev.length === orders.length ? [] : orders.map((order) => order.id)));
+    setSelectedIds((prev) => (prev.length === filteredOrders.length ? [] : filteredOrders.map((order) => order.id)));
   };
 
   async function readApiResponse(response: Response) {
@@ -158,16 +176,39 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Tổng đơn</p>
-            <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{orders.length}</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Tổng đơn {searchQuery || statusFilter ? "(đã lọc)" : ""}</p>
+            <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{filteredOrders.length}</p>
           </div>
           <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Đơn gần nhất</p>
             <p className="mt-4 text-2xl font-black text-slate-950 dark:text-white">
-              {orders[0] ? `#${orders[0].id}` : "Chưa có"}
+              {filteredOrders[0] ? `#${filteredOrders[0].id}` : "Chưa có"}
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-[1fr_200px] mb-4">
+        <input
+          type="text"
+          placeholder="Tìm theo ID, tên sản phẩm, địa chỉ..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-sm outline-none focus:border-amber-500 dark:text-white"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-sm outline-none focus:border-amber-500 dark:text-white"
+        >
+          <option value="">Tất cả trạng thái</option>
+          <option value="PENDING">Chờ xử lý</option>
+          <option value="PROCESSING">Đang xử lý</option>
+          <option value="ORDER_PLACED">Đã đặt đơn</option>
+          <option value="TRACKING_GENERATED">Đã lên mã VĐ</option>
+          <option value="DELIVERED">Đã giao hàng</option>
+          <option value="CANCELED">Đã hủy</option>
+        </select>
       </div>
 
       {selectedIds.length > 0 ? (
@@ -180,7 +221,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                 onClick={toggleSelectAll}
                 className="rounded-2xl border border-amber-200 dark:border-amber-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-amber-700 dark:text-amber-400 transition hover:bg-amber-50 dark:hover:bg-amber-800"
               >
-                {selectedIds.length === orders.length ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                {selectedIds.length === filteredOrders.length && filteredOrders.length > 0 ? "Bỏ chọn tất cả" : "Chọn tất cả"}
               </button>
               <button
                 type="button"
@@ -208,15 +249,17 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
           <table className="min-w-[1200px] text-center text-sm border-collapse">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-300">
               <tr>
-                <th className="px-4 py-3 w-10">
-                  <input
-                    type="checkbox"
-                    checked={orders.length > 0 && selectedIds.length === orders.length}
-                    onChange={toggleSelectAll}
-                    className="rounded"
-                  />
+                <th className="px-4 py-3 sticky left-0 z-20 bg-slate-50 dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700/80 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <input
+                      type="checkbox"
+                      checked={filteredOrders.length > 0 && selectedIds.length === filteredOrders.length}
+                      onChange={toggleSelectAll}
+                      className="rounded shrink-0"
+                    />
+                    <Eye size={16} className="text-slate-500 dark:text-slate-400 shrink-0" />
+                  </div>
                 </th>
-                <th className="px-4 py-3 whitespace-nowrap">ID</th>
                 <th className="px-4 py-3 whitespace-nowrap min-w-[280px]">Địa chỉ</th>
                 <th className="px-4 py-3 whitespace-nowrap min-w-[150px]">Phân loại</th>
                 <th className="px-4 py-3 whitespace-nowrap">Tổng tiền</th>
@@ -226,23 +269,25 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <tr
                   key={order.id}
                   data-order-id={order.id}
-                  className={`border-t border-slate-100 dark:border-slate-700/80 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
+                  className={`group border-t border-slate-100 dark:border-slate-700/80 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
                     focusedOrderId === order.id ? "bg-amber-100/40 dark:bg-amber-900/20" : ""
                   }`}
                 >
-                  <td className="px-4 py-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(order.id)}
-                      onChange={() => toggleSelect(order.id)}
-                      className="rounded"
-                    />
+                  <td className="px-4 py-4 align-middle sticky left-0 z-10 bg-white dark:bg-slate-900 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] border-r border-slate-100 dark:border-slate-700/80 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
+                    <div className="flex items-center justify-between gap-3 h-full">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(order.id)}
+                        onChange={() => toggleSelect(order.id)}
+                        className="rounded shrink-0"
+                      />
+                      <ViewUserOrderDetailsButton orderId={order.id} />
+                    </div>
                   </td>
-                  <td className="px-4 py-4 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">#{order.id}</td>
                   <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-300">
                     <div className="flex flex-col items-center">
                       <p className="font-medium text-slate-900 dark:text-white whitespace-nowrap truncate max-w-[280px]">{getShortAddress(order.address)}</p>
@@ -266,7 +311,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                   <td className="px-4 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-300 whitespace-nowrap uppercase tracking-wider" suppressHydrationWarning>{formatDate(order.createdAt)}</td>
                   <td className="px-4 py-4">
                     <div className="flex justify-center">
-                      <UserOrderActions orderId={order.id} status={order.status} complaintStatus={order.complaintStatus} updatedAt={order.updatedAt} buttonClassName="min-w-[90px] h-10 px-3 py-2 text-xs" />
+                      <UserOrderActions orderId={order.id} status={order.status} complaintStatus={order.complaintStatus} updatedAt={order.updatedAt} buttonClassName="min-w-[90px] h-10 px-3 py-2 text-xs" hideViewDetails={true} />
                     </div>
                   </td>
                 </tr>
@@ -276,7 +321,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
         </div>
 
         <div className="lg:hidden space-y-4">
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <div
               key={order.id}
               data-order-id={order.id}
@@ -287,9 +332,12 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-black text-slate-900 dark:text-white">#{order.id}</span>
-                  <StatusPill status={order.status} />
+                <div className="flex items-center gap-3">
+                  <ViewUserOrderDetailsButton orderId={order.id} />
+                  <div>
+                    <span className="font-black text-slate-900 dark:text-white">#{order.id}</span>
+                    <StatusPill status={order.status} />
+                  </div>
                 </div>
                 <label className="inline-flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-800 p-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest cursor-pointer">
                   <input
@@ -331,15 +379,18 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
                   complaintStatus={order.complaintStatus}
                   updatedAt={order.updatedAt}
                   buttonClassName="w-full h-12 rounded-xl text-sm font-semibold shadow-sm active:scale-[0.98] transition-transform" 
+                  hideViewDetails={true}
                 />
               </div>
             </div>
           ))}
         </div>
 
-        {orders.length === 0 && (
+        {filteredOrders.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-sm text-slate-500 dark:text-slate-300">Chưa có đơn nào.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-300">
+              {orders.length === 0 ? "Chưa có đơn nào." : "Không tìm thấy đơn nào phù hợp với bộ lọc."}
+            </p>
           </div>
         )}
       </div>
