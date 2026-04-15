@@ -211,22 +211,71 @@ async function fetchProductData(shopId: string, itemId: string, cookie: string, 
 }
 
 export async function fetchShopeeProductDetails(productLink: string, overrideCookie?: string): Promise<ShopeeProductDetails> {
+  // 1. Thu thập danh sách cookie ứng viên
   const sysConfig = await prisma.systemConfig.findUnique({ where: { key: "SHOPEE_SPC_ST" } });
-  let cookie = overrideCookie || (sysConfig?.value || process.env.COOKIE || "").trim();
+  const defaultCookie = (sysConfig?.value || process.env.COOKIE || "").trim();
   
-  if (cookie && !cookie.includes("SPC_ST=")) {
-    cookie = `SPC_ST=${cookie}`;
+  // Lấy thêm cookie từ các đơn hàng gần đây đã thành công
+  const recentOrders = await prisma.order.findMany({
+    where: { spcCookie: { not: "" } },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+    select: { spcCookie: true }
+  });
+  
+  const candidateCookies = new Set<string>();
+  if (overrideCookie) candidateCookies.add(overrideCookie);
+  if (defaultCookie) candidateCookies.add(defaultCookie);
+  recentOrders.forEach(o => {
+    if (o.spcCookie) candidateCookies.add(o.spcCookie);
+  });
+  
+  const cookiesToTry = Array.from(candidateCookies).map(c => {
+    const val = c.trim();
+    return val.includes("SPC_ST=") ? val : `SPC_ST=${val}`;
+  });
+
+  if (cookiesToTry.length === 0) {
+    // Nếu hoàn toàn không có cookie nào, vẫn thử chạy không cookie hoặc ném lỗi nếu cần
+    // Ở đây ta cứ cho một mảng rỗng để vòng lặp chạy ít nhất 1 lần với null agent/cookie nếu có thể
+    cookiesToTry.push("");
   }
 
-  const proxyAgent = await getRandomSysProxy();
+  // 2. Giải quyết ShopId và ItemId
+  let shopId: string | undefined;
+  let itemId: string | undefined;
+  let resolvedLink: string = productLink;
 
-  const { shopId, itemId, resolvedLink } = await resolveShopAndItemIds(productLink, cookie, proxyAgent);
+  // Thử giải quyết link với các cookie khác nhau nếu bị chặn
+  for (const cookie of cookiesToTry) {
+    const proxyAgent = await getRandomSysProxy();
+    const resolved = await resolveShopAndItemIds(productLink, cookie, proxyAgent);
+    if (resolved.shopId && resolved.itemId) {
+      shopId = resolved.shopId;
+      itemId = resolved.itemId;
+      resolvedLink = resolved.resolvedLink;
+      break;
+    }
+  }
 
   if (!shopId || !itemId) {
-    throw new Error("Không tìm thấy shopId hoặc itemId từ link Shopee.");
+    throw new Error("Không tìm thấy shopId hoặc itemId từ link Shopee (Có thể link sai hoặc Shopee đang chặn mạnh).");
   }
 
-  const prodData = await fetchProductData(shopId, itemId, cookie, proxyAgent);
+  // 3. Lấy dữ liệu sản phẩm với cơ chế retry
+  let prodData: any = null;
+  
+  for (const cookie of cookiesToTry) {
+    const proxyAgent = await getRandomSysProxy();
+    prodData = await fetchProductData(shopId, itemId, cookie, proxyAgent);
+    
+    // Nếu lấy được biến thể (variants) thì coi như thành công
+    if (prodData && prodData.variants && prodData.variants.length > 0) {
+      break;
+    }
+    // Nếu bị chặn hoặc không có dữ liệu, tiếp tục thử cookie + proxy tiếp theo
+  }
+
   let productName = prodData?.productName || "Sản phẩm Shopee";
 
   if (!prodData || productName === "Sản phẩm Shopee") {
