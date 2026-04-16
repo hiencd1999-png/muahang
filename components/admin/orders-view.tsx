@@ -31,11 +31,23 @@ interface Order {
   isLockerPickup?: boolean;
 }
 
+
 interface AssignableAdmin {
   id: number;
   username: string;
   fullName: string | null;
   role: "ADMIN" | "SPADMIN";
+}
+
+interface AdminOrdersViewProps {
+  orders: Order[];
+  totalCount: number;
+  totalPages: number;
+  page: number;
+  pageSize: number;
+  currentAdminId: number;
+  canManageAllOrders: boolean;
+  assignableAdmins: AssignableAdmin[];
 }
 
 import { AdminGuideModal } from "@/components/admin/admin-guide-modal";
@@ -45,18 +57,11 @@ export function AdminOrdersView({
   totalCount,
   totalPages,
   page,
+  pageSize,
   currentAdminId,
   canManageAllOrders,
   assignableAdmins,
-}: {
-  orders: Order[];
-  totalCount: number;
-  totalPages: number;
-  page: number;
-  currentAdminId: number;
-  canManageAllOrders: boolean;
-  assignableAdmins: AssignableAdmin[];
-}) {
+}: AdminOrdersViewProps) {
   const { addToast } = useToast();
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -144,6 +149,14 @@ export function AdminOrdersView({
   }
 
   const searchParams = useSearchParams();
+  const currentPageSize = [10, 20, 50].includes(Number(searchParams.get("pageSize"))) ? Number(searchParams.get("pageSize")) : 10;
+  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSize = e.target.value;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("pageSize", newSize);
+    params.set("page", "1");
+    window.location.search = params.toString();
+  };
   const currentQuery = searchParams.get("q") || "";
   const currentStatus = searchParams.get("status") || "";
 
@@ -170,6 +183,24 @@ export function AdminOrdersView({
 
   return (
     <section className="min-w-0 space-y-6">
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-sm text-slate-600">
+          Tổng đơn: <span className="font-semibold">{totalCount}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm">Hiển thị:</span>
+          <select
+            className="rounded-lg border border-slate-200 px-2 py-1 text-sm"
+            value={currentPageSize}
+            onChange={handlePageSizeChange}
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+          <span className="text-sm">/trang</span>
+        </div>
+      </div>
       <div className="mb-6 grid gap-4 lg:grid-cols-[1.5fr_0.9fr] lg:items-end">
         <div className="space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pr-2">
@@ -264,11 +295,11 @@ export function AdminOrdersView({
 
       {/* Tables */}
       <div className="mt-5 min-w-0">
-        <div className="hidden lg:block overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-white shadow-sm w-full">
-          <table className="min-w-[1400px] text-center text-sm border-collapse">
-            <thead className="bg-slate-100 text-slate-500">
+        <div className="hidden lg:block overflow-auto max-h-[75vh] rounded-[1.5rem] border border-slate-200 bg-white shadow-sm w-full">
+          <table className="min-w-[1400px] text-center text-sm border-collapse relative">
+            <thead className="bg-slate-100 text-slate-500 sticky top-0 z-30 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
               <tr>
-                <th className="px-4 py-3 sticky left-0 z-20 bg-slate-100 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] border-r border-slate-200" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
+                <th className="px-4 py-3 sticky left-0 z-40 bg-slate-100 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] border-r border-slate-200" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
                   <div className="flex items-center justify-between gap-3">
                     <input
                       type="checkbox"

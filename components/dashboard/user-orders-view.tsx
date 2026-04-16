@@ -26,26 +26,35 @@ interface Order {
   isLockerPickup?: boolean;
 }
 
-export function UserOrdersView({ orders }: { orders: Order[] }) {
+
+import { Pagination } from "@/components/shared/pagination";
+
+interface UserOrdersViewProps {
+  orders: Order[];
+  page: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount }: UserOrdersViewProps) {
   const searchParams = useSearchParams();
   const { addToast } = useToast();
   const [focusedOrderId, setFocusedOrderId] = useState<number | null>(null);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  const filteredOrders = orders.filter((order) => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = !q || 
-      order.id.toString() === q ||
-      order.productLink.toLowerCase().includes(q) ||
-      (order.productName && order.productName.toLowerCase().includes(q)) ||
-      (order.address && order.address.toLowerCase().includes(q));
-      
-    const matchesStatus = !statusFilter || order.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  // Lấy pageSize hiện tại từ URL
+  const currentPageSize = [10, 20, 50].includes(Number(searchParams.get("pageSize"))) ? Number(searchParams.get("pageSize")) : 10;
+
+  // Điều hướng khi chọn pageSize mới
+  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSize = e.target.value;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("pageSize", newSize);
+    params.set("page", "1"); // reset về trang 1 khi đổi pageSize
+    window.location.search = params.toString();
+  };
 
   const getShortAddress = (fullAddress: string) => {
     if (!fullAddress) return "-";
@@ -56,7 +65,6 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
   const selectedOrders = orders.filter((order) => selectedIds.includes(order.id));
   const canDeleteCanceled = selectedOrders.length > 0 && selectedOrders.every((order) => order.status === "CANCELED");
 
@@ -244,12 +252,31 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
         </div>
       ) : null}
 
-      <div className="mt-5 space-y-4 min-w-0">
-        <div className="hidden lg:block rounded-[1.5rem] border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-sm overflow-x-auto w-full">
+      <div className="flex items-center justify-between mt-5 mb-2">
+        <div className="text-sm text-slate-600">
+          Tổng đơn: <span className="font-semibold">{totalCount}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm">Hiển thị:</span>
+          <select
+            className="rounded-lg border border-slate-200 px-2 py-1 text-sm"
+            value={currentPageSize}
+            onChange={handlePageSizeChange}
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+          <span className="text-sm">/trang</span>
+        </div>
+      </div>
+
+      <div className="space-y-4 min-w-0">
+        <div className="hidden lg:block rounded-[1.5rem] border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-sm overflow-auto max-h-[75vh] w-full">
           <table className="min-w-[1200px] text-center text-sm border-collapse">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-300">
+            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 sticky top-0 z-30 shadow-[0_1px_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_rgba(255,255,255,0.05)]">
               <tr>
-                <th className="px-4 py-3 sticky left-0 z-20 bg-slate-50 dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700/80 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
+                <th className="px-4 py-3 sticky left-0 z-40 bg-slate-50 dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700/80 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
                   <div className="flex items-center justify-between gap-3">
                     <input
                       type="checkbox"
@@ -394,6 +421,7 @@ export function UserOrdersView({ orders }: { orders: Order[] }) {
           </div>
         )}
       </div>
+      <Pagination currentPage={page} totalPages={totalPages} baseUrl="/dashboard/orders" />
     </section>
   );
 }

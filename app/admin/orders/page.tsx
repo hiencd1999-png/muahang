@@ -8,22 +8,24 @@ import { AdminOrdersView } from "@/components/admin/orders-view";
 import { isSpAdminRole } from "@/lib/roles";
 import { releaseExpiredProcessingOrders } from "@/lib/order-assignment";
 
-const ITEMS_PER_PAGE = 20;
 
-export default async function AdminOrdersPage({
+const DEFAULT_PAGE_SIZE = 10;
+
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; page?: string; voucherCode?: string; dateFrom?: string; dateTo?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; page?: string; pageSize?: string; voucherCode?: string; dateFrom?: string; dateTo?: string }>;
 }) {
   const currentAdmin = await requireUser("ADMIN");
   const canManageAllOrders = isSpAdminRole(currentAdmin.role);
 
   await releaseExpiredProcessingOrders();
 
+
   const params = await searchParams;
   const query = params.q || "";
   const statusFilter = params.status || "";
   const page = Math.max(1, parseInt(params.page || "1"));
+  const pageSize = [10, 20, 50].includes(Number(params.pageSize)) ? Number(params.pageSize) : DEFAULT_PAGE_SIZE;
   const voucherCodeFilter = params.voucherCode || "";
   const dateFrom = params.dateFrom || "";
   const dateTo = params.dateTo || "";
@@ -65,8 +67,8 @@ export default async function AdminOrdersPage({
       },
       include: { user: true },
       orderBy: { createdAt: "desc" },
-      skip: (page - 1) * ITEMS_PER_PAGE,
-      take: ITEMS_PER_PAGE,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     }),
     prisma.order.count({
       where: {
@@ -109,7 +111,7 @@ export default async function AdminOrdersPage({
       : null,
   }));
 
-  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const assignableAdminsRaw = await prisma.user.findMany({
     where: {
@@ -135,6 +137,7 @@ export default async function AdminOrdersPage({
       totalCount={totalCount}
       totalPages={totalPages}
       page={page}
+      pageSize={pageSize}
       currentAdminId={currentAdmin.id}
       canManageAllOrders={canManageAllOrders}
       assignableAdmins={assignableAdmins}
