@@ -11,9 +11,10 @@ import { releaseExpiredProcessingOrders } from "@/lib/order-assignment";
 
 const DEFAULT_PAGE_SIZE = 10;
 
+export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; page?: string; pageSize?: string; voucherCode?: string; dateFrom?: string; dateTo?: string }>;
+  searchParams: { q?: string; status?: string; page?: string; pageSize?: string; voucherCode?: string; dateFrom?: string; dateTo?: string };
 }) {
   const currentAdmin = await requireUser("ADMIN");
   const canManageAllOrders = isSpAdminRole(currentAdmin.role);

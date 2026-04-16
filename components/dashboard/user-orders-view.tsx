@@ -75,7 +75,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
   };
 
   const toggleSelectAll = () => {
-    setSelectedIds((prev) => (prev.length === filteredOrders.length ? [] : filteredOrders.map((order) => order.id)));
+    setSelectedIds((prev) => (prev.length === orders.length ? [] : orders.map((order) => order.id)));
   };
 
   async function readApiResponse(response: Response) {
@@ -185,12 +185,12 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Tổng đơn {searchQuery || statusFilter ? "(đã lọc)" : ""}</p>
-            <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{filteredOrders.length}</p>
+            <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{orders.length}</p>
           </div>
           <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Đơn gần nhất</p>
             <p className="mt-4 text-2xl font-black text-slate-950 dark:text-white">
-              {filteredOrders[0] ? `#${filteredOrders[0].id}` : "Chưa có"}
+              {orders[0] ? `#${orders[0].id}` : "Chưa có"}
             </p>
           </div>
         </div>
@@ -229,7 +229,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
                 onClick={toggleSelectAll}
                 className="rounded-2xl border border-amber-200 dark:border-amber-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-amber-700 dark:text-amber-400 transition hover:bg-amber-50 dark:hover:bg-amber-800"
               >
-                {selectedIds.length === filteredOrders.length && filteredOrders.length > 0 ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                {selectedIds.length === orders.length && orders.length > 0 ? "Bỏ chọn tất cả" : "Chọn tất cả"}
               </button>
               <button
                 type="button"
@@ -280,7 +280,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
                   <div className="flex items-center justify-between gap-3">
                     <input
                       type="checkbox"
-                      checked={filteredOrders.length > 0 && selectedIds.length === filteredOrders.length}
+                      checked={orders.length > 0 && selectedIds.length === orders.length}
                       onChange={toggleSelectAll}
                       className="rounded shrink-0"
                     />
@@ -296,7 +296,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((order) => (
+              {orders.map((order) => (
                 <tr
                   key={order.id}
                   data-order-id={order.id}
@@ -348,7 +348,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
         </div>
 
         <div className="lg:hidden space-y-4">
-          {filteredOrders.map((order) => (
+          {orders.map((order) => (
             <div
               key={order.id}
               data-order-id={order.id}
@@ -413,7 +413,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
           ))}
         </div>
 
-        {filteredOrders.length === 0 && (
+        {orders.length === 0 && (
           <div className="text-center py-8">
             <p className="text-sm text-slate-500 dark:text-slate-300">
               {orders.length === 0 ? "Chưa có đơn nào." : "Không tìm thấy đơn nào phù hợp với bộ lọc."}
