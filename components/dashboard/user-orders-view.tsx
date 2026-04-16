@@ -44,6 +44,11 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
+  // Lọc orders theo statusFilter
+  const filteredOrders = statusFilter
+    ? orders.filter((order) => order.status === statusFilter)
+    : orders;
+
   // Lấy pageSize hiện tại từ URL
   const currentPageSize = [10, 20, 50].includes(Number(searchParams.get("pageSize"))) ? Number(searchParams.get("pageSize")) : 10;
 
@@ -65,7 +70,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const selectedOrders = orders.filter((order) => selectedIds.includes(order.id));
+  const selectedOrders = filteredOrders.filter((order) => selectedIds.includes(order.id));
   const canDeleteCanceled = selectedOrders.length > 0 && selectedOrders.every((order) => order.status === "CANCELED");
 
   const toggleSelect = (id: number) => {
@@ -185,7 +190,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Tổng đơn {searchQuery || statusFilter ? "(đã lọc)" : ""}</p>
-            <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{orders.length}</p>
+            <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{filteredOrders.length}</p>
           </div>
           <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Đơn gần nhất</p>
@@ -254,7 +259,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
 
       <div className="flex items-center justify-between mt-5 mb-2">
         <div className="text-sm text-slate-600">
-          Tổng đơn: <span className="font-semibold">{totalCount}</span>
+          Tổng đơn: <span className="font-semibold">{filteredOrders.length}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm">Hiển thị:</span>
@@ -280,7 +285,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
                   <div className="flex items-center justify-between gap-3">
                     <input
                       type="checkbox"
-                      checked={orders.length > 0 && selectedIds.length === orders.length}
+                      checked={filteredOrders.length > 0 && selectedIds.length === filteredOrders.length}
                       onChange={toggleSelectAll}
                       className="rounded shrink-0"
                     />
@@ -296,7 +301,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <tr
                   key={order.id}
                   data-order-id={order.id}
