@@ -53,11 +53,23 @@ export default async function AdminOrdersPage({
       }
     : undefined;
 
+  const statusWhere = statusFilter === "DELIVERING_SOON"
+    ? {
+        OR: [
+          { shopeeTrackingData: { contains: "chuẩn bị giao" } },
+          { shopeeTrackingData: { contains: "sớm được giao" } },
+        ]
+      }
+    : (statusFilter ? { status: statusFilter as any } : undefined);
+
   const [orders, totalCount] = await Promise.all([
     prisma.order.findMany({
       where: {
-        AND: [visibilityWhere, ...(queryWhere ? [queryWhere] : [])],
-        ...(statusFilter && { status: statusFilter as any }),
+        AND: [
+          visibilityWhere,
+          ...(queryWhere ? [queryWhere] : []),
+          ...(statusWhere ? [statusWhere] : [])
+        ],
         ...(voucherCodeFilter && { voucherCode: { contains: voucherCodeFilter, mode: "insensitive" as const } }),
         ...((dateFrom || dateTo) && {
           createdAt: {
@@ -73,8 +85,11 @@ export default async function AdminOrdersPage({
     }),
     prisma.order.count({
       where: {
-        AND: [visibilityWhere, ...(queryWhere ? [queryWhere] : [])],
-        ...(statusFilter && { status: statusFilter as any }),
+        AND: [
+          visibilityWhere,
+          ...(queryWhere ? [queryWhere] : []),
+          ...(statusWhere ? [statusWhere] : [])
+        ],
         ...(voucherCodeFilter && { voucherCode: { contains: voucherCodeFilter, mode: "insensitive" as const } }),
         ...((dateFrom || dateTo) && {
           createdAt: {
@@ -85,6 +100,7 @@ export default async function AdminOrdersPage({
       },
     }),
   ]);
+
 
   const approvedAdminIds = Array.from(
     new Set(

@@ -229,6 +229,7 @@ export function AdminOrdersView({
               <option value="PROCESSING">Đang xử lý</option>
               <option value="ORDER_PLACED">Đã đặt đơn</option>
               <option value="TRACKING_GENERATED">Đã lên mã VĐ</option>
+              <option value="DELIVERING_SOON">Chuẩn bị giao / Đang đến</option>
               <option value="DELIVERED">Đã giao hàng</option>
               <option value="CANCELED">Đã hủy</option>
             </select>

@@ -14,18 +14,39 @@ export default async function OrdersPage(props: { searchParams: Promise<{ page?:
   const status = searchParams.status || "";
 
   const whereClause: any = { userId: user.id };
+  let statusCondition: any = null;
   if (status) {
-    whereClause.status = status;
+    if (status === "DELIVERING_SOON") {
+      statusCondition = {
+        OR: [
+          { shopeeTrackingData: { contains: "chuẩn bị giao" } },
+          { shopeeTrackingData: { contains: "sớm được giao" } },
+        ]
+      };
+    } else {
+      whereClause.status = status;
+    }
   }
+
+  let queryCondition: any = null;
   if (query) {
-    whereClause.OR = [
+    const qConds: any[] = [
       { productName: { contains: query, mode: "insensitive" } },
       { productLink: { contains: query, mode: "insensitive" } },
       { address: { contains: query, mode: "insensitive" } },
     ];
     if (/^\d+$/.test(query)) {
-      whereClause.OR.push({ id: parseInt(query, 10) });
+      qConds.push({ id: parseInt(query, 10) });
     }
+    queryCondition = { OR: qConds };
+  }
+
+  if (statusCondition && queryCondition) {
+    whereClause.AND = [statusCondition, queryCondition];
+  } else if (statusCondition) {
+    whereClause.OR = statusCondition.OR;
+  } else if (queryCondition) {
+    whereClause.OR = queryCondition.OR;
   }
 
   const [orders, totalCount, totalSystemCount] = await Promise.all([

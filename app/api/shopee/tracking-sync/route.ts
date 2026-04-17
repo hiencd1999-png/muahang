@@ -117,19 +117,38 @@ export async function GET(request: NextRequest) {
     let newTrackingNo = order.trackingNo || "";
 
     if (results.length > 0) {
-      const anyDelivered = results.some((r: any) => 
-        r.description === "Đã giao hàng" || 
-        r.description === "Hoàn thành" || 
-        r.description === "Giao hàng thành công"
-      );
-      const isCanceled = results.some((r: any) => {
-        const desc = (r.description || "").toLowerCase();
-        return desc.includes("đã hủy") || 
-               desc.includes("đã huỷ") || 
-               desc.includes("hủy bởi hệ thống") ||
-               desc.includes("huỷ bởi hệ thống") ||
-               desc.includes("bị hủy") ||
-               desc.includes("bị huỷ");
+      const anyDelivered = results.some((r: any) => {
+        const check = (desc: string) => {
+          const d = (desc || "").toLowerCase();
+          return d === "đã giao hàng" || 
+                 d === "hoàn thành" || 
+                 d.includes("giao hàng thành công");
+        };
+        if (check(r.description)) return true;
+        if (r.logistics?.shipping_status && check(r.logistics.shipping_status)) return true;
+        if (r.logistics?.history && Array.isArray(r.logistics.history)) {
+          if (r.logistics.history.some((h: any) => check(h.description))) return true;
+        }
+        return false;
+      });
+
+      const isCanceled = results.every((r: any) => {
+        const check = (desc: string) => {
+          const d = (desc || "").toLowerCase();
+          return d.includes("đã hủy") || 
+                 d.includes("đã huỷ") || 
+                 d.includes("hủy bởi hệ thống") ||
+                 d.includes("huỷ bởi hệ thống") ||
+                 d.includes("bị hủy") ||
+                 d.includes("bị huỷ") ||
+                 d.includes("đơn vị vận chuyển thông báo đơn hàng đã bị");
+        };
+        if (check(r.description)) return true;
+        if (r.logistics?.shipping_status && check(r.logistics.shipping_status)) return true;
+        if (r.logistics?.history && Array.isArray(r.logistics.history)) {
+          if (r.logistics.history.some((h: any) => check(h.description))) return true;
+        }
+        return false;
       });
 
       const allTrackingNumbers = results
@@ -159,16 +178,28 @@ export async function GET(request: NextRequest) {
     // Cưỡng chế đẩy mốc updatedAt để chốt mốc thời gian cho vòng Smart Polling kế tiếp
     updates.updatedAt = new Date();
 
-    const anyDeliveringSoon = results.some((r: any) => 
-      (r.description || "").includes("Đơn hàng sẽ sớm được giao, vui lòng chú ý điện thoại")
-    );
+    const checkDeliveringSoon = (desc: string) => {
+        const d = (desc || "").toLowerCase();
+        return d.includes("đơn hàng sẽ sớm được giao, vui lòng chú ý điện thoại") ||
+               d.includes("đơn hàng chuẩn bị giao");
+    };
+    const hasDeliveringSoon = (resultsData: any[]) => {
+       return resultsData.some((r: any) => {
+          if (checkDeliveringSoon(r.description)) return true;
+          if (r.logistics?.shipping_status && checkDeliveringSoon(r.logistics.shipping_status)) return true;
+          if (r.logistics?.history && Array.isArray(r.logistics.history)) {
+             if (r.logistics.history.some((h: any) => checkDeliveringSoon(h.description))) return true;
+          }
+          return false;
+       });
+    };
+
+    const anyDeliveringSoon = hasDeliveringSoon(results);
     let oldDeliveringSoon = false;
     try {
       if (order.shopeeTrackingData) {
         const oldResults = JSON.parse(order.shopeeTrackingData);
-        oldDeliveringSoon = oldResults.some((r: any) => 
-          (r.description || "").includes("Đơn hàng sẽ sớm được giao, vui lòng chú ý điện thoại")
-        );
+        oldDeliveringSoon = hasDeliveringSoon(oldResults);
       }
     } catch {}
 
