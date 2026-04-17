@@ -23,24 +23,21 @@ export async function POST(request: Request) {
       userId: result.user.id,
       id: { in: normalizedIds },
     },
-    select: { id: true, status: true, updatedAt: true },
+    select: { id: true, status: true, complaintStatus: true, updatedAt: true },
   });
 
   if (orders.length === 0) {
     return NextResponse.json({ error: "Không tìm thấy đơn phù hợp để xóa." }, { status: 404 });
   }
 
-  const nonCanceledOrder = orders.find((order) => order.status !== "CANCELED");
-  if (nonCanceledOrder) {
-    return NextResponse.json({ error: "Chỉ được xóa các đơn đã hủy." }, { status: 400 });
-  }
+  const unsafeOrder = orders.find((order) => {
+    if (order.status !== "CANCELED" && order.status !== "DELIVERED") return true;
+    if (order.complaintStatus === "PENDING") return true;
+    return false;
+  });
 
-  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
-  const recentCanceledOrder = orders.find((order) => order.updatedAt > threeDaysAgo);
-  if (recentCanceledOrder) {
-    return NextResponse.json({ 
-      error: "Đơn hàng hủy cần chờ 3 ngày để Admin xem xét khiếu nại trước khi bạn có thể xóa." 
-    }, { status: 400 });
+  if (unsafeOrder) {
+    return NextResponse.json({ error: "Chỉ được xóa các đơn Đã hoàn thành/Đã hủy và không trong quá trình khiếu nại." }, { status: 400 });
   }
 
   await prisma.order.deleteMany({
@@ -52,7 +49,7 @@ export async function POST(request: Request) {
 
   await createAuditLog({
     actorId: result.user.id,
-    action: "USER_DELETE_CANCELED_ORDERS",
+    action: "USER_DELETE_SAFE_ORDERS",
     targetType: "ORDER",
     details: { orderIds: orders.map((order) => order.id), count: orders.length },
   });

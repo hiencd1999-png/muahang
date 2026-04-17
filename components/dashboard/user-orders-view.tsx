@@ -88,7 +88,9 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount,
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const selectedOrders = orders.filter((order) => selectedIds.includes(order.id));
-  const canDeleteCanceled = selectedOrders.length > 0 && selectedOrders.every((order) => order.status === "CANCELED");
+  const canDeleteSafeOrders = selectedOrders.length > 0 && selectedOrders.every((order) => 
+    (order.status === "CANCELED" || order.status === "DELIVERED") && order.complaintStatus !== "PENDING"
+  );
 
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) =>
@@ -156,13 +158,13 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount,
     }
   }
 
-  async function handleDeleteCanceled() {
-    if (!canDeleteCanceled) {
-      addToast("error", "Chỉ có thể xóa các đơn đã hủy.");
+  async function handleDeleteSafeOrders() {
+    if (!canDeleteSafeOrders) {
+      addToast("error", "Chỉ có thể xóa các đơn Đã hoàn thành hoặc Đã hủy (không bị khiếu nại).");
       return;
     }
 
-    const confirmed = window.confirm(`Xóa ${selectedIds.length} đơn đã hủy đã chọn?`);
+    const confirmed = window.confirm(`Xóa lịch sử ${selectedIds.length} đơn hàng đã chọn? Hành động này không thể hoàn tác.`);
     if (!confirmed) return;
 
     setIsDeleting(true);
@@ -175,11 +177,11 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount,
       const payload = await response.json();
 
       if (!response.ok) {
-        addToast("error", payload.error || "Không thể xóa đơn đã hủy.");
+        addToast("error", payload.error || "Không thể xóa đơn.");
         return;
       }
 
-      addToast("success", "Đã xóa các đơn đã hủy đã chọn.");
+      addToast("success", "Đã xóa lịch sử đơn hàng.");
       setSelectedIds([]);
       window.location.reload();
     } catch {
@@ -281,11 +283,11 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount,
               </button>
               <button
                 type="button"
-                onClick={handleDeleteCanceled}
-                disabled={!canDeleteCanceled || isDeleting}
+                onClick={handleDeleteSafeOrders}
+                disabled={!canDeleteSafeOrders || isDeleting}
                 className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
               >
-                {isDeleting ? "Đang xóa..." : "Xóa đơn đã hủy"}
+                {isDeleting ? "Đang xóa..." : "Xóa lịch sử đơn"}
               </button>
             </div>
           </div>
@@ -316,15 +318,18 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount,
           <table className="min-w-[1200px] text-center text-sm border-collapse">
             <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 sticky top-0 z-30 shadow-[0_1px_0_rgba(0,0,0,0.05)] dark:shadow-[0_1px_0_rgba(255,255,255,0.05)]">
               <tr>
-                <th className="px-4 py-3 sticky left-0 z-40 bg-slate-50 dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700/80 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
-                  <div className="flex items-center justify-between gap-3">
+                <th className="px-4 py-3 sticky left-0 z-40 bg-slate-50 dark:bg-slate-800 border-r border-slate-100 dark:border-slate-700/80 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)]" style={{ width: '105px', minWidth: '105px', maxWidth: '105px' }}>
+                  <div className="flex items-center justify-between gap-2">
                     <input
                       type="checkbox"
                       checked={filteredOrders.length > 0 && filteredOrders.every(o => selectedIds.includes(o.id))}
                       onChange={toggleSelectAll}
                       className="rounded shrink-0"
                     />
-                    <Eye size={16} className="text-slate-500 dark:text-slate-400 shrink-0" />
+                    <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                      <span className="text-[10px] font-bold">ID</span>
+                      <Eye size={16} className="shrink-0" />
+                    </div>
                   </div>
                 </th>
                 <th className="px-4 py-3 whitespace-nowrap min-w-[280px]">Địa chỉ</th>
@@ -344,15 +349,18 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount,
                     focusedOrderId === order.id ? "bg-amber-100/40 dark:bg-amber-900/20" : ""
                   }`}
                 >
-                  <td className="px-4 py-4 align-middle sticky left-0 z-10 bg-white dark:bg-slate-900 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] border-r border-slate-100 dark:border-slate-700/80 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
-                    <div className="flex items-center justify-between gap-3 h-full">
+                  <td className="px-4 py-4 align-middle sticky left-0 z-10 bg-white dark:bg-slate-900 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] border-r border-slate-100 dark:border-slate-700/80 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50" style={{ width: '105px', minWidth: '105px', maxWidth: '105px' }}>
+                    <div className="flex items-center justify-between gap-2 h-full">
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(order.id)}
                         onChange={() => toggleSelect(order.id)}
                         className="rounded shrink-0"
                       />
-                      <ViewUserOrderDetailsButton orderId={order.id} />
+                      <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-mono text-xs font-semibold">
+                        <span>#{order.id}</span>
+                        <ViewUserOrderDetailsButton orderId={order.id} />
+                      </div>
                     </div>
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-300">

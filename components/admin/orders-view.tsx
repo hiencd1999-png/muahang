@@ -215,7 +215,7 @@ export function AdminOrdersView({
           <form onSubmit={handleSearch} className="grid gap-3 sm:grid-cols-[1.2fr_0.8fr_0.7fr_0.5fr]">
             <input
               name="q"
-              placeholder="Tìm tên, username hoặc link..."
+              placeholder="Tìm mã đơn (#), tên, username hoặc link..."
               defaultValue={currentQuery}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500"
             />
@@ -300,15 +300,18 @@ export function AdminOrdersView({
           <table className="min-w-[1400px] text-center text-sm border-collapse relative">
             <thead className="bg-slate-100 text-slate-500 sticky top-0 z-30 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
               <tr>
-                <th className="px-4 py-3 sticky left-0 z-40 bg-slate-100 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] border-r border-slate-200" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
-                  <div className="flex items-center justify-between gap-3">
+                <th className="px-4 py-3 sticky left-0 z-40 bg-slate-100 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] border-r border-slate-200" style={{ width: '105px', minWidth: '105px', maxWidth: '105px' }}>
+                  <div className="flex items-center justify-between gap-2">
                     <input
                       type="checkbox"
                       checked={selectedIds.length === orders.length && orders.length > 0}
                       onChange={(e) => (e.target.checked ? selectAll() : clearAll())}
                       className="rounded shrink-0"
                     />
-                    <Eye size={16} className="text-slate-500 shrink-0" />
+                    <div className="flex items-center gap-1 text-slate-500">
+                      <span className="text-[10px] font-bold">ID</span>
+                      <Eye size={16} className="shrink-0" />
+                    </div>
                   </div>
                 </th>
                 <th className="px-4 py-3 whitespace-nowrap">User</th>
@@ -324,19 +327,22 @@ export function AdminOrdersView({
             <tbody>
               {orders.map((order) => (
                 <tr key={order.id} className="group border-t border-slate-200 hover:bg-slate-50">
-                  <td className="px-4 py-4 align-middle sticky left-0 z-10 bg-white group-hover:bg-slate-50 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] border-r border-slate-200" style={{ width: '85px', minWidth: '85px', maxWidth: '85px' }}>
-                    <div className="flex items-center justify-between gap-3 h-full">
+                  <td className="px-4 py-4 align-middle sticky left-0 z-10 bg-white group-hover:bg-slate-50 shadow-[inset_-1px_0_0_rgba(0,0,0,0.05)] border-r border-slate-200" style={{ width: '105px', minWidth: '105px', maxWidth: '105px' }}>
+                    <div className="flex items-center justify-between gap-2 h-full">
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(order.id)}
                         onChange={() => toggleSelect(order.id)}
                         className="rounded shrink-0"
                       />
-                      <ViewOrderDetailsButton 
-                        orderId={order.id} 
-                        currentAdminId={currentAdminId} 
-                        canManageAllOrders={canManageAllOrders} 
-                      />
+                      <div className="flex items-center gap-1.5 text-slate-500 font-mono text-xs font-semibold">
+                        <span>#{order.id}</span>
+                        <ViewOrderDetailsButton 
+                          orderId={order.id} 
+                          currentAdminId={currentAdminId} 
+                          canManageAllOrders={canManageAllOrders} 
+                        />
+                      </div>
                     </div>
                   </td>
                   <td className="px-4 py-4 text-slate-700 text-sm whitespace-nowrap">

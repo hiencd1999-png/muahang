@@ -44,13 +44,20 @@ export default async function AdminOrdersPage({
       };
 
   const queryWhere = query
-    ? {
-        OR: [
+    ? (() => {
+        const idQ = query.replace(/^#/, '');
+        const qConds: any[] = [
           { user: { fullName: { contains: query, mode: "insensitive" as const } } },
           { user: { username: { contains: query, mode: "insensitive" as const } } },
           { productLink: { contains: query, mode: "insensitive" as const } },
-        ],
-      }
+          { address: { contains: query, mode: "insensitive" as const } },
+          { shopeeTrackingData: { contains: query, mode: "insensitive" as const } }
+        ];
+        if (/^\d+$/.test(idQ)) {
+          qConds.push({ id: parseInt(idQ, 10) });
+        }
+        return { OR: qConds };
+      })()
     : undefined;
 
   const statusWhere = statusFilter === "DELIVERING_SOON"

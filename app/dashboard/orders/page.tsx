@@ -40,8 +40,9 @@ export default async function OrdersPage(props: { searchParams: Promise<{ page?:
       { productLink: { contains: query, mode: "insensitive" } },
       { address: { contains: query, mode: "insensitive" } },
     ];
-    if (/^\d+$/.test(query)) {
-      qConds.push({ id: parseInt(query, 10) });
+    const idQ = query.replace(/^#/, '');
+    if (/^\d+$/.test(idQ)) {
+      qConds.push({ id: parseInt(idQ, 10) });
     }
     queryCondition = { OR: qConds };
   }
