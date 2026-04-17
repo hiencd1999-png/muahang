@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { StatusPill } from "@/components/shared/status-pill";
 import { UserOrderActions } from "@/components/dashboard/user-order-actions";
@@ -38,6 +38,7 @@ interface UserOrdersViewProps {
 }
 
 export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount }: UserOrdersViewProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
   const [focusedOrderId, setFocusedOrderId] = useState<number | null>(null);
@@ -66,7 +67,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
     const params = new URLSearchParams(searchParams.toString());
     params.set("pageSize", newSize);
     params.set("page", "1"); // reset về trang 1 khi đổi pageSize
-    window.location.search = params.toString();
+    router.push("?" + params.toString());
   };
 
   const getShortAddress = (fullAddress: string) => {
@@ -208,8 +209,8 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Tổng đơn {searchQuery || statusFilter ? "(đã lọc)" : ""}</p>
-            <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{filteredOrders.length}</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Tổng đơn {searchQuery || statusFilter ? "(đã lọc trên nhánh này)" : "(Toàn hệ thống)"}</p>
+            <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{searchQuery || statusFilter ? filteredOrders.length : totalCount}</p>
           </div>
           <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Đơn gần nhất</p>
@@ -278,7 +279,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
 
       <div className="flex items-center justify-between mt-5 mb-2">
         <div className="text-sm text-slate-600">
-          Tổng đơn: <span className="font-semibold">{filteredOrders.length}</span>
+          Tổng đơn: <span className="font-semibold">{searchQuery || statusFilter ? filteredOrders.length : totalCount}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm">Hiển thị:</span>

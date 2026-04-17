@@ -155,7 +155,7 @@ export function AdminOrdersView({
     const params = new URLSearchParams(searchParams.toString());
     params.set("pageSize", newSize);
     params.set("page", "1");
-    window.location.search = params.toString();
+    router.push("?" + params.toString());
   };
   const currentQuery = searchParams.get("q") || "";
   const currentStatus = searchParams.get("status") || "";

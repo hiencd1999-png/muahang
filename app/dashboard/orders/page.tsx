@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { UserOrdersView } from "@/components/dashboard/user-orders-view";
 import { redirect } from "next/navigation";
 
-export default async function OrdersPage({ searchParams }: { searchParams: { page?: string; pageSize?: string } }) {
+export default async function OrdersPage(props: { searchParams: Promise<{ page?: string; pageSize?: string }> }) {
+  const searchParams = await props.searchParams;
   const user = await requireUser();
   const page = Math.max(1, parseInt(searchParams.page || "1"));
   const pageSize = [10, 20, 50].includes(Number(searchParams.pageSize)) ? Number(searchParams.pageSize) : 10;
