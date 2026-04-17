@@ -120,9 +120,12 @@ export async function GET(request: NextRequest) {
       const anyDelivered = results.some((r: any) => {
         const check = (desc: string) => {
           const d = (desc || "").toLowerCase();
-          return d === "đã giao hàng" || 
-                 d === "hoàn thành" || 
-                 d.includes("giao hàng thành công");
+          if (d === "hoàn thành" || d === "đơn hàng hoàn thành") return true;
+          
+          const isDeliveredText = d.includes("giao hàng thành công") || d.includes("đã giao hàng");
+          const isNotShopDroppingOff = !d.includes("cho đơn vị") && !d.includes("cho bên vận chuyển");
+          
+          return isDeliveredText && isNotShopDroppingOff;
         };
         if (check(r.description)) return true;
         if (r.logistics?.shipping_status && check(r.logistics.shipping_status)) return true;
