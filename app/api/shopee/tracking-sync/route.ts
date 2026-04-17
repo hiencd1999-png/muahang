@@ -120,12 +120,15 @@ export async function GET(request: NextRequest) {
       const anyDelivered = results.some((r: any) => {
         const check = (desc: string) => {
           const d = (desc || "").toLowerCase();
-          if (d === "hoàn thành" || d === "đơn hàng hoàn thành") return true;
+          if (d === "đã giao hàng" || d === "hoàn thành" || d === "đơn hàng hoàn thành") return true;
           
-          const isDeliveredText = d.includes("giao hàng thành công") || d.includes("đã giao hàng");
-          const isNotShopDroppingOff = !d.includes("cho đơn vị") && !d.includes("cho bên vận chuyển");
-          
-          return isDeliveredText && isNotShopDroppingOff;
+          if (d.includes("giao hàng thành công")) {
+             // Loại trừ các text lúc nhà bán hàng gửi đơn
+             if (d.includes("cho đơn vị") || d.includes("cho bên vận chuyển") || d.includes("đã chuẩn bị hàng")) return false;
+             return true;
+          }
+          if (d.includes("đã nhận được hàng")) return true;
+          return false;
         };
         if (check(r.description)) return true;
         if (r.logistics?.shipping_status && check(r.logistics.shipping_status)) return true;

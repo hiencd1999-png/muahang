@@ -57,12 +57,17 @@ export async function POST(request: Request) {
         const results = JSON.parse(order.shopeeTrackingData);
         if (!Array.isArray(results) || results.length === 0) continue;
 
-        const isDelivered = results.some((r: any) => {
-            const check = (desc: string) => {
-              const d = (desc || "").toLowerCase();
-              if (d === "hoàn thành" || d === "đơn hàng hoàn thành") return true;
-              return (d.includes("giao hàng thành công") || d.includes("đã giao hàng")) && !d.includes("cho đơn vị") && !d.includes("cho bên vận chuyển");
-            };
+            const isDelivered = results.some((r: any) => {
+                const check = (desc: string) => {
+                  const d = (desc || "").toLowerCase();
+                  if (d === "đã giao hàng" || d === "hoàn thành" || d === "đơn hàng hoàn thành") return true;
+                  if (d.includes("giao hàng thành công")) {
+                     if (d.includes("cho đơn vị") || d.includes("cho bên vận chuyển") || d.includes("đã chuẩn bị hàng")) return false;
+                     return true;
+                  }
+                  if (d.includes("đã nhận được hàng")) return true;
+                  return false;
+                };
             if (check(r.description)) return true;
             if (r.logistics?.shipping_status && check(r.logistics.shipping_status)) return true;
             if (r.logistics?.history && Array.isArray(r.logistics.history)) {
