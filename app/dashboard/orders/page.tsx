@@ -49,7 +49,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ page?:
   if (statusCondition && queryCondition) {
     whereClause.AND = [statusCondition, queryCondition];
   } else if (statusCondition) {
-    whereClause.OR = statusCondition.OR;
+    whereClause.AND = [statusCondition];
   } else if (queryCondition) {
     whereClause.OR = queryCondition.OR;
   }
