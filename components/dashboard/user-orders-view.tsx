@@ -35,28 +35,35 @@ interface UserOrdersViewProps {
   totalPages: number;
   pageSize: number;
   totalCount: number;
+  totalSystemCount: number;
 }
 
-export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount }: UserOrdersViewProps) {
+export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount, totalSystemCount }: UserOrdersViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
-  const [focusedOrderId, setFocusedOrderId] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const currentQuery = searchParams.get("q") || "";
+  const currentStatus = searchParams.get("status") || "";
 
-  // Lọc orders theo statusFilter và searchQuery
-  const filteredOrders = orders.filter((order) => {
-    const matchesStatus = statusFilter ? order.status === statusFilter : true;
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = searchQuery
-      ? String(order.id).includes(searchLower) ||
-        (order.productName || "").toLowerCase().includes(searchLower) ||
-        (order.address || "").toLowerCase().includes(searchLower) ||
-        (order.productLink || "").toLowerCase().includes(searchLower)
-      : true;
-    return matchesStatus && matchesSearch;
-  });
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const q = formData.get("q") as string;
+    const status = formData.get("status") as string;
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (q) params.set("q", q);
+    else params.delete("q");
+
+    if (status) params.set("status", status);
+    else params.delete("status");
+
+    params.set("page", "1");
+    router.push("?" + params.toString());
+  };
+
+  // Các đơn hàng hiện tại là do server phục vụ
+  const filteredOrders = orders;
 
   // Lấy pageSize hiện tại từ URL
   const currentPageSize = [10, 20, 50].includes(Number(searchParams.get("pageSize"))) ? Number(searchParams.get("pageSize")) : 10;
@@ -209,8 +216,8 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Tổng đơn {searchQuery || statusFilter ? "(đã lọc trên nhánh này)" : "(Toàn hệ thống)"}</p>
-            <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{searchQuery || statusFilter ? filteredOrders.length : totalCount}</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Tổng đơn {currentQuery || currentStatus ? "(đã lọc trên nhánh này)" : "(Toàn hệ thống)"}</p>
+            <p className="mt-4 text-3xl font-black text-slate-950 dark:text-white">{currentQuery || currentStatus ? totalCount : totalSystemCount}</p>
           </div>
           <div className="rounded-[1.5rem] bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-700/80 shadow-sm">
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300 font-bold">Đơn gần nhất</p>
@@ -221,17 +228,17 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-[1fr_200px] mb-4">
+      <form onSubmit={handleSearch} className="grid gap-3 sm:grid-cols-[1fr_200px_100px] mb-4">
         <input
+          name="q"
           type="text"
           placeholder="Tìm theo ID, tên sản phẩm, địa chỉ..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          defaultValue={currentQuery}
           className="rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-sm outline-none focus:border-amber-500 dark:text-white"
         />
         <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          name="status"
+          defaultValue={currentStatus}
           className="rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-4 py-3 text-sm outline-none focus:border-amber-500 dark:text-white"
         >
           <option value="">Tất cả trạng thái</option>
@@ -242,7 +249,13 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
           <option value="DELIVERED">Đã giao hàng</option>
           <option value="CANCELED">Đã hủy</option>
         </select>
-      </div>
+        <button
+          type="submit"
+          className="rounded-2xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-700 transition"
+        >
+          Tìm
+        </button>
+      </form>
 
       {selectedIds.length > 0 ? (
         <div className="rounded-[1.5rem] border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 shadow-sm">
@@ -279,7 +292,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
 
       <div className="flex items-center justify-between mt-5 mb-2">
         <div className="text-sm text-slate-600">
-          Tổng đơn: <span className="font-semibold">{searchQuery || statusFilter ? filteredOrders.length : totalCount}</span>
+          Tổng đơn: <span className="font-semibold">{totalCount}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm">Hiển thị:</span>
