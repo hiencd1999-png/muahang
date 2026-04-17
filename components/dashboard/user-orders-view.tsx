@@ -44,10 +44,18 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  // Lọc orders theo statusFilter
-  const filteredOrders = statusFilter
-    ? orders.filter((order) => order.status === statusFilter)
-    : orders;
+  // Lọc orders theo statusFilter và searchQuery
+  const filteredOrders = orders.filter((order) => {
+    const matchesStatus = statusFilter ? order.status === statusFilter : true;
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = searchQuery
+      ? String(order.id).includes(searchLower) ||
+        (order.productName || "").toLowerCase().includes(searchLower) ||
+        (order.address || "").toLowerCase().includes(searchLower) ||
+        (order.productLink || "").toLowerCase().includes(searchLower)
+      : true;
+    return matchesStatus && matchesSearch;
+  });
 
   // Lấy pageSize hiện tại từ URL
   const currentPageSize = [10, 20, 50].includes(Number(searchParams.get("pageSize"))) ? Number(searchParams.get("pageSize")) : 10;
@@ -70,7 +78,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const selectedOrders = filteredOrders.filter((order) => selectedIds.includes(order.id));
+  const selectedOrders = orders.filter((order) => selectedIds.includes(order.id));
   const canDeleteCanceled = selectedOrders.length > 0 && selectedOrders.every((order) => order.status === "CANCELED");
 
   const toggleSelect = (id: number) => {
@@ -80,7 +88,18 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
   };
 
   const toggleSelectAll = () => {
-    setSelectedIds((prev) => (prev.length === orders.length ? [] : orders.map((order) => order.id)));
+    setSelectedIds((prev) => {
+      const allFilteredSelected = filteredOrders.length > 0 && filteredOrders.every((order) => prev.includes(order.id));
+      if (allFilteredSelected) {
+        // Deselect all currently visible items
+        const visibleIds = filteredOrders.map(o => o.id);
+        return prev.filter(id => !visibleIds.includes(id));
+      } else {
+        // Select all currently visible items
+        const visibleIds = filteredOrders.map(o => o.id);
+        return Array.from(new Set([...prev, ...visibleIds]));
+      }
+    });
   };
 
   async function readApiResponse(response: Response) {
@@ -234,7 +253,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
                 onClick={toggleSelectAll}
                 className="rounded-2xl border border-amber-200 dark:border-amber-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-amber-700 dark:text-amber-400 transition hover:bg-amber-50 dark:hover:bg-amber-800"
               >
-                {selectedIds.length === orders.length && orders.length > 0 ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                {filteredOrders.length > 0 && filteredOrders.every(o => selectedIds.includes(o.id)) ? "Bỏ chọn tất cả" : "Chọn tất cả"}
               </button>
               <button
                 type="button"
@@ -285,7 +304,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
                   <div className="flex items-center justify-between gap-3">
                     <input
                       type="checkbox"
-                      checked={filteredOrders.length > 0 && selectedIds.length === filteredOrders.length}
+                      checked={filteredOrders.length > 0 && filteredOrders.every(o => selectedIds.includes(o.id))}
                       onChange={toggleSelectAll}
                       className="rounded shrink-0"
                     />
@@ -353,7 +372,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
         </div>
 
         <div className="lg:hidden space-y-4">
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <div
               key={order.id}
               data-order-id={order.id}
@@ -418,7 +437,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount 
           ))}
         </div>
 
-        {orders.length === 0 && (
+        {filteredOrders.length === 0 && (
           <div className="text-center py-8">
             <p className="text-sm text-slate-500 dark:text-slate-300">
               {orders.length === 0 ? "Chưa có đơn nào." : "Không tìm thấy đơn nào phù hợp với bộ lọc."}
