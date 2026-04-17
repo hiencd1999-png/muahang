@@ -2,15 +2,21 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 
-export async function GET() {
+export async function GET(request: Request) {
   const result = await requireApiUser();
 
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
+  const { searchParams } = new URL(request.url);
+  const orderId = searchParams.get("id");
+
   const orders = await prisma.order.findMany({
-    where: { userId: result.user.id },
+    where: { 
+      userId: result.user.id,
+      ...(orderId ? { id: parseInt(orderId, 10) } : {})
+    },
     orderBy: { createdAt: "desc" },
   });
 

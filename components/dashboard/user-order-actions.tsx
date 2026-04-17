@@ -146,7 +146,7 @@ export function UserOrderActions({
   }
 
   async function fetchCurrentOrder() {
-    const response = await fetch(`/api/order/list`);
+    const response = await fetch(`/api/order/list?id=${orderId}`);
     const data = await readApiResponse(response);
     if (!response.ok || !data.orders) {
       throw new Error(data.error || "Không thể tải thông tin đơn hàng");
