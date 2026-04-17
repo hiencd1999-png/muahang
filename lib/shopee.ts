@@ -313,3 +313,89 @@ export async function fetchShopeeProductDetails(productLink: string, overrideCoo
     resolvedLink,
   };
 }
+
+export async function generateAffiliateShortLink(originalLink: string, spcCookie: string, proxyAgent?: any): Promise<string> {
+  const url = "https://affiliate.shopee.vn/api/v3/gql?q=batchCustomLink";
+  const payload = {
+    operationName: "batchGetCustomLink",
+    query: "query batchGetCustomLink($linkParams: [CustomLinkParam!], $sourceCaller: SourceCaller){\n      batchCustomLink(linkParams: $linkParams, sourceCaller: $sourceCaller){\n        shortLink\n        longLink\n        failCode\n      }\n    }\n    ",
+    variables: {
+      linkParams: [{ originalLink }],
+      sourceCaller: "CUSTOM_LINK_CALLER"
+    }
+  };
+
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let randomCsrf = '';
+  for (let i = 0; i < 32; i++) {
+      randomCsrf += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  const headers = {
+    accept: "application/json, text/plain, */*",
+    "content-type": "application/json; charset=UTF-8",
+    cookie: `${spcCookie}; csrftoken=${randomCsrf}`,
+    "csrf-token": randomCsrf,
+    "user-agent": "Android app Shopee appver=28320 app_type=1"
+  };
+
+  const options: any = {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  };
+
+  if (proxyAgent) {
+    options.agent = proxyAgent;
+  }
+
+  try {
+      const response = await nodeFetch(url, options);
+      if (!response.ok) return originalLink;
+
+      const data: any = await response.json();
+      const shortLink = data?.data?.batchCustomLink?.[0]?.shortLink;
+      return shortLink || originalLink;
+  } catch (e) {
+      return originalLink;
+  }
+}
+
+export async function convertToAffiliateLinkWithFallback(originalLink: string): Promise<string> {
+  const sysConfig = await prisma.systemConfig.findUnique({ where: { key: "SHOPEE_SPC_ST" } });
+  const defaultCookie = (sysConfig?.value || process.env.COOKIE || "").trim();
+  
+  const recentOrders = await prisma.order.findMany({
+    where: { spcCookie: { not: "" } },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+    select: { spcCookie: true }
+  });
+  
+  const candidateCookies = new Set<string>();
+  if (defaultCookie) candidateCookies.add(defaultCookie);
+  recentOrders.forEach(o => {
+    if (o.spcCookie) candidateCookies.add(o.spcCookie);
+  });
+  
+  const cookiesToTry = Array.from(candidateCookies).map(c => {
+    const val = c.trim();
+    return val.includes("SPC_ST=") ? val : `SPC_ST=${val}`;
+  });
+
+  if (cookiesToTry.length === 0) return originalLink;
+
+  for (const cookie of cookiesToTry) {
+    const proxyAgent = await getRandomSysProxy();
+    try {
+        const shortLink = await generateAffiliateShortLink(originalLink, cookie, proxyAgent);
+        if (shortLink && shortLink !== originalLink && shortLink.includes("shp.ee")) {
+            return shortLink;
+        }
+    } catch {
+       continue;
+    }
+  }
+
+  return originalLink;
+}

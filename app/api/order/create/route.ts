@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { buildCanonicalShopeeLink, isValidShopeeLink, parseShopeeProductLink } from "@/lib/order";
+import { convertToAffiliateLinkWithFallback } from "@/lib/shopee";
 import { prisma } from "@/lib/prisma";
 import { requireApiUser } from "@/lib/session";
 import { createNotification } from "@/lib/notifications";
@@ -187,9 +188,9 @@ export async function POST(request: Request) {
        }, { status: 400 });
     }
 
-    const preparedItems = parsed.items.map((item, index) => {
+    const preparedItems = await Promise.all(parsed.items.map(async (item, index) => {
       if (!isValidShopeeLink(item.productLink)) {
-        throw new Error(`Link sản phẩm ở dòng ${index + 1} phải chứa \"shopee\".`);
+        throw new Error(`Link sản phẩm ở dòng ${index + 1} phải chứa "shopee".`);
       }
 
       const linkCandidate = (item.resolvedLink || item.productLink).trim();
@@ -198,15 +199,18 @@ export async function POST(request: Request) {
         ? buildCanonicalShopeeLink(parsedLink.shopId, parsedLink.itemId)
         : linkCandidate;
 
+      // Đâm thẳng vào Shopee Affiliate để nặn ra ShortLink (thay the originProductLink)
+      const finalProductLink = await convertToAffiliateLinkWithFallback(canonicalProductLink);
+
       return {
-        canonicalProductLink,
+        canonicalProductLink: finalProductLink,
         productName: item.productName,
         shopId: item.shopId,
         variant: item.variant,
         quantity: item.quantity,
         productPrice: item.productPrice ?? 0,
       };
-    });
+    }));
 
     const totalQuantity = preparedItems.reduce((sum, item) => sum + item.quantity, 0);
     
