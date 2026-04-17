@@ -13,7 +13,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ page?:
   const query = searchParams.q || "";
   const status = searchParams.status || "";
 
-  const whereClause: any = { userId: user.id };
+  const whereClause: any = { userId: user.id, isHiddenByUser: false };
   let statusCondition: any = null;
   if (status) {
     if (status === "DELIVERING_SOON") {
@@ -63,7 +63,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ page?:
       take: pageSize,
     }),
     prisma.order.count({ where: whereClause }),
-    prisma.order.count({ where: { userId: user.id } }),
+    prisma.order.count({ where: { userId: user.id, isHiddenByUser: false } }),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));

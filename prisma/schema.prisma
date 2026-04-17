@@ -129,6 +129,7 @@ model Order {
 
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  isHiddenByUser Boolean    @default(false)
 
   @@index([userId, status])
   @@index([status, updatedAt])

@@ -40,11 +40,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Chỉ được xóa các đơn Đã hoàn thành/Đã hủy và không trong quá trình khiếu nại." }, { status: 400 });
   }
 
-  await prisma.order.deleteMany({
+  await prisma.order.updateMany({
     where: {
       userId: result.user.id,
       id: { in: orders.map((order) => order.id) },
     },
+    data: {
+      isHiddenByUser: true
+    }
   });
 
   await createAuditLog({
