@@ -19,7 +19,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ page?:
     if (status === "DELIVERING_SOON") {
       statusCondition = {
         AND: [
-          { status: "TRACKING_GENERATED" },
+          { status: "TRACKING_GENERATED" as any },
           {
             OR: [
               { shopeeTrackingData: { contains: "chuẩn bị giao" } },

@@ -56,7 +56,7 @@ export default async function AdminOrdersPage({
   const statusWhere = statusFilter === "DELIVERING_SOON"
     ? {
         AND: [
-          { status: "TRACKING_GENERATED" },
+          { status: "TRACKING_GENERATED" as any },
           {
             OR: [
               { shopeeTrackingData: { contains: "chuẩn bị giao" } },
