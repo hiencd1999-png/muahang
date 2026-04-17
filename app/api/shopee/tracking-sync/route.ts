@@ -122,11 +122,15 @@ export async function GET(request: NextRequest) {
         r.description === "Hoàn thành" || 
         r.description === "Giao hàng thành công"
       );
-      const allCanceled = results.every((r: any) => 
-        r.description === "Đã hủy" || 
-        r.description === "Hủy bởi hệ thống" ||
-        r.description === "Đã huỷ"
-      );
+      const isCanceled = results.some((r: any) => {
+        const desc = (r.description || "").toLowerCase();
+        return desc.includes("đã hủy") || 
+               desc.includes("đã huỷ") || 
+               desc.includes("hủy bởi hệ thống") ||
+               desc.includes("huỷ bởi hệ thống") ||
+               desc.includes("bị hủy") ||
+               desc.includes("bị huỷ");
+      });
 
       const allTrackingNumbers = results
         .map((r: any) => (r.tracking_number || "").trim())
@@ -139,7 +143,7 @@ export async function GET(request: NextRequest) {
 
       if (anyDelivered) {
         newStatus = "DELIVERED";
-      } else if (allCanceled) {
+      } else if (isCanceled) {
         newStatus = "CANCELED";
       } else if (newTrackingNo && (newStatus === "PENDING" || newStatus === "PROCESSING" || newStatus === "ORDER_PLACED")) {
         newStatus = "TRACKING_GENERATED";
