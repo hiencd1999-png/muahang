@@ -42,6 +42,7 @@ export function UserOrdersView({ orders, page, totalPages, pageSize, totalCount,
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
+  const [focusedOrderId, setFocusedOrderId] = useState<number | null>(null);
   const currentQuery = searchParams.get("q") || "";
   const currentStatus = searchParams.get("status") || "";
 
