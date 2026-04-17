@@ -94,7 +94,7 @@ async function fetchSharingLink(productLink: string, cookie?: string, proxyAgent
   const headers: Record<string, string> = {
     Host: "mall.shopee.vn",
     Cookie: cookie || "",
-    "User-Agent": "iOS app iPhone Shopee appver=36931 language=vi app_type=1 platform=native_ios os_ver=26.3.0 Cronet/102.0.5005.61",
+    "User-Agent": "Android app Shopee appver=28320 app_type=1",
     "Content-Length": "4",
     Accept: "application/json, text/plain, */*",
     Origin: "https://mall.shopee.vn",
@@ -315,6 +315,7 @@ export async function fetchShopeeProductDetails(productLink: string, overrideCoo
 }
 
 export async function generateAffiliateShortLink(originalLink: string, spcCookie: string, proxyAgent?: any): Promise<string> {
+  // 1. Thử gọi Affiliate Portal (Cực chặt, hay bị văng WAF 90309999)
   const url = "https://affiliate.shopee.vn/api/v3/gql?q=batchCustomLink";
   const payload = {
     operationName: "batchGetCustomLink",
@@ -351,14 +352,58 @@ export async function generateAffiliateShortLink(originalLink: string, spcCookie
 
   try {
       const response = await nodeFetch(url, options);
-      if (!response.ok) return originalLink;
-
-      const data: any = await response.json();
-      const shortLink = data?.data?.batchCustomLink?.[0]?.shortLink;
-      return shortLink || originalLink;
+      if (response.ok) {
+          const data: any = await response.json();
+          // Nếu KHÔNG có error (hoặc error = 0), trả về link luôn
+          if (!data.error && data?.data?.batchCustomLink?.[0]?.shortLink) {
+              return data.data.batchCustomLink[0].shortLink;
+          }
+          console.log("[Affiliate Warning] Shopee Web GQL failed (often 90309999):", JSON.stringify(data));
+      }
   } catch (e) {
-      return originalLink;
+      console.log("[Affiliate Link Exception]", e);
   }
+
+  // ==============
+  // 2. FALLBACK BYPASS (CỨU CÁNH TUYỆT ĐỐI)
+  // Nếu Web Affiliate GQL hỏng do WAF, ta sẽ gắn cứng AF_SITEID vào link gốc và ép mall.shopee.vn nén nó!
+  // Đảm bảo LUÔN LUÔN có link rút gọn mang Affiliate track ID
+  // ==============
+  console.log("[Affiliate Fallback] Đang chèn hard-code AFF_ID và dùng mall.shopee.vn...");
+  try {
+      let affIdToUse = "17329290385"; // Mặc định fallback
+      try {
+           const sysConfAffId = await prisma.systemConfig.findUnique({ where: { key: "SHOPEE_AFF_ID" } });
+           if (sysConfAffId && sysConfAffId.value) affIdToUse = sysConfAffId.value.trim();
+      } catch (e){}
+
+      // Kẹp param af_siteid vào url gốc
+      let customUrl = originalLink;
+      if (customUrl.includes("?")) customUrl += `&af_siteid=${affIdToUse}`;
+      else customUrl += `?af_siteid=${affIdToUse}`;
+
+      const encoded = encodeURIComponent(customUrl);
+      const fallbackUrl = `https://mall.shopee.vn/api/v4/generic_sharing/get_sharing_link_for_non_affiliate?url=${encoded}`;
+      const fallbackHeaders = {
+         "User-Agent": "Android app Shopee appver=28320 app_type=1",
+         "cookie": spcCookie
+      };
+      const fallbackOptions: any = { method: "GET", headers: fallbackHeaders };
+      if (proxyAgent) fallbackOptions.agent = proxyAgent;
+
+      const fallbackRes = await nodeFetch(fallbackUrl, fallbackOptions);
+      if (fallbackRes.ok) {
+          const fallbackData: any = await fallbackRes.json();
+          if (fallbackData?.data?.short_url) {
+              console.log("[Affiliate Fallback] -> Thành công! Cứu được short link:", fallbackData.data.short_url);
+              return fallbackData.data.short_url;
+          }
+      }
+  } catch (fallbackError) {
+      console.log("[Affiliate Fallback Exception]", fallbackError);
+  }
+
+  return originalLink;
 }
 
 export async function convertToAffiliateLinkWithFallback(originalLink: string): Promise<string> {
@@ -389,7 +434,7 @@ export async function convertToAffiliateLinkWithFallback(originalLink: string): 
     const proxyAgent = await getRandomSysProxy();
     try {
         const shortLink = await generateAffiliateShortLink(originalLink, cookie, proxyAgent);
-        if (shortLink && shortLink !== originalLink && shortLink.includes("shp.ee")) {
+        if (shortLink && shortLink !== originalLink && (shortLink.includes("shp.ee") || shortLink.includes("s.shopee.vn"))) {
             return shortLink;
         }
     } catch {

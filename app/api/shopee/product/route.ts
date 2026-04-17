@@ -21,6 +21,11 @@ export async function POST(request: Request) {
 
   try {
     const details = await fetchShopeeProductDetails(parsed.data.productLink);
+    
+    // Convert link gốc shopee lấy được thành Link Affiliate Rút Gọn ngay trên bảng Phân tích UI
+    const { convertToAffiliateLinkWithFallback } = await import("@/lib/shopee");
+    details.resolvedLink = await convertToAffiliateLinkWithFallback(details.resolvedLink);
+
     return NextResponse.json(details);
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Không thể lấy dữ liệu từ Shopee." }, { status: 400 });
