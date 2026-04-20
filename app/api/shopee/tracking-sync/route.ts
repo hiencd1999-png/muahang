@@ -166,28 +166,10 @@ export async function GET(request: NextRequest) {
         newTrackingNo = uniqueTrackings.join("\n");
       }
 
-      const checkDeliveringSoon = (desc: string) => {
-          const d = (desc || "").toLowerCase();
-          return d.includes("đơn hàng sẽ sớm được giao, vui lòng chú ý điện thoại") ||
-                 d.includes("đơn hàng chuẩn bị giao") ||
-                 d.includes("người mua có thể đến nhận hàng tại");
-      };
-
-      const anyDeliveringSoon = results.some((r: any) => {
-         if (checkDeliveringSoon(r.description)) return true;
-         if (r.logistics?.shipping_status && checkDeliveringSoon(r.logistics.shipping_status)) return true;
-         if (r.logistics?.history && Array.isArray(r.logistics.history)) {
-            if (r.logistics.history.some((h: any) => checkDeliveringSoon(h.description))) return true;
-         }
-         return false;
-      });
-
       if (anyDelivered) {
         newStatus = "DELIVERED";
       } else if (isCanceled) {
         newStatus = "CANCELED";
-      } else if (anyDeliveringSoon) {
-        newStatus = "DELIVERING_SOON";
       } else if (newTrackingNo && (newStatus === "PENDING" || newStatus === "PROCESSING" || newStatus === "ORDER_PLACED")) {
         newStatus = "TRACKING_GENERATED";
       }

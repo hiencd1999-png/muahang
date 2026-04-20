@@ -68,6 +68,7 @@ export default async function AdminOrdersPage({
             OR: [
               { shopeeTrackingData: { contains: "chuẩn bị giao" } },
               { shopeeTrackingData: { contains: "sớm được giao" } },
+              { shopeeTrackingData: { contains: "nhận hàng tại" } },
             ]
           }
         ]

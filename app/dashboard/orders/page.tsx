@@ -24,6 +24,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ page?:
             OR: [
               { shopeeTrackingData: { contains: "chuẩn bị giao" } },
               { shopeeTrackingData: { contains: "sớm được giao" } },
+              { shopeeTrackingData: { contains: "nhận hàng tại" } },
             ]
           }
         ]
