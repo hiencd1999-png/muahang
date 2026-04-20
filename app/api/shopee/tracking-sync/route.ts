@@ -166,10 +166,28 @@ export async function GET(request: NextRequest) {
         newTrackingNo = uniqueTrackings.join("\n");
       }
 
+      const checkDeliveringSoon = (desc: string) => {
+          const d = (desc || "").toLowerCase();
+          return d.includes("đơn hàng sẽ sớm được giao, vui lòng chú ý điện thoại") ||
+                 d.includes("đơn hàng chuẩn bị giao") ||
+                 d.includes("người mua có thể đến nhận hàng tại");
+      };
+
+      const anyDeliveringSoon = results.some((r: any) => {
+         if (checkDeliveringSoon(r.description)) return true;
+         if (r.logistics?.shipping_status && checkDeliveringSoon(r.logistics.shipping_status)) return true;
+         if (r.logistics?.history && Array.isArray(r.logistics.history)) {
+            if (r.logistics.history.some((h: any) => checkDeliveringSoon(h.description))) return true;
+         }
+         return false;
+      });
+
       if (anyDelivered) {
         newStatus = "DELIVERED";
       } else if (isCanceled) {
         newStatus = "CANCELED";
+      } else if (anyDeliveringSoon) {
+        newStatus = "DELIVERING_SOON";
       } else if (newTrackingNo && (newStatus === "PENDING" || newStatus === "PROCESSING" || newStatus === "ORDER_PLACED")) {
         newStatus = "TRACKING_GENERATED";
       }
@@ -184,33 +202,33 @@ export async function GET(request: NextRequest) {
     // Cưỡng chế đẩy mốc updatedAt để chốt mốc thời gian cho vòng Smart Polling kế tiếp
     updates.updatedAt = new Date();
 
-    const checkDeliveringSoon = (desc: string) => {
-        const d = (desc || "").toLowerCase();
-        return d.includes("đơn hàng sẽ sớm được giao, vui lòng chú ý điện thoại") ||
-               d.includes("đơn hàng chuẩn bị giao") ||
-               d.includes("người mua có thể đến nhận hàng tại");
-    };
-    const hasDeliveringSoon = (resultsData: any[]) => {
+    const hasDeliveringSoonFunc = (resultsData: any[]) => {
+       const cdSoon = (desc: string) => {
+          const d = (desc || "").toLowerCase();
+          return d.includes("đơn hàng sẽ sớm được giao, vui lòng chú ý điện thoại") ||
+                 d.includes("đơn hàng chuẩn bị giao") ||
+                 d.includes("người mua có thể đến nhận hàng tại");
+       };
        return resultsData.some((r: any) => {
-          if (checkDeliveringSoon(r.description)) return true;
-          if (r.logistics?.shipping_status && checkDeliveringSoon(r.logistics.shipping_status)) return true;
+          if (cdSoon(r.description)) return true;
+          if (r.logistics?.shipping_status && cdSoon(r.logistics.shipping_status)) return true;
           if (r.logistics?.history && Array.isArray(r.logistics.history)) {
-             if (r.logistics.history.some((h: any) => checkDeliveringSoon(h.description))) return true;
+             if (r.logistics.history.some((h: any) => cdSoon(h.description))) return true;
           }
           return false;
        });
     };
 
-    const anyDeliveringSoon = hasDeliveringSoon(results);
+    const anyDeliveringSoonNotification = hasDeliveringSoonFunc(results);
     let oldDeliveringSoon = false;
     try {
       if (order.shopeeTrackingData) {
         const oldResults = JSON.parse(order.shopeeTrackingData);
-        oldDeliveringSoon = hasDeliveringSoon(oldResults);
+        oldDeliveringSoon = hasDeliveringSoonFunc(oldResults);
       }
     } catch {}
 
-    if (anyDeliveringSoon && !oldDeliveringSoon) {
+    if (anyDeliveringSoonNotification && !oldDeliveringSoon) {
        const { sendTelegramNotification } = await import("@/lib/telegram");
        await sendTelegramNotification(
           order.userId,
