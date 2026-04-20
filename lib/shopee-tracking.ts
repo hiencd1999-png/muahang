@@ -257,11 +257,23 @@ export class ShopeeTrackingChecker {
     const trackingItems = data.tracking_info_list || [];
     const history = [];
     for (const item of trackingItems) {
+      let desc = item.description || "";
+      let normalizedDesc = normalizeTrackingStatus(desc, "");
+      const pinCode = item.pin_code || item.pinCode || data.pin_code || data.pinCode;
+      
+      if (desc.toLowerCase().includes("người mua có thể đến nhận hàng tại")) {
+         if (pinCode) {
+            normalizedDesc = `${desc} | Mã pin: ${pinCode}`;
+         } else {
+            normalizedDesc = desc;
+         }
+      }
+
       history.push({
         ctime: item.ctime,
         ctime_text: formatHistoryTime(item.ctime),
-        description: normalizeTrackingStatus(item.description, ""),
-        pin_code: item.pin_code || item.pinCode,
+        description: normalizedDesc,
+        pin_code: pinCode,
         driver_phone: item.driver_phone || "",
         driver_name: item.driver_name || "",
         license_plate_number: item.license_plate_number || "",
@@ -308,13 +320,22 @@ export class ShopeeTrackingChecker {
         item = detailPayload.info_card?.product_info?.item_groups?.[0]?.items?.[0] || {};
       }
 
+      let rootDesc = tracking.description || detailPayload.status?.status_label?.text || "";
+      let rootDescStr = normalizeTrackingStatus(rootDesc, "Unknown");
+      const pinCode = shipping.pin_code || shipping.pinCode || tracking.pin_code || tracking.pinCode;
+      
+      if (rootDesc.toLowerCase().includes("người mua có thể đến nhận hàng tại")) {
+         if (pinCode) {
+            rootDescStr = `${rootDesc} | Mã pin: ${pinCode}`;
+         } else {
+            rootDescStr = rootDesc;
+         }
+      }
+
       const result: any = {
         order_id: seed.order_id,
         tracking_number: shipping.tracking_number || "",
-        description: normalizeTrackingStatus(
-          tracking.description || detailPayload.status?.status_label?.text,
-          "Unknown"
-        ),
+        description: rootDescStr,
         shipping_name: address.shipping_name || "",
         shipping_phone: address.shipping_phone || "",
         shipping_address: address.shipping_address || "",

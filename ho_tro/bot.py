@@ -34,13 +34,18 @@ def extract_shop_item(url_str):
             return match.group(1), match.group(2)
     return None
 
-def generate_short_link_gql(original_link, spc_st):
+def generate_short_link_gql(original_link, spc_st, sub_id=None):
     url = "https://affiliate.shopee.vn/api/v3/gql?q=batchCustomLink"
+    
+    link_param = {"originalLink": original_link}
+    if sub_id:
+        link_param["advancedLinkParams"] = {"subId1": sub_id}
+        
     payload = {
         "operationName": "batchGetCustomLink",
         "query": "query batchGetCustomLink($linkParams: [CustomLinkParam!], $sourceCaller: SourceCaller){\n      batchCustomLink(linkParams: $linkParams, sourceCaller: $sourceCaller){\n        shortLink\n        longLink\n        failCode\n      }\n    }\n    ",
         "variables": {
-            "linkParams": [{"originalLink": original_link}],
+            "linkParams": [link_param],
             "sourceCaller": "CUSTOM_LINK_CALLER"
         }
     }
@@ -75,14 +80,34 @@ def generate_short_link_gql(original_link, spc_st):
         
     return original_link, "Lỗi phản hồi hệ thống (Có thể do mã bảo mật WAF hết hạn)"
 
+@bot.message_handler(commands=['start', 'help'])
+def send_welcome(message):
+    instructions = (
+        "👋 Chào mừng bạn đến với Bot tạo link Affiliate Shopee!\n\n"
+        "📖 **Cách sử dụng:**\n"
+        "1. Tạo link cơ bản: Gửi một đường link Shopee bất kỳ.\n"
+        "   👉 `https://shopee.vn/...`\n\n"
+        "2. Tạo link kèm SubID: Gửi link Shopee cách một khoảng trắng rồi đến SubID.\n"
+        "   👉 `https://shopee.vn/... OtisTX`\n\n"
+        "⚠️ Bot hỗ trợ phân giải đủ các định dạng rút gọn như s.shopee.vn hay shp.ee"
+    )
+    bot.reply_to(message, instructions, parse_mode='Markdown')
+
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     global current_spc_st
     chat_id = message.chat.id
     text = message.text
 
-    if not text or not is_shopee_link(text):
-        bot.send_message(chat_id, 'Vui lòng gửi link Shopee hợp lệ')
+    if not text:
+        return
+        
+    parts = text.split()
+    link_text = parts[0]
+    sub_id = parts[1] if len(parts) > 1 else None
+
+    if not is_shopee_link(link_text):
+        bot.send_message(chat_id, 'Vui lòng gửi link Shopee hợp lệ (Cú pháp: <link> <subid - tùy chọn>)')
         return
     if not current_spc_st:
         bot.send_message(chat_id, "⚠️ Bot chưa đưọc nạp SPC_ST từ Console! Hãy khởi động lại script.")
@@ -91,11 +116,11 @@ def handle_message(message):
     bot.send_message(chat_id, '⏳ Đang xử lý lấy link Affiliate...')
 
     try:
-        if 's.shopee.vn' in text or 'shp.ee' in text:
-            text = expand(text)
+        if 's.shopee.vn' in link_text or 'shp.ee' in link_text:
+            link_text = expand(link_text)
 
-        clean_long_url = text
-        extracted = extract_shop_item(text)
+        clean_long_url = link_text
+        extracted = extract_shop_item(link_text)
         
         if extracted:
             shop_id, item_id = extracted
@@ -105,7 +130,7 @@ def handle_message(message):
             clean_long_url = urllib.parse.urlunparse(parsed._replace(query=""))
 
         # Gọi GraphQL tạo link rút gọn theo cookie SPC_ST đã cài
-        short_url, err = generate_short_link_gql(clean_long_url, current_spc_st)
+        short_url, err = generate_short_link_gql(clean_long_url, current_spc_st, sub_id)
 
         if err:
             bot.send_message(chat_id, f"❌ Không thể rút gọn link!\nLý do: {err}")

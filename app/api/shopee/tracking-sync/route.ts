@@ -187,7 +187,8 @@ export async function GET(request: NextRequest) {
     const checkDeliveringSoon = (desc: string) => {
         const d = (desc || "").toLowerCase();
         return d.includes("đơn hàng sẽ sớm được giao, vui lòng chú ý điện thoại") ||
-               d.includes("đơn hàng chuẩn bị giao");
+               d.includes("đơn hàng chuẩn bị giao") ||
+               d.includes("người mua có thể đến nhận hàng tại");
     };
     const hasDeliveringSoon = (resultsData: any[]) => {
        return resultsData.some((r: any) => {
