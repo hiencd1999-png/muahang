@@ -192,6 +192,44 @@ export async function runBackgroundCron() {
             }
         }
 
+        // --- 1.5. AUTO-EXPIRE BANK DEPOSITS ---
+        const expiredBankDeposits = await prisma.bankDeposit.findMany({
+            where: {
+                status: { in: ["PENDING", "TRANSFERRED"] },
+                expiresAt: { lt: new Date() }
+            },
+            include: { admin: true }
+        });
+
+        for (const deposit of expiredBankDeposits) {
+            const isSpAdminRole = (role: string) => role === "SPADMIN";
+            const isTargetAdminSpAdmin = isSpAdminRole(deposit.admin.role);
+
+            await prisma.$transaction(async (tx) => {
+                const updateResult = await tx.bankDeposit.updateMany({
+                     where: { id: deposit.id, status: { in: ["PENDING", "TRANSFERRED"] } },
+                     data: { status: "EXPIRED" }
+                });
+
+                if (updateResult.count > 0 && !isTargetAdminSpAdmin) {
+                    await tx.user.update({
+                        where: { id: deposit.adminId },
+                        data: { balance: { increment: deposit.amount } }
+                    });
+                    await tx.transaction.create({
+                         data: {
+                             userId: deposit.adminId,
+                             amount: deposit.amount,
+                             type: "ADMIN_ADJUSTMENT",
+                             note: `[Hệ Thống] Rollback tự động: Hoàn trả Escrow cho lệnh Bank quá hạn từ User ${deposit.userId}`
+                         }
+                    });
+                }
+            });
+            console.log(`[Sweeper] ♻️ Rollback thành công lệnh cọc bank mã ${deposit.id}`);
+        }
+
+
         // --- 2. THEO DÕI MÃ VẬN ĐƠN NGẦM ---
         const orders = await prisma.order.findMany({
             where: {

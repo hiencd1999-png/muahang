@@ -13,7 +13,7 @@ async function sweepExpiredDeposits() {
         // Tìm toàn bộ lệnh nạp tiền Bank mà chưa ai ngó tới nhưng đã mốc meo quá hạn.
         const stuckOrders = await prisma.bankDeposit.findMany({
             where: {
-                status: "PENDING",
+                status: { in: ["PENDING", "TRANSFERRED"] },
                 expiresAt: { lt: new Date() }
             },
             include: { admin: true }
@@ -31,7 +31,7 @@ async function sweepExpiredDeposits() {
             // Bọc cẩn thận qua ACID $transaction để dù lỗi RAM cũng an toàn cực độ
             await prisma.$transaction(async (tx) => {
                 const updateResult = await tx.bankDeposit.updateMany({
-                     where: { id: deposit.id, status: "PENDING" },
+                     where: { id: deposit.id, status: { in: ["PENDING", "TRANSFERRED"] } },
                      data: { status: "EXPIRED" }
                 });
 

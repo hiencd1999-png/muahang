@@ -16,14 +16,14 @@ export async function GET(req: Request, props: { params: Promise<{ orderId: stri
 
     if (!deposit) return NextResponse.json({ error: "Không tìm thấy lệnh nạp" }, { status: 404 });
 
-    if (deposit.status === "PENDING" && deposit.expiresAt < new Date()) {
+    if ((deposit.status === "PENDING" || deposit.status === "TRANSFERRED") && deposit.expiresAt < new Date()) {
         const isSpAdminRole = (role: string) => role === "SPADMIN";
         if (deposit.admin && deposit.admin.role) {
             const isTargetAdminSpAdmin = isSpAdminRole(deposit.admin.role);
 
             await prisma.$transaction(async (tx) => {
                 const updateResult = await tx.bankDeposit.updateMany({
-                    where: { id: deposit.id, status: "PENDING" },
+                    where: { id: deposit.id, status: { in: ["PENDING", "TRANSFERRED"] } },
                     data: { status: "EXPIRED" }
                 });
 
