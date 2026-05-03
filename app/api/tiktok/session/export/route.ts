@@ -39,6 +39,15 @@ export async function POST(request: Request) {
           productNames = products.map((p) => `${p.name} (x${p.qty})`).join(" | ");
         } catch (e) {}
 
+        // Safely parse details for shipper info
+        let parsedDetails = order.details as any;
+        if (typeof parsedDetails === 'string') {
+          try { parsedDetails = JSON.parse(parsedDetails); } catch (e) {}
+        }
+        
+        const shipperName = parsedDetails?.detail?.shipper_name || parsedDetails?.shipper_name || "";
+        const shipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone || "";
+
         rows.push({
           "Session": session.session,
           "Ghi chú (Session)": session.note || "",
@@ -48,8 +57,10 @@ export async function POST(request: Request) {
           "Tổng tiền": order.total || "",
           "Trạng thái": order.status || "",
           "Mã VĐ": order.trackingNo || "",
-          "SĐT": order.phone || "",
+          "SĐT Khách": order.phone || "",
           "Địa chỉ": order.address || "",
+          "Người giao hàng": shipperName,
+          "SĐT Người giao": shipperPhone,
           "Cập nhật lần cuối": new Date(order.updatedAt).toLocaleString("vi-VN"),
         });
       }
