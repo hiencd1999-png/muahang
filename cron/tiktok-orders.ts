@@ -48,7 +48,7 @@ export async function fetchTikTokOrders() {
                 await tx.transaction.create({
                   data: {
                     userId: session.userId,
-                    amount: 200,
+                    amount: -200,
                     type: "ORDER_DEBIT",
                     note: `[TikTok] Phí tra cứu đơn hàng lần đầu session: ${session.session}`
                   }
@@ -68,7 +68,7 @@ export async function fetchTikTokOrders() {
                 await tx.transaction.create({
                   data: {
                     userId: session.userId,
-                    amount: 200,
+                    amount: -200,
                     type: "ORDER_DEBIT",
                     note: `[TikTok] Phí tra cứu đơn hàng lần đầu session: ${session.session}`
                   }
