@@ -330,8 +330,16 @@ export function TiktokView() {
       </div>
 
       <div className="rounded-[1.5rem] border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 p-5 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Thêm Session Nhanh</h3>
-        <p className="text-xs text-slate-500 mb-4 italic">Cú pháp hỗ trợ: <strong className="text-slate-700 dark:text-slate-300">session|ghi chú</strong>. Mỗi session trên 1 dòng.</p>
+        <div className="flex flex-col md:flex-row md:items-start justify-between mb-3 gap-3">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white shrink-0">Thêm Session Nhanh</h3>
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 text-blue-800 dark:text-blue-300 px-4 py-2.5 rounded-xl text-xs flex items-start gap-2 max-w-2xl leading-relaxed">
+            <span className="text-blue-500 mt-0.5">💡</span>
+            <span>
+              <strong>Cách lấy Session:</strong> Đăng nhập vào Seller Center trên máy tính, nhấn <strong>F12</strong> (hoặc chuột phải chọn Kiểm tra), chuyển sang tab <strong>Application</strong> {'>'} <strong>Cookies</strong> và copy giá trị của <code>session_ss</code>.
+            </span>
+          </div>
+        </div>
+        <p className="text-xs text-slate-500 mb-4 italic">Cú pháp hỗ trợ: <strong className="text-slate-700 dark:text-slate-300">session_ss|ghi chú</strong>. Mỗi session trên 1 dòng.</p>
         <textarea
           placeholder="9f149a7d7904f342f2aa31c3a21c9e2a|Tài khoản 1&#10;8f249a7d...|Tài khoản 2"
           rows={3}
