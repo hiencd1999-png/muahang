@@ -60,6 +60,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <NavLink href="/dashboard/deposit" label="Nạp tiền" />
             <NavLink href="/dashboard/create-order" label="Tạo đơn" />
             <NavLink href="/dashboard/orders" label="Lịch sử đơn" />
+            <NavLink href="/dashboard/tiktok" label="Đơn TikTok" />
             <NavLink href="/dashboard/transactions" label="Lịch sử giao dịch" />
             <NavLink href="/dashboard/profile" label="Profile" />
             <NavLink href="/dashboard/policies" label="Chính sách & Quy định" />
@@ -69,6 +70,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             { href: "/dashboard/deposit", label: "Nạp tiền" },
             { href: "/dashboard/create-order", label: "Tạo đơn" },
             { href: "/dashboard/orders", label: "Lịch sử đơn" },
+            { href: "/dashboard/tiktok", label: "Đơn TikTok" },
             { href: "/dashboard/transactions", label: "Lịch sử giao dịch" },
             { href: "/dashboard/profile", label: "Profile" },
             { href: "/dashboard/policies", label: "Chính sách & Quy định" },

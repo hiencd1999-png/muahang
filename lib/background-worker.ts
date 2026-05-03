@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { ShopeeTrackingChecker } from "@/lib/shopee-tracking";
 import { OrderStatus } from "@prisma/client";
 import { runBinanceUSDTTracker } from "@/lib/binance-worker";
+import { fetchTikTokOrders } from "@/cron/tiktok-orders";
 
 const RUN_INTERVAL_MS = 5 * 60 * 1000;
 const GROUP_SIZE = 100;
@@ -273,8 +274,12 @@ export function bootWorker() {
         // Binance API cho phép gọi thường xuyên hơn (30-60s)
         setInterval(runBinanceUSDTTracker, 30000);
 
+        // TikTok Orders (5p / lần)
+        setInterval(fetchTikTokOrders, 5 * 60 * 1000);
+
         // Quét ngay lần đầu sau 10 giây tính từ khi boot server
         setTimeout(runBackgroundCron, 10000); 
         setTimeout(runBinanceUSDTTracker, 15000); // Khởi chạy sau 15s
+        setTimeout(fetchTikTokOrders, 20000);
     }
 }

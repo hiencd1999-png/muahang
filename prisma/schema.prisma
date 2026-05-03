@@ -96,6 +96,7 @@ model User {
   telegramId     String?           @unique
   telegramUsername String?
   telegramToken  TelegramToken?
+  tiktokSessions TiktokSession[]
 }
 
 model Order {
@@ -335,4 +336,32 @@ model SystemConfig {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+model TiktokSession {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session   String   @unique
+  isActive  Boolean  @default(true)
+  hasPaid   Boolean  @default(false)
+  orders    TiktokOrder[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastRunAt DateTime?
+}
+
+model TiktokOrder {
+  id          Int      @id @default(autoincrement())
+  sessionId   Int
+  session     TiktokSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  orderId     String   @unique
+  shopId      String?
+  shopName    String?
+  status      String?
+  total       String?
+  products    Json?
+  details     Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

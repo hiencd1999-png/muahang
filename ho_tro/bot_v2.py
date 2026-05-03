@@ -8,8 +8,8 @@ TOKEN = '8438915216:AAHztUIypRr1DOvInQX5VP5qJqLWhl6UdEU'
 
 bot = telebot.TeleBot(TOKEN)
 
-# Biến lưu trữ SPC_ST (có thể cập nhật qua tin nhắn)
-current_spc_st = None
+# Biến lưu trữ danh sách SPC_ST
+spc_st_list = []
 
 def is_shopee_link(text):
     return 'shopee.vn' in text or 'shp.ee' in text
@@ -95,7 +95,7 @@ def send_welcome(message):
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
-    global current_spc_st
+    global spc_st_list
     chat_id = message.chat.id
     text = message.text
 
@@ -109,7 +109,7 @@ def handle_message(message):
     if not is_shopee_link(link_text):
         bot.send_message(chat_id, 'Vui lòng gửi link Shopee hợp lệ (Cú pháp: <link> <subid - tùy chọn>)')
         return
-    if not current_spc_st:
+    if not spc_st_list:
         bot.send_message(chat_id, "⚠️ Bot chưa đưọc nạp SPC_ST từ Console! Hãy khởi động lại script.")
         return
 
@@ -129,8 +129,11 @@ def handle_message(message):
             parsed = urllib.parse.urlparse(clean_long_url)
             clean_long_url = urllib.parse.urlunparse(parsed._replace(query=""))
 
-        # Gọi GraphQL tạo link rút gọn theo cookie SPC_ST đã cài
-        short_url, err = generate_short_link_gql(clean_long_url, current_spc_st, sub_id)
+        import random
+        # Chọn ngẫu nhiên 1 cookie từ danh sách để chia đều tỷ lệ sử dụng
+        selected_spc_st = random.choice(spc_st_list)
+        # Gọi GraphQL tạo link rút gọn theo cookie SPC_ST đã chọn
+        short_url, err = generate_short_link_gql(clean_long_url, selected_spc_st, sub_id)
 
         if err:
             bot.send_message(chat_id, f"❌ Không thể rút gọn link!\nLý do: {err}")
@@ -143,15 +146,24 @@ def handle_message(message):
 
 if __name__ == "__main__":
     print("=== SHOPEE AFFILIATE BOT ===")
-    user_input = input("Nhập cookie SPC_ST (từ web affiliate.shopee.vn): ").strip()
+    import os
     
-    if user_input.startswith("SPC_ST="):
-        user_input = user_input.replace("SPC_ST=", "")
-        
-    current_spc_st = user_input
-    if not current_spc_st:
-        print("Lỗi: Bạn chưa nhập SPC_ST! Tắt script...")
+    spc_st_list = []
+    if os.path.exists("cookie.txt"):
+        with open("cookie.txt", "r", encoding="utf-8") as f:
+            for line in f:
+                c = line.strip()
+                if c.startswith("SPC_ST="):
+                    c = c.replace("SPC_ST=", "")
+                if c:
+                    spc_st_list.append(c)
+    else:
+        print("Lỗi: Không tìm thấy file cookie.txt! Vui lòng tạo file và thêm cookie.")
+        exit(1)
+            
+    if not spc_st_list:
+        print("Lỗi: Bạn chưa nhập SPC_ST nào! Tắt script...")
         exit(1)
         
-    print("\n✅ Đã nạp thành công SPC_ST. Bot đang chờ tin nhắn Telegram...")
+    print(f"\n✅ Đã nạp thành công {len(spc_st_list)} cookie SPC_ST. Bot đang chờ tin nhắn Telegram...")
     bot.infinity_polling()
