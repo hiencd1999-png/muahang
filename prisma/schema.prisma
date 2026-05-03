@@ -343,6 +343,7 @@ model TiktokSession {
   userId    Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   session   String   @unique
+  note      String?
   isActive  Boolean  @default(true)
   hasPaid   Boolean  @default(false)
   orders    TiktokOrder[]
@@ -360,6 +361,9 @@ model TiktokOrder {
   shopName    String?
   status      String?
   total       String?
+  trackingNo  String?
+  phone       String?
+  address     String?
   products    Json?
   details     Json?
   createdAt   DateTime @default(now())

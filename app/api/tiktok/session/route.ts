@@ -38,7 +38,9 @@ export async function POST(request: Request) {
 
     let addedCount = 0;
     for (const sessionStr of sessions) {
-      const session = sessionStr.trim();
+      const parts = sessionStr.split("|");
+      const session = parts[0]?.trim();
+      const note = parts[1]?.trim() || null;
       if (!session) continue;
 
       const existing = await prisma.tiktokSession.findUnique({
@@ -50,6 +52,7 @@ export async function POST(request: Request) {
           data: {
             userId: auth.user.id,
             session,
+            note,
             isActive: true,
           },
         });

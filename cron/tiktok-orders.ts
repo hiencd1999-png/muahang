@@ -92,13 +92,35 @@ export async function fetchTikTokOrders() {
               console.error(`[TikTokWorker] Lỗi khi lấy chi tiết đơn ${order.order_id}:`, err);
             }
 
+            let trackingNo = "";
+            let phone = "";
+            let address = "";
+            if (detailData && detailData.data) {
+                trackingNo = detailData.data.tracking_no || detailData.data.trackingNo || "";
+                phone = detailData.data.phone || "";
+                address = detailData.data.address || "";
+            } else if (detailData) {
+                trackingNo = detailData.tracking_no || detailData.trackingNo || "";
+                phone = detailData.phone || "";
+                address = detailData.address || "";
+            }
+
+            let statusTranslated = order.status;
+            if (order.status === "Canceled") statusTranslated = "Đã hủy";
+            else if (order.status === "In transit") statusTranslated = "Đang giao";
+            else if (order.status === "Order delivered") statusTranslated = "Đã giao";
+            else if (order.status === "Order completed") statusTranslated = "Đã hoàn thành";
+
             await prisma.tiktokOrder.upsert({
               where: { orderId: order.order_id },
               update: {
                 shopId: order.shop_id,
                 shopName: order.shop_name,
-                status: order.status,
+                status: statusTranslated,
                 total: order.total,
+                trackingNo,
+                phone,
+                address,
                 products: order.products,
                 details: detailData,
               },
@@ -107,8 +129,11 @@ export async function fetchTikTokOrders() {
                 orderId: order.order_id,
                 shopId: order.shop_id,
                 shopName: order.shop_name,
-                status: order.status,
+                status: statusTranslated,
                 total: order.total,
+                trackingNo,
+                phone,
+                address,
                 products: order.products,
                 details: detailData,
               }
