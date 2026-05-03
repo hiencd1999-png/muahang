@@ -384,7 +384,7 @@ export function TiktokView() {
         <div className="flex items-center justify-between sm:justify-end gap-3 w-full md:w-auto">
           <button
             onClick={toggleSelectAllFiltered}
-            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors"
+            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
           >
             Chọn tất cả
           </button>

@@ -83,6 +83,25 @@ export async function fetchTikTokOrders() {
           }
 
           for (const order of listData.orders) {
+            // Kiểm tra trạng thái trong DB để bỏ qua các đơn đã hoàn thành/đã giao
+            const existingOrder = await prisma.tiktokOrder.findUnique({
+              where: { orderId: order.order_id },
+              select: { status: true }
+            });
+
+            if (existingOrder && existingOrder.status) {
+              const currentStatus = existingOrder.status.toLowerCase();
+              if (
+                currentStatus.includes("đã được giao") ||
+                currentStatus === "đã giao" ||
+                currentStatus === "đã hoàn thành" ||
+                currentStatus === "đã hủy"
+              ) {
+                console.log(`[TikTokWorker] Bỏ qua đơn ${order.order_id} vì đã ở trạng thái: ${existingOrder.status}`);
+                continue;
+              }
+            }
+
             const detailUrl = `https://vubel-tiktok.vercel.app/api/order/detail?session=${session.session}&proxy=${proxyStr}&order_id=${order.order_id}`;
             let detailData = null;
             try {
