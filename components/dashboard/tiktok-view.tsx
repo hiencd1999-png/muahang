@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Trash2, Plus, RefreshCw, MapPin, Phone, Hash, Copy, Check, Edit2, Download, CheckSquare } from "lucide-react";
+import { Loader2, Trash2, Plus, RefreshCw, MapPin, Phone, Hash, Copy, Check, Edit2, Download, CheckSquare, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useToast } from "@/components/shared/toast";
 
@@ -50,6 +50,12 @@ export function TiktokView() {
 
   // Expand Session state
   const [expandedSessions, setExpandedSessions] = useState<Set<number>>(new Set());
+
+  // Filters & Pagination
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { addToast } = useToast();
 
@@ -166,12 +172,62 @@ export function TiktokView() {
     });
   };
 
+  // Derived values for filters
+  const allStatuses = Array.from(new Set(sessions.flatMap(s => s.orders.map(o => o.status || "Chờ xử lý")))).filter(Boolean).sort();
+
+  // Filter & Pagination Logic
+  const filteredSessions = sessions.map(session => {
+    const q = searchQuery.toLowerCase();
+    
+    // Filter orders
+    const filteredOrders = session.orders.filter(order => {
+      const matchStatus = statusFilter === "ALL" || (order.status || "Chờ xử lý") === statusFilter;
+      const matchSearch = !q || 
+        order.orderId.toLowerCase().includes(q) ||
+        (order.trackingNo || "").toLowerCase().includes(q) ||
+        (order.phone || "").toLowerCase().includes(q) ||
+        (order.shopName || "").toLowerCase().includes(q) ||
+        (order.address || "").toLowerCase().includes(q) ||
+        ((order.products as any[]) || []).some(p => p.name.toLowerCase().includes(q));
+      
+      return matchStatus && matchSearch;
+    });
+
+    const sessionMatchSearch = !q || 
+      session.session.toLowerCase().includes(q) || 
+      (session.note || "").toLowerCase().includes(q);
+
+    // If a specific status is selected, the session MUST have matching orders
+    const matchStatusRequirement = statusFilter === "ALL" || filteredOrders.length > 0;
+
+    return {
+      ...session,
+      filteredOrders,
+      isMatch: (sessionMatchSearch || filteredOrders.length > 0) && matchStatusRequirement
+    };
+  }).filter(s => s.isMatch);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSessions.length / itemsPerPage));
+  const paginatedSessions = filteredSessions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, itemsPerPage]);
+
   // Bulk Actions
-  const toggleSelectAll = () => {
-    if (selectedIds.length === sessions.length) {
-      setSelectedIds([]);
+  const toggleSelectAllFiltered = () => {
+    const filteredIds = filteredSessions.map(s => s.id);
+    const allSelected = filteredIds.every(id => selectedIds.includes(id));
+    
+    if (allSelected) {
+      // Deselect all filtered
+      setSelectedIds(prev => prev.filter(id => !filteredIds.includes(id)));
     } else {
-      setSelectedIds(sessions.map(s => s.id));
+      // Select all filtered
+      setSelectedIds(prev => {
+        const newSet = new Set([...prev, ...filteredIds]);
+        return Array.from(newSet);
+      });
     }
   };
 
@@ -278,7 +334,7 @@ export function TiktokView() {
         <p className="text-xs text-slate-500 mb-4 italic">Cú pháp hỗ trợ: <strong className="text-slate-700 dark:text-slate-300">session|ghi chú</strong>. Mỗi session trên 1 dòng.</p>
         <textarea
           placeholder="9f149a7d7904f342f2aa31c3a21c9e2a|Tài khoản 1&#10;8f249a7d...|Tài khoản 2"
-          rows={4}
+          rows={3}
           className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800 p-4 text-sm outline-none focus:border-amber-500 mb-4 transition-colors font-mono"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
@@ -293,21 +349,56 @@ export function TiktokView() {
         </button>
       </div>
 
+      {/* Tools & Filters */}
+      <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] border border-slate-200 dark:border-slate-700/80 shadow-sm">
+        <div className="flex-1 flex flex-col sm:flex-row gap-3 w-full">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Tìm mã đơn, SĐT, session..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
+            />
+          </div>
+          <select 
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors min-w-[180px]"
+          >
+            <option value="ALL">Tất cả trạng thái</option>
+            {allStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        
+        <div className="flex items-center justify-between sm:justify-end gap-3 w-full md:w-auto">
+          <button
+            onClick={toggleSelectAllFiltered}
+            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors"
+          >
+            Chọn tất cả
+          </button>
+          <select 
+            value={itemsPerPage}
+            onChange={e => setItemsPerPage(Number(e.target.value))}
+            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
+          >
+            <option value={10}>10 dòng</option>
+            <option value={20}>20 dòng</option>
+            <option value={50}>50 dòng</option>
+          </select>
+        </div>
+      </div>
+
       {/* Bulk Actions Bar */}
       {selectedIds.length > 0 && (
-        <div className="rounded-[1.5rem] border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 shadow-sm sticky top-4 z-10 backdrop-blur-sm">
+        <div className="rounded-[1.5rem] border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 shadow-sm sticky top-4 z-10 backdrop-blur-sm animate-in fade-in slide-in-from-top-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
               <CheckSquare className="w-4 h-4" /> Đã chọn {selectedIds.length} session
             </p>
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={toggleSelectAll}
-                className="rounded-xl border border-amber-200 dark:border-amber-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400 transition hover:bg-amber-50 dark:hover:bg-amber-800"
-              >
-                {selectedIds.length === sessions.length ? "Bỏ chọn" : "Chọn tất cả"}
-              </button>
               <button
                 type="button"
                 onClick={handleBulkExport}
@@ -343,13 +434,13 @@ export function TiktokView() {
           <div className="flex justify-center p-12">
             <Loader2 className="h-10 w-10 animate-spin text-amber-500" />
           </div>
-        ) : sessions.length === 0 ? (
+        ) : paginatedSessions.length === 0 ? (
           <div className="text-center p-10 text-sm text-slate-500 rounded-[1.5rem] border border-slate-200 bg-white shadow-sm flex flex-col items-center gap-3">
             <span className="text-4xl text-slate-300">📦</span>
-            Chưa có dữ liệu session nào.
+            Không tìm thấy session nào khớp với điều kiện lọc.
           </div>
         ) : (
-          sessions.map((session) => (
+          paginatedSessions.map((session) => (
             <div key={session.id} className={`rounded-[1.5rem] border ${selectedIds.includes(session.id) ? 'border-amber-400 dark:border-amber-600 shadow-md ring-1 ring-amber-400/50' : 'border-slate-200 dark:border-slate-700/80 shadow-sm'} bg-white dark:bg-slate-900 overflow-hidden flex flex-col transition-all hover:shadow-xl`}>
               
               {/* Session Header */}
@@ -403,7 +494,13 @@ export function TiktokView() {
                   <div className="text-xs font-medium text-slate-500 flex flex-wrap gap-x-4 gap-y-1 ml-6">
                     <span>Lần cập nhật cuối: {session.lastRunAt ? formatDate(new Date(session.lastRunAt)) : "Chưa cập nhật"}</span>
                     <span>•</span>
-                    <span>Số đơn: <strong className="text-slate-800 dark:text-slate-200">{session.orders.length}</strong></span>
+                    <span>Tổng đơn: <strong className="text-slate-800 dark:text-slate-200">{session.orders.length}</strong></span>
+                    {session.filteredOrders.length !== session.orders.length && (
+                      <span>•</span>
+                    )}
+                    {session.filteredOrders.length !== session.orders.length && (
+                      <span className="text-amber-600 font-bold">Khớp lọc: {session.filteredOrders.length}</span>
+                    )}
                   </div>
                 </div>
                 
@@ -427,10 +524,13 @@ export function TiktokView() {
 
               {/* Order List */}
               <div className="p-0 overflow-hidden">
-                {session.orders.length > 0 ? (
+                {session.filteredOrders.length > 0 ? (
                   <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
                     {(() => {
-                      const sortedOrders = [...session.orders].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+                      const sortedOrders = [...session.filteredOrders].sort((a, b) => {
+                        if (a.orderId.length !== b.orderId.length) return b.orderId.length - a.orderId.length;
+                        return b.orderId.localeCompare(a.orderId);
+                      });
                       const isExpanded = expandedSessions.has(session.id);
                       const displayedOrders = isExpanded ? sortedOrders : sortedOrders.slice(0, 1);
                       
@@ -563,6 +663,32 @@ export function TiktokView() {
           ))
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 py-4">
+          <button 
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          
+          <div className="flex items-center gap-1 px-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Trang {currentPage}</span>
+            <span className="text-sm text-slate-500">/ {totalPages}</span>
+          </div>
+
+          <button 
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      )}
     </section>
   );
 }
