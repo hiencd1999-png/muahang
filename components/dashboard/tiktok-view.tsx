@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Trash2, Plus, RefreshCw, MapPin, Phone, Hash, Copy, Check, Edit2, Download, CheckSquare, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Trash2, Plus, RefreshCw, MapPin, Phone, Hash, Copy, Check, Edit2, Download, CheckSquare, Search, ChevronLeft, ChevronRight, Truck } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useToast } from "@/components/shared/toast";
 
@@ -15,6 +15,7 @@ interface TiktokOrder {
   phone: string | null;
   address: string | null;
   products: any;
+  details?: any;
   updatedAt: string;
 }
 
@@ -546,6 +547,16 @@ export function TiktokView() {
                         <>
                           {displayedOrders.map((order) => {
                             const products = order.products as any[] || [];
+                            
+                            // Safely parse details
+                            let parsedDetails = order.details;
+                            if (typeof parsedDetails === 'string') {
+                              try { parsedDetails = JSON.parse(parsedDetails); } catch (e) {}
+                            }
+                            
+                            const shipperName = parsedDetails?.detail?.shipper_name || parsedDetails?.shipper_name;
+                            const shipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone;
+
                             return (
                               <div key={order.id} className="p-5 flex flex-col xl:flex-row gap-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                                 
@@ -617,6 +628,22 @@ export function TiktokView() {
                                       </div>
                                     </div>
                                   </div>
+
+                                  {(shipperName || shipperPhone) && (
+                                    <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300 mt-4 border-t border-slate-100 dark:border-slate-800/80 pt-3">
+                                      <Truck className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                                      <div className="flex flex-col w-full">
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200">Người Giao Hàng</span>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          <span>
+                                            {shipperName || "Không rõ tên"}
+                                            {shipperPhone ? ` - ${shipperPhone}` : ""}
+                                          </span>
+                                          {shipperPhone && <CopyBtn text={shipperPhone} />}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
 
                                 {/* Info Column 3: Products */}
