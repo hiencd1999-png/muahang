@@ -65,14 +65,11 @@ export async function POST(request: Request) {
         let trackingNo = "";
         let phone = "";
         let address = "";
-        if (detailData && detailData.data) {
-            trackingNo = detailData.data.tracking_no || detailData.data.trackingNo || "";
-            phone = detailData.data.phone || "";
-            address = detailData.data.address || "";
-        } else if (detailData) {
-            trackingNo = detailData.tracking_no || detailData.trackingNo || "";
-            phone = detailData.phone || "";
-            address = detailData.address || "";
+        
+        if (detailData?.detail) {
+            trackingNo = detailData.detail.logistics?.tracking_no || "";
+            phone = detailData.detail.recipient?.phone || "";
+            address = detailData.detail.recipient?.address || "";
         }
 
         let statusTranslated = order.status;
