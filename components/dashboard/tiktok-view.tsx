@@ -424,29 +424,29 @@ export function TiktokView() {
                           
                           {/* Info Column 1: Order ID & Shop */}
                           <div className="flex-1 min-w-[200px] space-y-3">
-                            <div className="flex items-center justify-between xl:justify-start gap-3">
+                            <div className="flex flex-col gap-2">
                               <div className="flex items-center gap-1">
                                 <span className="font-mono text-sm font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">#{order.orderId}</span>
                                 <CopyBtn text={order.orderId} />
                               </div>
-                              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider line-clamp-1 ${
-                                order.status === "Đã giao" || order.status === "Đã hoàn thành" 
-                                  ? "bg-emerald-100 text-emerald-700" 
-                                  : order.status === "Đã hủy" 
-                                    ? "bg-rose-100 text-rose-700"
-                                    : "bg-amber-100 text-amber-700"
+                              <div className={`px-3 py-2 rounded-xl text-xs font-semibold leading-relaxed border ${
+                                order.status === "Đã giao" || order.status === "Đã hoàn thành" || order.status?.includes("đã được giao")
+                                  ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300" 
+                                  : order.status === "Đã hủy" || order.status?.includes("hủy")
+                                    ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-300"
+                                    : "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300"
                               }`}>
                                 {order.status || "Chờ xử lý"}
-                              </span>
+                              </div>
                             </div>
                             
                             <div className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                              <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px]">🏪</div>
-                              {order.shopName || "Shop không rõ"}
+                              <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] shrink-0">🏪</div>
+                              <span className="line-clamp-1">{order.shopName || "Shop không rõ"}</span>
                             </div>
                             
-                            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 px-3 py-2 rounded-xl inline-block w-full max-w-[250px]">
-                              <span className="text-[10px] uppercase font-black tracking-widest text-amber-700/70 block mb-0.5">Tổng Tiền</span>
+                            <div className="bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-xl inline-block w-full max-w-[250px]">
+                              <span className="text-[10px] uppercase font-black tracking-widest text-slate-500 dark:text-slate-400 block mb-0.5">Tổng Tiền</span>
                               <div className="flex items-center gap-2">
                                 <span className="font-black text-amber-600 text-lg">{order.total || "-"}</span>
                                 <CopyBtn text={order.total} />
