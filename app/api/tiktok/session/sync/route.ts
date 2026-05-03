@@ -77,6 +77,10 @@ export async function POST(request: Request) {
         else if (order.status === "In transit") statusTranslated = "Đang giao";
         else if (order.status === "Order delivered") statusTranslated = "Đã giao";
         else if (order.status === "Order completed") statusTranslated = "Đã hoàn thành";
+        
+        if (detailData?.detail?.logistics?.message) {
+            statusTranslated = detailData.detail.logistics.message;
+        }
 
         await prisma.tiktokOrder.upsert({
           where: { orderId: order.order_id },
