@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Trash2, Plus, RefreshCw, MapPin, Phone, Hash, Copy, Check, Edit2, Download, CheckSquare, Search, ChevronLeft, ChevronRight, Truck } from "lucide-react";
+import { Loader2, Trash2, Plus, RefreshCw, MapPin, Phone, Hash, Copy, Check, Edit2, Download, CheckSquare, Search, ChevronLeft, ChevronRight, Truck, Maximize, Minimize } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useToast } from "@/components/shared/toast";
 
@@ -57,6 +57,7 @@ export function TiktokView() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const { addToast } = useToast();
 
@@ -358,87 +359,115 @@ export function TiktokView() {
         </button>
       </div>
 
-      {/* Tools & Filters */}
-      <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] border border-slate-200 dark:border-slate-700/80 shadow-sm">
-        <div className="flex-1 flex flex-col sm:flex-row gap-3 w-full">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Tìm mã đơn, SĐT, session..." 
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
-            />
-          </div>
-          <select 
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors min-w-[180px]"
-          >
-            <option value="ALL">Tất cả trạng thái</option>
-            {allStatuses.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
+      {/* Fullscreen Wrapper */}
+      <div className={isFullscreen ? "fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 p-2 sm:p-4 flex flex-col overflow-hidden" : "space-y-6"}>
         
-        <div className="flex items-center justify-between sm:justify-end gap-3 w-full md:w-auto">
-          <button
-            onClick={toggleSelectAllFiltered}
-            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
-          >
-            Chọn tất cả
-          </button>
-          <select 
-            value={itemsPerPage}
-            onChange={e => setItemsPerPage(Number(e.target.value))}
-            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
-          >
-            <option value={10}>10 dòng</option>
-            <option value={20}>20 dòng</option>
-            <option value={50}>50 dòng</option>
-          </select>
-        </div>
-      </div>
+        {/* Fullscreen Header (only visible in fullscreen) */}
+        {isFullscreen && (
+          <div className="flex items-center justify-between mb-4 px-2 shrink-0">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="text-2xl">📊</span> Bảng dữ liệu toàn màn hình
+            </h2>
+            <button 
+              onClick={() => setIsFullscreen(false)}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-semibold transition"
+            >
+              <Minimize className="w-4 h-4" /> Đóng (Esc)
+            </button>
+          </div>
+        )}
 
-      {/* Bulk Actions Bar */}
-      {selectedIds.length > 0 && (
-        <div className="rounded-[1.5rem] border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 shadow-sm sticky top-4 z-10 backdrop-blur-sm animate-in fade-in slide-in-from-top-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
-              <CheckSquare className="w-4 h-4" /> Đã chọn {selectedIds.length} session
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
+        {/* Tools & Filters */}
+        <div className={`flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] border border-slate-200 dark:border-slate-700/80 shadow-sm shrink-0 ${isFullscreen ? 'mb-4' : ''}`}>
+          <div className="flex-1 flex flex-col sm:flex-row gap-3 w-full">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Tìm mã đơn, SĐT, session..." 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
+              />
+            </div>
+            <select 
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors min-w-[180px]"
+            >
+              <option value="ALL">Tất cả trạng thái</option>
+              {allStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full md:w-auto">
+            <button
+              onClick={toggleSelectAllFiltered}
+              className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
+            >
+              Chọn tất cả
+            </button>
+            <select 
+              value={itemsPerPage}
+              onChange={e => setItemsPerPage(Number(e.target.value))}
+              className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
+            >
+              <option value={10}>10 dòng</option>
+              <option value={20}>20 dòng</option>
+              <option value={50}>50 dòng</option>
+              <option value={100}>100 dòng</option>
+            </select>
+            {!isFullscreen && (
               <button
-                type="button"
-                onClick={handleBulkExport}
-                disabled={isExporting}
-                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 hover:bg-emerald-700 transition"
+                onClick={() => setIsFullscreen(true)}
+                className="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-xl transition-colors shrink-0"
+                title="Xem toàn màn hình"
               >
-                {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                Xuất Excel
+                <Maximize className="w-5 h-5" />
               </button>
-              <button
-                type="button"
-                onClick={handleBulkSync}
-                disabled={isBulkSyncing}
-                className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 hover:bg-blue-700 transition"
-              >
-                {isBulkSyncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                Cập nhật
-              </button>
-              <button
-                type="button"
-                onClick={handleBulkDelete}
-                className="flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700 transition"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Xóa
-              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Bulk Actions Bar */}
+        {selectedIds.length > 0 && (
+          <div className="rounded-[1.5rem] border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 shadow-sm shrink-0 mb-4 animate-in fade-in slide-in-from-top-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                <CheckSquare className="w-4 h-4" /> Đã chọn {selectedIds.length} session
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleBulkExport}
+                  disabled={isExporting}
+                  className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 hover:bg-emerald-700 transition"
+                >
+                  {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  Xuất Excel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBulkSync}
+                  disabled={isBulkSyncing}
+                  className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 hover:bg-blue-700 transition"
+                >
+                  {isBulkSyncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  Cập nhật
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBulkDelete}
+                  className="flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700 transition"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Xóa
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="overflow-x-auto bg-white dark:bg-[#1e1e1e] border border-[#c0c0c0] dark:border-[#444] shadow-sm" style={{ maxHeight: "calc(100vh - 200px)" }}>
+        <div className={`overflow-x-auto bg-white dark:bg-[#1e1e1e] border border-[#c0c0c0] dark:border-[#444] shadow-sm custom-scrollbar ${isFullscreen ? 'flex-1 h-0' : ''}`} style={!isFullscreen ? { maxHeight: "calc(100vh - 200px)" } : {}}>
         <table className="w-full text-[13px] border-collapse" style={{ fontFamily: "Arial, sans-serif" }}>
           <thead className="bg-[#f8f9fa] dark:bg-[#2d2d2d] text-[#444] dark:text-[#ccc] sticky top-0 z-10 shadow-[0_1px_0_#c0c0c0] dark:shadow-[0_1px_0_#444]">
             <tr>
@@ -616,7 +645,7 @@ export function TiktokView() {
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 py-4">
+        <div className={`flex items-center justify-center gap-2 shrink-0 ${isFullscreen ? 'mt-4' : 'py-4'}`}>
           <button 
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
@@ -639,6 +668,7 @@ export function TiktokView() {
           </button>
         </div>
       )}
+      </div>
     </section>
   );
 }
