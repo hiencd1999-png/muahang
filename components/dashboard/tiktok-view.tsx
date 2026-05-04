@@ -59,6 +59,17 @@ export function TiktokView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Handle Escape key to close fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
+
   const { addToast } = useToast();
 
   const fetchSessions = async () => {
@@ -510,14 +521,16 @@ export function TiktokView() {
                 const orders = session.filteredOrders;
                 const rowCount = Math.max(1, orders.length);
                 const isSelected = selectedIds.includes(session.id);
+                const bgClass = isSelected ? "bg-[#e8f0fe] dark:bg-[#3b5070]" : "hover:bg-[#f1f3f4] dark:hover:bg-[#2a2a2a]";
                 
-                return Array.from({ length: rowCount }).map((_, idx) => {
-                  const order = orders[idx];
-                  const bgClass = isSelected ? "bg-[#e8f0fe] dark:bg-[#3b5070]" : "bg-white dark:bg-[#1e1e1e] hover:bg-[#f1f3f4] dark:hover:bg-[#2a2a2a]";
-                  
-                  return (
-                    <tr key={`${session.id}-${idx}`} className={`group ${bgClass}`}>
-                      {idx === 0 && (
+                return (
+                  <tbody key={session.id} className={`group/tbody ${bgClass}`}>
+                    {Array.from({ length: rowCount }).map((_, idx) => {
+                      const order = orders[idx];
+                      
+                      return (
+                        <tr key={`${session.id}-${idx}`} className="group">
+                          {idx === 0 && (
                         <>
                           <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center align-top w-8">
                             <input 
@@ -593,15 +606,19 @@ export function TiktokView() {
                               {order.phone && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.phone} /></div>}
                             </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5">
-                            {order.address || "-"}
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px] max-w-[250px]">
+                            <div className="line-clamp-2 hover:line-clamp-none transition-all cursor-default" title={order.address || ""}>
+                              {order.address || "-"}
+                            </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5">
-                            {order.products?.map((p: any, i: number) => (
-                              <div key={i} className="mb-0.5 leading-snug" title={p.name}>
-                                • {p.name} <strong className="text-blue-600 dark:text-blue-400">(x{p.qty})</strong>
-                              </div>
-                            ))}
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px] max-w-[250px]">
+                            <div className="max-h-[80px] overflow-y-auto custom-scrollbar pr-1">
+                              {order.products?.map((p: any, i: number) => (
+                                <div key={i} className="mb-0.5 leading-snug" title={p.name}>
+                                  • {p.name} <strong className="text-blue-600 dark:text-blue-400">(x{p.qty})</strong>
+                                </div>
+                              ))}
+                            </div>
                           </td>
                           <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-right font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                             {order.total || "-"}
