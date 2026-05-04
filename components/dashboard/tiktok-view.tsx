@@ -534,19 +534,22 @@ export function TiktokView() {
               <th className="border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Thao tác</th>
             </tr>
           </thead>
-          <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={12} className="text-center p-8 text-[#666] dark:text-[#aaa]">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500" />
-                </td>
-              </tr>
+              <tbody>
+                <tr>
+                  <td colSpan={12} className="text-center p-8 text-[#666] dark:text-[#aaa]">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500" />
+                  </td>
+                </tr>
+              </tbody>
             ) : paginatedSessions.length === 0 ? (
-              <tr>
-                <td colSpan={12} className="text-center p-8 text-[#666] dark:text-[#aaa] italic">
-                  Không có dữ liệu
-                </td>
-              </tr>
+              <tbody>
+                <tr>
+                  <td colSpan={12} className="text-center p-8 text-[#666] dark:text-[#aaa] italic">
+                    Không có dữ liệu
+                  </td>
+                </tr>
+              </tbody>
             ) : (
               paginatedSessions.map((session) => {
                 const orders = session.filteredOrders;
@@ -684,10 +687,11 @@ export function TiktokView() {
                       )}
                     </tr>
                   );
-                });
+                })}
+                  </tbody>
+                );
               })
             )}
-          </tbody>
         </table>
       </div>
 
