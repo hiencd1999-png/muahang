@@ -59,6 +59,38 @@ export function TiktokView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Column Resizing State
+  const [colWidths, setColWidths] = useState<Record<string, number>>({});
+  const [resizingCol, setResizingCol] = useState<string | null>(null);
+  const [startX, setStartX] = useState(0);
+  const [startWidth, setStartWidth] = useState(0);
+
+  const startResize = (e: React.MouseEvent, colId: string) => {
+    e.preventDefault();
+    setResizingCol(colId);
+    setStartX(e.clientX);
+    const th = (e.target as HTMLElement).closest('th');
+    setStartWidth(th ? th.getBoundingClientRect().width : 100);
+  };
+
+  useEffect(() => {
+    if (!resizingCol) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const diff = e.clientX - startX;
+      setColWidths(prev => ({
+        ...prev,
+        [resizingCol]: Math.max(30, startWidth + diff) // Minimum width of 30px
+      }));
+    };
+    const handleMouseUp = () => setResizingCol(null);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [resizingCol, startX, startWidth]);
+
   // Check URL for fullscreen mode on load
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -223,10 +255,15 @@ export function TiktokView() {
   const filteredSessions = sessions.map(session => {
     const q = searchQuery.toLowerCase();
     
+    const sessionMatchSearch = !q || 
+      session.session.toLowerCase().includes(q) || 
+      (session.note || "").toLowerCase().includes(q);
+
     // Filter orders
     const filteredOrders = session.orders.filter(order => {
       const matchStatus = statusFilter === "ALL" || (order.status || "Chờ xử lý") === statusFilter;
-      const matchSearch = !q || 
+      
+      const matchOrderSearch = !q || 
         order.orderId.toLowerCase().includes(q) ||
         (order.trackingNo || "").toLowerCase().includes(q) ||
         (order.phone || "").toLowerCase().includes(q) ||
@@ -234,12 +271,9 @@ export function TiktokView() {
         (order.address || "").toLowerCase().includes(q) ||
         ((order.products as any[]) || []).some(p => p.name.toLowerCase().includes(q));
       
-      return matchStatus && matchSearch;
+      // If the session itself matched the search query, we show the order (as long as it matches the status filter)
+      return matchStatus && (sessionMatchSearch || matchOrderSearch);
     });
-
-    const sessionMatchSearch = !q || 
-      session.session.toLowerCase().includes(q) || 
-      (session.note || "").toLowerCase().includes(q);
 
     // If a specific status is selected, the session MUST have matching orders
     const matchStatusRequirement = statusFilter === "ALL" || filteredOrders.length > 0;
@@ -510,28 +544,51 @@ export function TiktokView() {
         )}
 
         <div className={`overflow-x-auto bg-white dark:bg-[#1e1e1e] border border-[#c0c0c0] dark:border-[#444] shadow-sm custom-scrollbar ${isFullscreen ? 'flex-1 h-0' : ''}`} style={!isFullscreen ? { maxHeight: "calc(100vh - 200px)" } : {}}>
-        <table className="w-full text-[13px] border-collapse" style={{ fontFamily: "Arial, sans-serif" }}>
+        <table className={`w-full text-[13px] border-collapse ${resizingCol ? 'select-none cursor-col-resize' : ''}`} style={{ fontFamily: "Arial, sans-serif" }}>
           <thead className="bg-[#f8f9fa] dark:bg-[#2d2d2d] text-[#444] dark:text-[#ccc] sticky top-0 z-10 shadow-[0_1px_0_#c0c0c0] dark:shadow-[0_1px_0_#444]">
             <tr>
-              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center w-8 bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+              <th style={{ width: colWidths['cb'] || 32, minWidth: colWidths['cb'] || 32, maxWidth: colWidths['cb'] || 32 }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 <input 
                   type="checkbox" 
                   checked={filteredSessions.length > 0 && filteredSessions.every(s => selectedIds.includes(s.id))}
                   onChange={toggleSelectAllFiltered} 
                   className="accent-blue-600"
                 />
+                <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'cb' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'cb')} />
               </th>
-              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Session</th>
-              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Ghi chú</th>
-              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Mã Đơn</th>
-              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Trạng thái</th>
-              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Tên Shop</th>
-              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Mã Vận Đơn</th>
-              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">SĐT</th>
-              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">Địa chỉ</th>
-              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">Sản phẩm</th>
-              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-right whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Tổng tiền</th>
-              <th className="border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Thao tác</th>
+              <th style={{ width: colWidths['session'], minWidth: colWidths['session'], maxWidth: colWidths['session'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Session <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'session' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'session')} />
+              </th>
+              <th style={{ width: colWidths['note'], minWidth: colWidths['note'], maxWidth: colWidths['note'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Ghi chú <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'note' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'note')} />
+              </th>
+              <th style={{ width: colWidths['orderId'], minWidth: colWidths['orderId'], maxWidth: colWidths['orderId'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Mã Đơn <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'orderId' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'orderId')} />
+              </th>
+              <th style={{ width: colWidths['status'], minWidth: colWidths['status'], maxWidth: colWidths['status'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Trạng thái <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'status' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'status')} />
+              </th>
+              <th style={{ width: colWidths['trackingNo'], minWidth: colWidths['trackingNo'], maxWidth: colWidths['trackingNo'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Mã Vận Đơn <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'trackingNo' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'trackingNo')} />
+              </th>
+              <th style={{ width: colWidths['shipper'], minWidth: colWidths['shipper'], maxWidth: colWidths['shipper'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Shipper <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'shipper' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'shipper')} />
+              </th>
+              <th style={{ width: colWidths['phone'], minWidth: colWidths['phone'], maxWidth: colWidths['phone'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                SĐT Khách <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'phone' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'phone')} />
+              </th>
+              <th style={{ width: colWidths['address'], minWidth: colWidths['address'], maxWidth: colWidths['address'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Địa chỉ <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'address' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'address')} />
+              </th>
+              <th style={{ width: colWidths['products'], minWidth: colWidths['products'], maxWidth: colWidths['products'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Sản phẩm <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'products' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'products')} />
+              </th>
+              <th style={{ width: colWidths['total'], minWidth: colWidths['total'], maxWidth: colWidths['total'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-right whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Tổng tiền <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'total' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'total')} />
+              </th>
+              <th style={{ width: colWidths['actions'], minWidth: colWidths['actions'], maxWidth: colWidths['actions'] }} className="relative border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Thao tác
+              </th>
             </tr>
           </thead>
             {loading ? (
@@ -561,6 +618,16 @@ export function TiktokView() {
                   <tbody key={session.id} className={`group/tbody ${bgClass}`}>
                     {Array.from({ length: rowCount }).map((_, idx) => {
                       const order = orders[idx];
+                      let shipperName = "";
+                      let shipperPhone = "";
+                      if (order) {
+                        let parsedDetails = order.details;
+                        if (typeof parsedDetails === 'string') {
+                          try { parsedDetails = JSON.parse(parsedDetails); } catch (e) {}
+                        }
+                        shipperName = parsedDetails?.detail?.shipper_name || parsedDetails?.shipper_name || "";
+                        shipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone || "";
+                      }
                       
                       return (
                         <tr key={`${session.id}-${idx}`} className="group">
@@ -625,13 +692,21 @@ export function TiktokView() {
                           }`}>
                             {order.status || "-"}
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 truncate max-w-[120px]" title={order.shopName || ""}>
-                            {order.shopName || "-"}
-                          </td>
                           <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap">
                             <div className="flex items-center justify-between gap-1">
                               <span>{order.trackingNo || "-"}</span>
                               {order.trackingNo && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.trackingNo} /></div>}
+                            </div>
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap">
+                            <div className="flex flex-col gap-0.5">
+                              {shipperName ? <span className="font-semibold">{shipperName}</span> : <span className="text-slate-400 italic">Chưa rõ</span>}
+                              {shipperPhone && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-blue-600 dark:text-blue-400">{shipperPhone}</span>
+                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={shipperPhone} /></div>
+                                </div>
+                              )}
                             </div>
                           </td>
                           <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap">
@@ -640,13 +715,13 @@ export function TiktokView() {
                               {order.phone && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.phone} /></div>}
                             </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px] max-w-[250px]">
-                            <div className="line-clamp-2 hover:line-clamp-none transition-all cursor-default" title={order.address || ""}>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px]" style={colWidths['address'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
+                            <div className={`transition-all cursor-default ${colWidths['address'] ? '' : 'line-clamp-2 hover:line-clamp-none'}`} title={order.address || ""}>
                               {order.address || "-"}
                             </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px] max-w-[250px]">
-                            <div className="max-h-[80px] overflow-y-auto custom-scrollbar pr-1">
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px]" style={colWidths['products'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
+                            <div className={`overflow-y-auto custom-scrollbar pr-1 ${colWidths['products'] ? '' : 'max-h-[80px]'}`}>
                               {order.products?.map((p: any, i: number) => (
                                 <div key={i} className="mb-0.5 leading-snug" title={p.name}>
                                   • {p.name} <strong className="text-blue-600 dark:text-blue-400">(x{p.qty})</strong>
