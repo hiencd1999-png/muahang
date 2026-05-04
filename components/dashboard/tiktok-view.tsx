@@ -59,11 +59,42 @@ export function TiktokView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Check URL for fullscreen mode on load
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('fullscreen') === 'true') {
+        setIsFullscreen(true);
+      }
+    }
+  }, []);
+
+  const handleCloseFullscreen = () => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('fullscreen') === 'true') {
+        window.close(); // Close the tab if it was opened dedicatedly for fullscreen
+      } else {
+        setIsFullscreen(false);
+      }
+    } else {
+      setIsFullscreen(false);
+    }
+  };
+
+  const openFullscreenInNewTab = () => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('fullscreen', 'true');
+      window.open(url.toString(), '_blank');
+    }
+  };
+
   // Handle Escape key to close fullscreen
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {
-        setIsFullscreen(false);
+        handleCloseFullscreen();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -380,7 +411,7 @@ export function TiktokView() {
               <span className="text-2xl">📊</span> Bảng dữ liệu toàn màn hình
             </h2>
             <button 
-              onClick={() => setIsFullscreen(false)}
+              onClick={handleCloseFullscreen}
               className="flex items-center gap-2 px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-semibold transition"
             >
               <Minimize className="w-4 h-4" /> Đóng (Esc)
@@ -430,9 +461,9 @@ export function TiktokView() {
             </select>
             {!isFullscreen && (
               <button
-                onClick={() => setIsFullscreen(true)}
+                onClick={openFullscreenInNewTab}
                 className="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-xl transition-colors shrink-0"
-                title="Xem toàn màn hình"
+                title="Mở toàn màn hình ở tab mới"
               >
                 <Maximize className="w-5 h-5" />
               </button>
