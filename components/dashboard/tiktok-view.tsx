@@ -438,288 +438,180 @@ export function TiktokView() {
         </div>
       )}
 
-      <div className="space-y-6">
-        {loading ? (
-          <div className="flex justify-center p-12">
-            <Loader2 className="h-10 w-10 animate-spin text-amber-500" />
-          </div>
-        ) : paginatedSessions.length === 0 ? (
-          <div className="text-center p-10 text-sm text-slate-500 rounded-[1.5rem] border border-slate-200 bg-white shadow-sm flex flex-col items-center gap-3">
-            <span className="text-4xl text-slate-300">📦</span>
-            Không tìm thấy session nào khớp với điều kiện lọc.
-          </div>
-        ) : (
-          paginatedSessions.map((session) => (
-            <div key={session.id} className={`rounded-[1.5rem] border ${selectedIds.includes(session.id) ? 'border-amber-400 dark:border-amber-600 shadow-md ring-1 ring-amber-400/50' : 'border-slate-200 dark:border-slate-700/80 shadow-sm'} bg-white dark:bg-slate-900 overflow-hidden flex flex-col transition-all hover:shadow-xl`}>
-              
-              {/* Session Header */}
-              <div className="bg-slate-50 dark:bg-slate-800/80 p-5 border-b border-slate-100 dark:border-slate-700/80 flex flex-col md:flex-row md:items-start justify-between gap-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 mr-1" 
-                      checked={selectedIds.includes(session.id)}
-                      onChange={() => toggleSelect(session.id)}
-                    />
-                    <div className="flex items-center gap-1">
-                      <span className="font-mono bg-white dark:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 text-xs truncate max-w-[200px] md:max-w-[350px] shadow-sm font-bold text-slate-700 dark:text-slate-200">
-                        {session.session}
-                      </span>
-                      <CopyBtn text={session.session} />
-                    </div>
-
-                    {/* Editable Note */}
-                    {editingNoteId === session.id ? (
-                      <div className="flex items-center gap-1">
-                        <input 
-                          type="text"
-                          value={editingNoteText}
-                          onChange={(e) => setEditingNoteText(e.target.value)}
-                          className="px-2 py-1 text-xs border rounded w-32 md:w-48 outline-none focus:border-blue-500"
-                          placeholder="Nhập ghi chú..."
-                          autoFocus
-                          onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateNote(session.id); if (e.key === 'Escape') setEditingNoteId(null); }}
-                        />
-                        <button onClick={() => handleUpdateNote(session.id)} className="p-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200">
-                          <Check className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 group cursor-pointer" onClick={() => { setEditingNoteId(session.id); setEditingNoteText(session.note || ""); }}>
-                        <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1 hover:bg-blue-200 transition-colors min-h-[28px]">
-                          {session.note ? `📌 ${session.note}` : <span className="opacity-60 italic">Chưa có ghi chú</span>}
-                        </span>
-                        <Edit2 className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    )}
-
-                    {session.isActive ? (
-                      <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm">Hoạt động</span>
-                    ) : (
-                      <span className="bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm">Lỗi/Hết hạn</span>
-                    )}
-                  </div>
-                  <div className="text-xs font-medium text-slate-500 flex flex-wrap gap-x-4 gap-y-1 ml-6">
-                    <span>Lần cập nhật cuối: {session.lastRunAt ? formatDate(new Date(session.lastRunAt)) : "Chưa cập nhật"}</span>
-                    <span>•</span>
-                    <span>Tổng đơn: <strong className="text-slate-800 dark:text-slate-200">{session.orders.length}</strong></span>
-                    {session.filteredOrders.length !== session.orders.length && (
-                      <span>•</span>
-                    )}
-                    {session.filteredOrders.length !== session.orders.length && (
-                      <span className="text-amber-600 font-bold">Khớp lọc: {session.filteredOrders.length}</span>
-                    )}
-                  </div>
-                </div>
+      <div className="overflow-x-auto bg-white dark:bg-[#1e1e1e] border border-[#c0c0c0] dark:border-[#444] shadow-sm" style={{ maxHeight: "calc(100vh - 200px)" }}>
+        <table className="w-full text-[13px] border-collapse" style={{ fontFamily: "Arial, sans-serif" }}>
+          <thead className="bg-[#f8f9fa] dark:bg-[#2d2d2d] text-[#444] dark:text-[#ccc] sticky top-0 z-10 shadow-[0_1px_0_#c0c0c0] dark:shadow-[0_1px_0_#444]">
+            <tr>
+              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center w-8 bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                <input 
+                  type="checkbox" 
+                  checked={filteredSessions.length > 0 && filteredSessions.every(s => selectedIds.includes(s.id))}
+                  onChange={toggleSelectAllFiltered} 
+                  className="accent-blue-600"
+                />
+              </th>
+              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Session</th>
+              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Ghi chú</th>
+              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Mã Đơn</th>
+              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Trạng thái</th>
+              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Tên Shop</th>
+              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Mã Vận Đơn</th>
+              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">SĐT</th>
+              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">Địa chỉ</th>
+              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">Sản phẩm</th>
+              <th className="border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-right whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Tổng tiền</th>
+              <th className="border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={12} className="text-center p-8 text-[#666] dark:text-[#aaa]">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500" />
+                </td>
+              </tr>
+            ) : paginatedSessions.length === 0 ? (
+              <tr>
+                <td colSpan={12} className="text-center p-8 text-[#666] dark:text-[#aaa] italic">
+                  Không có dữ liệu
+                </td>
+              </tr>
+            ) : (
+              paginatedSessions.map((session) => {
+                const orders = session.filteredOrders;
+                const rowCount = Math.max(1, orders.length);
+                const isSelected = selectedIds.includes(session.id);
                 
-                <div className="flex items-center gap-2 self-start md:self-auto">
-                  <button
-                    onClick={() => handleSyncSession(session.id)}
-                    disabled={syncingId === session.id}
-                    className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 px-3 py-2 rounded-xl text-xs font-bold transition active:scale-95 disabled:opacity-50"
-                  >
-                    <RefreshCw className={`h-3.5 w-3.5 ${syncingId === session.id ? "animate-spin" : ""}`} /> 
-                    {syncingId === session.id ? "Đang cập nhật..." : "Cập nhật"}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteSession(session.id)}
-                    className="flex items-center gap-1.5 text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/20 dark:hover:bg-rose-900/40 px-3 py-2 rounded-xl text-xs font-bold transition active:scale-95"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" /> Xóa
-                  </button>
-                </div>
-              </div>
-
-              {/* Order List */}
-              <div className="p-0 overflow-hidden">
-                {session.filteredOrders.length > 0 ? (
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                    {(() => {
-                      const sortedOrders = [...session.filteredOrders].sort((a, b) => {
-                        if (a.orderId.length !== b.orderId.length) return b.orderId.length - a.orderId.length;
-                        return b.orderId.localeCompare(a.orderId);
-                      });
-                      const isExpanded = expandedSessions.has(session.id);
-                      const displayedOrders = isExpanded ? sortedOrders : sortedOrders.slice(0, 1);
-                      
-                      return (
+                return Array.from({ length: rowCount }).map((_, idx) => {
+                  const order = orders[idx];
+                  const bgClass = isSelected ? "bg-[#e8f0fe] dark:bg-[#3b5070]" : "bg-white dark:bg-[#1e1e1e] hover:bg-[#f1f3f4] dark:hover:bg-[#2a2a2a]";
+                  
+                  return (
+                    <tr key={`${session.id}-${idx}`} className={`group ${bgClass}`}>
+                      {idx === 0 && (
                         <>
-                          {displayedOrders.map((order) => {
-                            const products = order.products as any[] || [];
-                            
-                            // Safely parse details
-                            let parsedDetails = order.details;
-                            if (typeof parsedDetails === 'string') {
-                              try { parsedDetails = JSON.parse(parsedDetails); } catch (e) {}
-                            }
-                            
-                            const shipperName = parsedDetails?.detail?.shipper_name || parsedDetails?.shipper_name;
-                            const shipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone;
-
-                            return (
-                              <div key={order.id} className="p-4 md:p-5 flex flex-col gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                                
-                                {/* Top Header: ID & Status & Total */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800/80">
-                                  <div className="flex flex-col gap-2">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <span className="font-mono text-sm md:text-base font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-                                        #{order.orderId}
-                                      </span>
-                                      <CopyBtn text={order.orderId} />
-                                      <div className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border shadow-sm ${
-                                        order.status === "Đã giao" || order.status === "Đã hoàn thành" || order.status?.includes("đã được giao")
-                                          ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300" 
-                                          : order.status === "Đã hủy" || order.status?.includes("hủy")
-                                            ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-300"
-                                            : "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300"
-                                      }`}>
-                                        {order.status || "Chờ xử lý"}
-                                      </div>
-                                    </div>
-                                    <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                                      <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] shrink-0 shadow-inner">🏪</div>
-                                      <span className="line-clamp-1">{order.shopName || "Shop không rõ"}</span>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl shrink-0 text-left sm:text-right w-fit">
-                                    <span className="text-[10px] uppercase font-black tracking-widest text-slate-500 dark:text-slate-400 block mb-0.5">Tổng Tiền</span>
-                                    <div className="flex items-center gap-2 justify-start sm:justify-end">
-                                      <span className="font-black text-amber-600 text-lg">{order.total || "-"}</span>
-                                      <CopyBtn text={order.total} />
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Body Content */}
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-8">
-                                  
-                                  {/* Delivery Info */}
-                                  <div className="space-y-3">
-                                    <h4 className="text-[10px] uppercase font-black tracking-widest text-slate-400">Thông tin giao hàng</h4>
-                                    <div className="bg-slate-50 dark:bg-slate-800/30 p-3.5 md:p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50 space-y-3.5">
-                                      
-                                      {/* Tracking */}
-                                      <div className="flex items-start gap-3 text-sm">
-                                        <div className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-lg shrink-0 mt-0.5">
-                                          <Hash className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                                        </div>
-                                        <div className="flex flex-col w-full">
-                                          <span className="text-xs text-slate-500 font-medium">Mã Vận Đơn</span>
-                                          <div className="flex items-center gap-2">
-                                            <span className="font-mono text-slate-800 dark:text-slate-200 font-bold">{order.trackingNo || "Chưa có mã"}</span>
-                                            {order.trackingNo && <CopyBtn text={order.trackingNo} />}
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      {/* Phone */}
-                                      <div className="flex items-start gap-3 text-sm">
-                                        <div className="bg-emerald-100 dark:bg-emerald-900/30 p-1.5 rounded-lg shrink-0 mt-0.5">
-                                          <Phone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                        </div>
-                                        <div className="flex flex-col w-full">
-                                          <span className="text-xs text-slate-500 font-medium">Số Điện Thoại</span>
-                                          <div className="flex items-center gap-2">
-                                            <span className="text-slate-800 dark:text-slate-200 font-semibold">{order.phone || "Đang cập nhật..."}</span>
-                                            {order.phone && <CopyBtn text={order.phone} />}
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      {/* Address */}
-                                      <div className="flex items-start gap-3 text-sm">
-                                        <div className="bg-rose-100 dark:bg-rose-900/30 p-1.5 rounded-lg shrink-0 mt-0.5">
-                                          <MapPin className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-                                        </div>
-                                        <div className="flex flex-col w-full">
-                                          <span className="text-xs text-slate-500 font-medium">Địa Chỉ</span>
-                                          <div className="flex items-start justify-between gap-2">
-                                            <span className="text-slate-800 dark:text-slate-200 leading-relaxed line-clamp-2 md:line-clamp-none">{order.address || "Đang cập nhật..."}</span>
-                                            {order.address && <div className="mt-1 shrink-0"><CopyBtn text={order.address} /></div>}
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      {/* Shipper */}
-                                      {(shipperName || shipperPhone) && (
-                                        <div className="flex items-start gap-3 text-sm pt-3.5 mt-1 border-t border-slate-200/60 dark:border-slate-700/60">
-                                          <div className="bg-amber-100 dark:bg-amber-900/30 p-1.5 rounded-lg shrink-0 mt-0.5">
-                                            <Truck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                                          </div>
-                                          <div className="flex flex-col w-full">
-                                            <span className="text-xs text-slate-500 font-medium">Người Giao Hàng</span>
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-slate-800 dark:text-slate-200 font-semibold">
-                                                {shipperName || "Không rõ tên"}
-                                                {shipperPhone ? ` - ${shipperPhone}` : ""}
-                                              </span>
-                                              {shipperPhone && <CopyBtn text={shipperPhone} />}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {/* Products Info */}
-                                  <div className="space-y-3">
-                                    <h4 className="text-[10px] uppercase font-black tracking-widest text-slate-400">Sản phẩm ({products.length})</h4>
-                                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
-                                      {products.length > 0 ? products.map((p, i) => (
-                                        <div key={i} className="bg-white dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex gap-3 items-center group hover:border-amber-300 dark:hover:border-amber-600 transition-colors">
-                                          <div className="flex-1 font-medium text-sm text-slate-800 dark:text-slate-200 line-clamp-2 leading-snug" title={p.name}>
-                                            {p.name}
-                                          </div>
-                                          <div className="shrink-0 flex items-center gap-3">
-                                            <span className="bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-xs font-bold text-slate-700 dark:text-slate-300">
-                                              x{p.qty}
-                                            </span>
-                                            <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                              <CopyBtn text={p.name} />
-                                            </div>
-                                          </div>
-                                        </div>
-                                      )) : (
-                                        <div className="text-xs text-slate-500 italic p-3 text-center bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">Không tìm thấy sản phẩm</div>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                </div>
-                              </div>
-                            );
-                          })}
-                          
-                          {sortedOrders.length > 1 && (
-                            <div className="bg-slate-50/50 dark:bg-slate-800/30 p-2 flex justify-center border-t border-slate-100 dark:border-slate-700/50">
-                              <button 
-                                onClick={() => toggleExpandSession(session.id)}
-                                className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 bg-white hover:bg-amber-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-amber-900/30 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-700 rounded-full transition-colors shadow-sm"
-                              >
-                                {isExpanded ? (
-                                  <>Thu gọn <span className="text-[10px]">▲</span></>
-                                ) : (
-                                  <>Xem thêm {sortedOrders.length - 1} đơn hàng <span className="text-[10px]">▼</span></>
-                                )}
-                              </button>
+                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center align-top w-8">
+                            <input 
+                              type="checkbox" 
+                              checked={isSelected}
+                              onChange={() => toggleSelect(session.id)}
+                              className="accent-blue-600 mt-1"
+                            />
+                          </td>
+                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-top max-w-[120px]">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="truncate" title={session.session}>{session.session}</span>
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={session.session} /></div>
                             </div>
-                          )}
+                            <div className="mt-1 text-[10px]">
+                              {session.isActive ? <span className="text-emerald-600 dark:text-emerald-400 font-bold">Hoạt động</span> : <span className="text-rose-600 dark:text-rose-400 font-bold">Lỗi</span>}
+                            </div>
+                          </td>
+                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-top max-w-[150px]">
+                            {editingNoteId === session.id ? (
+                              <div className="flex flex-col gap-1">
+                                <textarea
+                                  value={editingNoteText}
+                                  onChange={(e) => setEditingNoteText(e.target.value)}
+                                  className="w-full text-xs p-1 border border-[#4d90fe] outline-none resize-none bg-white dark:bg-[#2d2d2d]"
+                                  rows={2}
+                                  autoFocus
+                                  onBlur={() => handleUpdateNote(session.id)}
+                                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUpdateNote(session.id); } if (e.key === 'Escape') setEditingNoteId(null); }}
+                                />
+                              </div>
+                            ) : (
+                              <div 
+                                className="cursor-text min-h-[20px] text-xs text-[#333] dark:text-[#ccc]" 
+                                onClick={() => { setEditingNoteId(session.id); setEditingNoteText(session.note || ""); }}
+                              >
+                                {session.note || <span className="text-[#999] italic">Trống</span>}
+                              </div>
+                            )}
+                          </td>
                         </>
-                      );
-                    })()}
-                  </div>
-                ) : (
-                  <div className="text-center py-10 text-sm text-slate-500 font-medium">
-                    Chưa có đơn hàng nào cho session này. Nhấn "Cập nhật" để thử tải lại.
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
-        )}
+                      )}
+
+                      {order ? (
+                        <>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="font-mono">{order.orderId}</span>
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.orderId} /></div>
+                            </div>
+                          </td>
+                          <td className={`border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap ${
+                            order.status === "Đã giao" || order.status === "Đã hoàn thành" || order.status?.includes("đã được giao")
+                              ? "text-emerald-700 dark:text-emerald-400 font-medium"
+                              : order.status === "Đã hủy" || order.status?.includes("hủy")
+                                ? "text-rose-700 dark:text-rose-400 font-medium"
+                                : "text-amber-700 dark:text-amber-400 font-medium"
+                          }`}>
+                            {order.status || "-"}
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 truncate max-w-[120px]" title={order.shopName || ""}>
+                            {order.shopName || "-"}
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap">
+                            <div className="flex items-center justify-between gap-1">
+                              <span>{order.trackingNo || "-"}</span>
+                              {order.trackingNo && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.trackingNo} /></div>}
+                            </div>
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap">
+                            <div className="flex items-center justify-between gap-1">
+                              <span>{order.phone || "-"}</span>
+                              {order.phone && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.phone} /></div>}
+                            </div>
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5">
+                            {order.address || "-"}
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5">
+                            {order.products?.map((p: any, i: number) => (
+                              <div key={i} className="mb-0.5 leading-snug" title={p.name}>
+                                • {p.name} <strong className="text-blue-600 dark:text-blue-400">(x{p.qty})</strong>
+                              </div>
+                            ))}
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-right font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                            {order.total || "-"}
+                          </td>
+                        </>
+                      ) : (
+                        <td colSpan={8} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center text-[#999] italic">
+                          Không có đơn hàng
+                        </td>
+                      )}
+
+                      {idx === 0 && (
+                        <td rowSpan={rowCount} className="border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-top text-center w-20">
+                          <div className="flex justify-center gap-2 mt-1">
+                            <button 
+                              onClick={() => handleSyncSession(session.id)} 
+                              disabled={syncingId === session.id}
+                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50" 
+                              title="Cập nhật"
+                            >
+                              <RefreshCw className={`w-4 h-4 ${syncingId === session.id ? 'animate-spin' : ''}`} />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteSession(session.id)} 
+                              className="text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-300" 
+                              title="Xóa"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                });
+              })
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Pagination Controls */}
