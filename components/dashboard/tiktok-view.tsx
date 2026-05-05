@@ -662,24 +662,24 @@ export function TiktokView() {
                         <tr key={`${session.id}-${idx}`} className="group">
                           {idx === 0 && (
                         <>
-                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center align-top w-8">
+                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center align-middle w-8">
                             <input 
                               type="checkbox" 
                               checked={isSelected}
                               onChange={() => toggleSelect(session.id)}
-                              className="accent-blue-600 mt-1"
+                              className="accent-blue-600"
                             />
                           </td>
-                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-top max-w-[120px]">
+                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-middle text-center max-w-[120px]">
                             <div className="flex items-center justify-between gap-1">
-                              <span className="truncate" title={session.session}>{session.session}</span>
+                              <span className="truncate mx-auto" title={session.session}>{session.session}</span>
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={session.session} /></div>
                             </div>
                             <div className="mt-1 text-[10px]">
                               {session.isActive ? <span className="text-emerald-600 dark:text-emerald-400 font-bold">Hoạt động</span> : <span className="text-rose-600 dark:text-rose-400 font-bold">Lỗi</span>}
                             </div>
                           </td>
-                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-top" style={colWidths['note'] ? { maxWidth: colWidths['note'] } : { maxWidth: '200px' }}>
+                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-middle text-center" style={colWidths['note'] ? { maxWidth: colWidths['note'] } : { maxWidth: '200px' }}>
                             {editingNoteId === session.id ? (
                               <div className="flex flex-col gap-1">
                                 <textarea
@@ -707,21 +707,21 @@ export function TiktokView() {
 
                       {order ? (
                         <>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5">
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-middle text-center">
                             <div className="flex items-center justify-between gap-1">
-                              <span className="font-mono">{order.orderId}</span>
+                              <span className="font-mono mx-auto">{order.orderId}</span>
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.orderId} /></div>
                             </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap text-[11px]">
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap text-[11px] align-middle text-center">
                             {orderTime}
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[150px]" style={colWidths['shopName'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
-                            <div className={`transition-all cursor-default ${colWidths['shopName'] ? '' : 'line-clamp-2 hover:line-clamp-none'}`} title={order.shopName || ""}>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[150px] align-middle text-center" style={colWidths['shopName'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
+                            <div className={`transition-all cursor-default mx-auto ${colWidths['shopName'] ? '' : 'line-clamp-2 hover:line-clamp-none'}`} title={order.shopName || ""}>
                               {order.shopName || "-"}
                             </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px]" style={colWidths['products'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px] align-middle" style={colWidths['products'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
                             <div className={`overflow-y-auto custom-scrollbar pr-1 ${colWidths['products'] ? '' : 'max-h-[80px]'}`}>
                               {order.products?.map((p: any, i: number) => (
                                 <div key={i} className="mb-0.5 leading-snug" title={p.name}>
@@ -730,10 +730,10 @@ export function TiktokView() {
                               ))}
                             </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap align-middle">
                             {order.total || "-"}
                           </td>
-                          <td className={`border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap ${
+                          <td className={`border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap align-middle ${
                             order.status === "Đã giao" || order.status === "Đã hoàn thành" || order.status?.includes("đã được giao")
                               ? "text-emerald-700 dark:text-emerald-400 font-medium"
                               : order.status === "Đã hủy" || order.status?.includes("hủy")
@@ -742,7 +742,7 @@ export function TiktokView() {
                           }`}>
                             {order.status ? order.status.split(/Người nhận/i)[0].replace(/[.\s]+$/, '') : "-"}
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap">
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap align-middle">
                             <div className="flex flex-col gap-0.5">
                               <div className="flex items-center justify-between gap-1">
                                 <span className="mx-auto">{order.trackingNo || "-"}</span>
@@ -755,25 +755,25 @@ export function TiktokView() {
                               )}
                             </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap">
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap align-middle">
                             <div className="flex flex-col gap-0.5">
-                              {shipperName ? <span className="font-semibold">{shipperName}</span> : <span className="text-slate-400 italic">Chưa rõ</span>}
+                              {shipperName ? <span className="font-semibold mx-auto">{shipperName}</span> : <span className="text-slate-400 italic mx-auto">Chưa rõ</span>}
                               {shipperPhone && (
                                 <div className="flex items-center justify-center gap-1">
-                                  <span className="text-xs text-blue-600 dark:text-blue-400">{shipperPhone}</span>
+                                  <span className="text-xs text-blue-600 dark:text-blue-400 mx-auto">{shipperPhone}</span>
                                   <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={shipperPhone} /></div>
                                 </div>
                               )}
                             </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap">
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap align-middle">
                             <div className="flex items-center justify-between gap-1">
                               <span className="mx-auto">{order.phone || "-"}</span>
                               {order.phone && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.phone} /></div>}
                             </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px]" style={colWidths['address'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
-                            <div className={`transition-all cursor-default ${colWidths['address'] ? '' : 'line-clamp-2 hover:line-clamp-none'}`} title={order.address || ""}>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px] align-middle text-center" style={colWidths['address'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
+                            <div className={`transition-all cursor-default mx-auto ${colWidths['address'] ? '' : 'line-clamp-2 hover:line-clamp-none'}`} title={order.address || ""}>
                               {order.address || "-"}
                             </div>
                           </td>
@@ -785,8 +785,8 @@ export function TiktokView() {
                       )}
 
                       {idx === 0 && (
-                        <td rowSpan={rowCount} className="border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-top text-center w-20">
-                          <div className="flex justify-center gap-2 mt-1">
+                        <td rowSpan={rowCount} className="border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-middle text-center w-20">
+                          <div className="flex justify-center gap-2">
                             <button 
                               onClick={() => handleSyncSession(session.id)} 
                               disabled={syncingId === session.id}

@@ -46,22 +46,39 @@ export async function POST(request: Request) {
         }
         
         const shipperName = parsedDetails?.detail?.shipper_name || parsedDetails?.shipper_name || "";
-        const shipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone || "";
+        let rawShipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone || "";
+        const shipperPhone = rawShipperPhone ? rawShipperPhone.split(/Hotline/i)[0].trim() : "";
+        const providerName = parsedDetails?.detail?.logistics?.provider_name || parsedDetails?.detail?.logistics?.delivery_option_name || parsedDetails?.detail?.logistics?.shipping_provider || parsedDetails?.detail?.logistics?.logistics_name || "";
+
+        const ts = parsedDetails?.detail?.create_time || parsedDetails?.create_time;
+        let orderTime = "";
+        if (ts) {
+          if (typeof ts === 'number') {
+            orderTime = new Date(ts < 1e12 ? ts * 1000 : ts).toLocaleString("vi-VN");
+          } else {
+            orderTime = new Date(ts).toLocaleString("vi-VN");
+          }
+        } else if (order.updatedAt) {
+          orderTime = new Date(order.updatedAt).toLocaleString("vi-VN");
+        }
+
+        const cleanStatus = order.status ? order.status.split(/Người nhận/i)[0].replace(/[.\s]+$/, '') : "";
 
         rows.push({
           "Session": session.session,
-          "Ghi chú (Session)": session.note || "",
-          "Mã ĐH": order.orderId,
-          "Shop": order.shopName || "",
+          "Ghi chú": session.note || "",
+          "Mã Đơn": order.orderId,
+          "Thời gian đặt": orderTime || "",
+          "Tên shop": order.shopName || "",
           "Sản phẩm": productNames,
           "Tổng tiền": order.total || "",
-          "Trạng thái": order.status || "",
-          "Mã VĐ": order.trackingNo || "",
+          "Trạng thái": cleanStatus || "",
+          "Mã Vận Đơn": order.trackingNo || "",
+          "ĐVVC": providerName || "",
+          "Shipper": shipperName,
+          "SĐT Shipper": shipperPhone,
           "SĐT Khách": order.phone || "",
           "Địa chỉ": order.address || "",
-          "Người giao hàng": shipperName,
-          "SĐT Người giao": shipperPhone,
-          "Cập nhật lần cuối": new Date(order.updatedAt).toLocaleString("vi-VN"),
         });
       }
     }
