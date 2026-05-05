@@ -642,7 +642,8 @@ export function TiktokView() {
                           try { parsedDetails = JSON.parse(parsedDetails); } catch (e) {}
                         }
                         shipperName = parsedDetails?.detail?.shipper_name || parsedDetails?.shipper_name || "";
-                        shipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone || "";
+                        let rawShipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone || "";
+                        shipperPhone = rawShipperPhone ? rawShipperPhone.split(/Hotline/i)[0].trim() : "";
                         providerName = parsedDetails?.detail?.logistics?.provider_name || parsedDetails?.detail?.logistics?.delivery_option_name || parsedDetails?.detail?.logistics?.shipping_provider || parsedDetails?.detail?.logistics?.logistics_name || "";
                         
                         const ts = parsedDetails?.detail?.create_time || parsedDetails?.create_time;
@@ -739,7 +740,7 @@ export function TiktokView() {
                                 ? "text-rose-700 dark:text-rose-400 font-medium"
                                 : "text-amber-700 dark:text-amber-400 font-medium"
                           }`}>
-                            {order.status ? order.status.split('. Người nhận:')[0] : "-"}
+                            {order.status ? order.status.split(/Người nhận/i)[0].replace(/[.\s]+$/, '') : "-"}
                           </td>
                           <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap">
                             <div className="flex flex-col gap-0.5">
