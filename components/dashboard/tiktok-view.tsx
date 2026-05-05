@@ -260,7 +260,7 @@ export function TiktokView() {
       (session.note || "").toLowerCase().includes(q);
 
     // Filter orders
-    const filteredOrders = session.orders.filter(order => {
+    let filteredOrders = session.orders.filter(order => {
       const matchStatus = statusFilter === "ALL" || (order.status || "Chờ xử lý") === statusFilter;
       
       const matchOrderSearch = !q || 
@@ -274,6 +274,14 @@ export function TiktokView() {
       // If the session itself matched the search query, we show the order (as long as it matches the status filter)
       return matchStatus && (sessionMatchSearch || matchOrderSearch);
     });
+
+    // Nếu 1 session có cả đơn hủy và không hủy thì chỉ hiển thị đơn không bị hủy
+    const hasNonCanceled = filteredOrders.some(o => !(o.status === "Đã hủy" || o.status?.toLowerCase().includes("hủy")));
+    const hasCanceled = filteredOrders.some(o => o.status === "Đã hủy" || o.status?.toLowerCase().includes("hủy"));
+
+    if (hasNonCanceled && hasCanceled) {
+      filteredOrders = filteredOrders.filter(o => !(o.status === "Đã hủy" || o.status?.toLowerCase().includes("hủy")));
+    }
 
     // If a specific status is selected, the session MUST have matching orders
     const matchStatusRequirement = statusFilter === "ALL" || filteredOrders.length > 0;
