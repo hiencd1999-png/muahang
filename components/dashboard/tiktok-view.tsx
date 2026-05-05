@@ -409,7 +409,7 @@ export function TiktokView() {
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
               Quản lý và theo dõi trạng thái đơn hàng TikTok tự động. 
               <br className="md:hidden" />
-              <span className="font-semibold text-amber-600"> 200đ/session</span> cho lần quét đơn thành công đầu tiên.
+              <span className="font-semibold text-amber-600"> 500đ/session</span> cho lần quét đơn thành công đầu tiên.
             </p>
           </div>
         </div>

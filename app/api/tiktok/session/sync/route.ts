@@ -32,17 +32,17 @@ export async function POST(request: Request) {
     const listData = await listRes.json();
 
     if (listData.ok && listData.orders) {
-      // Deduct 200 VND if first time
+      // Deduct 500 VND if first time
       if (!session.hasPaid) {
         await prisma.$transaction(async (tx) => {
           await tx.user.update({
             where: { id: session.userId },
-            data: { balance: { decrement: 200 } }
+            data: { balance: { decrement: 500 } }
           });
           await tx.transaction.create({
             data: {
               userId: session.userId,
-              amount: -200,
+              amount: -500,
               type: "ORDER_DEBIT",
               note: `[TikTok] Phí tra cứu đơn hàng lần đầu session: ${session.session}`
             }
