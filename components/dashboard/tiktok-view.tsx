@@ -565,6 +565,12 @@ export function TiktokView() {
               <th style={{ width: colWidths['orderId'], minWidth: colWidths['orderId'], maxWidth: colWidths['orderId'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Mã Đơn <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'orderId' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'orderId')} />
               </th>
+              <th style={{ width: colWidths['orderTime'], minWidth: colWidths['orderTime'], maxWidth: colWidths['orderTime'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Thời gian đặt <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'orderTime' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'orderTime')} />
+              </th>
+              <th style={{ width: colWidths['shopName'], minWidth: colWidths['shopName'], maxWidth: colWidths['shopName'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Tên shop <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'shopName' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'shopName')} />
+              </th>
               <th style={{ width: colWidths['status'], minWidth: colWidths['status'], maxWidth: colWidths['status'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Trạng thái <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'status' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'status')} />
               </th>
@@ -594,7 +600,7 @@ export function TiktokView() {
             {loading ? (
               <tbody>
                 <tr>
-                  <td colSpan={12} className="text-center p-8 text-[#666] dark:text-[#aaa]">
+                  <td colSpan={14} className="text-center p-8 text-[#666] dark:text-[#aaa]">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500" />
                   </td>
                 </tr>
@@ -602,7 +608,7 @@ export function TiktokView() {
             ) : paginatedSessions.length === 0 ? (
               <tbody>
                 <tr>
-                  <td colSpan={12} className="text-center p-8 text-[#666] dark:text-[#aaa] italic">
+                  <td colSpan={14} className="text-center p-8 text-[#666] dark:text-[#aaa] italic">
                     Không có dữ liệu
                   </td>
                 </tr>
@@ -620,6 +626,7 @@ export function TiktokView() {
                       const order = orders[idx];
                       let shipperName = "";
                       let shipperPhone = "";
+                      let orderTime = "-";
                       if (order) {
                         let parsedDetails = order.details;
                         if (typeof parsedDetails === 'string') {
@@ -627,6 +634,17 @@ export function TiktokView() {
                         }
                         shipperName = parsedDetails?.detail?.shipper_name || parsedDetails?.shipper_name || "";
                         shipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone || "";
+                        
+                        const ts = parsedDetails?.detail?.create_time || parsedDetails?.create_time;
+                        if (ts) {
+                          if (typeof ts === 'number') {
+                            orderTime = formatDate(new Date(ts < 1e12 ? ts * 1000 : ts));
+                          } else {
+                            orderTime = formatDate(ts);
+                          }
+                        } else if (order.updatedAt) {
+                          orderTime = formatDate(order.updatedAt);
+                        }
                       }
                       
                       return (
@@ -683,6 +701,14 @@ export function TiktokView() {
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.orderId} /></div>
                             </div>
                           </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap text-[11px]">
+                            {orderTime}
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[150px]" style={colWidths['shopName'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
+                            <div className={`transition-all cursor-default ${colWidths['shopName'] ? '' : 'line-clamp-2 hover:line-clamp-none'}`} title={order.shopName || ""}>
+                              {order.shopName || "-"}
+                            </div>
+                          </td>
                           <td className={`border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap ${
                             order.status === "Đã giao" || order.status === "Đã hoàn thành" || order.status?.includes("đã được giao")
                               ? "text-emerald-700 dark:text-emerald-400 font-medium"
@@ -734,7 +760,7 @@ export function TiktokView() {
                           </td>
                         </>
                       ) : (
-                        <td colSpan={8} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center text-[#999] italic">
+                        <td colSpan={10} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center text-[#999] italic">
                           Không có đơn hàng
                         </td>
                       )}
