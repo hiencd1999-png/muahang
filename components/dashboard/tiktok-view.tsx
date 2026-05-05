@@ -60,8 +60,24 @@ export function TiktokView() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Auto Sync State
-  const [isAutoSync, setIsAutoSync] = useState(false);
+  const [isAutoSync, setIsAutoSync] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("tiktokAutoSync");
+      return saved === "true";
+    }
+    return false;
+  });
   const [autoSyncCountdown, setAutoSyncCountdown] = useState(300);
+
+  const toggleAutoSync = () => {
+    setIsAutoSync(prev => {
+      const newState = !prev;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("tiktokAutoSync", String(newState));
+      }
+      return newState;
+    });
+  };
 
   // Column Resizing State
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
@@ -525,7 +541,7 @@ export function TiktokView() {
             </select>
           </div>
           
-          <div className="flex items-center justify-between sm:justify-end gap-2 w-full md:w-auto">
+          <div className="flex flex-wrap items-center justify-start xl:justify-end gap-2 w-full xl:w-auto mt-2 md:mt-0">
             <button
               onClick={toggleSelectAllFiltered}
               className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
@@ -543,7 +559,7 @@ export function TiktokView() {
               <option value={100}>100 dòng</option>
             </select>
             <button
-              onClick={() => setIsAutoSync(!isAutoSync)}
+              onClick={toggleAutoSync}
               className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0 flex items-center gap-2 ${isAutoSync ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
               title="Tự động đồng bộ các Session đang hoạt động mỗi 5 phút"
             >
