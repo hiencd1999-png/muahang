@@ -627,6 +627,7 @@ export function TiktokView() {
                       let shipperName = "";
                       let shipperPhone = "";
                       let orderTime = "-";
+                      let providerName = "";
                       if (order) {
                         let parsedDetails = order.details;
                         if (typeof parsedDetails === 'string') {
@@ -634,6 +635,7 @@ export function TiktokView() {
                         }
                         shipperName = parsedDetails?.detail?.shipper_name || parsedDetails?.shipper_name || "";
                         shipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone || "";
+                        providerName = parsedDetails?.detail?.logistics?.provider_name || parsedDetails?.detail?.logistics?.delivery_option_name || parsedDetails?.detail?.logistics?.shipping_provider || parsedDetails?.detail?.logistics?.logistics_name || "";
                         
                         const ts = parsedDetails?.detail?.create_time || parsedDetails?.create_time;
                         if (ts) {
@@ -719,9 +721,16 @@ export function TiktokView() {
                             {order.status || "-"}
                           </td>
                           <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap">
-                            <div className="flex items-center justify-between gap-1">
-                              <span>{order.trackingNo || "-"}</span>
-                              {order.trackingNo && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.trackingNo} /></div>}
+                            <div className="flex flex-col gap-0.5">
+                              <div className="flex items-center justify-between gap-1">
+                                <span>{order.trackingNo || "-"}</span>
+                                {order.trackingNo && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.trackingNo} /></div>}
+                              </div>
+                              {providerName && (
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded w-fit">
+                                  {providerName}
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap">
