@@ -564,41 +564,41 @@ export function TiktokView() {
                 />
                 <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'cb' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'cb')} />
               </th>
-              <th style={{ width: colWidths['session'], minWidth: colWidths['session'], maxWidth: colWidths['session'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+              <th style={{ width: colWidths['session'], minWidth: colWidths['session'], maxWidth: colWidths['session'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Session <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'session' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'session')} />
               </th>
-              <th style={{ width: colWidths['note'], minWidth: colWidths['note'], maxWidth: colWidths['note'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+              <th style={{ width: colWidths['note'], minWidth: colWidths['note'], maxWidth: colWidths['note'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Ghi chú <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'note' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'note')} />
               </th>
-              <th style={{ width: colWidths['orderId'], minWidth: colWidths['orderId'], maxWidth: colWidths['orderId'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+              <th style={{ width: colWidths['orderId'], minWidth: colWidths['orderId'], maxWidth: colWidths['orderId'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Mã Đơn <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'orderId' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'orderId')} />
               </th>
-              <th style={{ width: colWidths['orderTime'], minWidth: colWidths['orderTime'], maxWidth: colWidths['orderTime'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+              <th style={{ width: colWidths['orderTime'], minWidth: colWidths['orderTime'], maxWidth: colWidths['orderTime'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Thời gian đặt <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'orderTime' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'orderTime')} />
               </th>
-              <th style={{ width: colWidths['shopName'], minWidth: colWidths['shopName'], maxWidth: colWidths['shopName'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+              <th style={{ width: colWidths['shopName'], minWidth: colWidths['shopName'], maxWidth: colWidths['shopName'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Tên shop <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'shopName' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'shopName')} />
               </th>
-              <th style={{ width: colWidths['status'], minWidth: colWidths['status'], maxWidth: colWidths['status'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
-                Trạng thái <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'status' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'status')} />
-              </th>
-              <th style={{ width: colWidths['trackingNo'], minWidth: colWidths['trackingNo'], maxWidth: colWidths['trackingNo'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
-                Mã Vận Đơn <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'trackingNo' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'trackingNo')} />
-              </th>
-              <th style={{ width: colWidths['shipper'], minWidth: colWidths['shipper'], maxWidth: colWidths['shipper'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
-                Shipper <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'shipper' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'shipper')} />
-              </th>
-              <th style={{ width: colWidths['phone'], minWidth: colWidths['phone'], maxWidth: colWidths['phone'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
-                SĐT Khách <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'phone' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'phone')} />
-              </th>
-              <th style={{ width: colWidths['address'], minWidth: colWidths['address'], maxWidth: colWidths['address'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">
-                Địa chỉ <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'address' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'address')} />
-              </th>
-              <th style={{ width: colWidths['products'], minWidth: colWidths['products'], maxWidth: colWidths['products'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-left whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+              <th style={{ width: colWidths['products'], minWidth: colWidths['products'], maxWidth: colWidths['products'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Sản phẩm <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'products' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'products')} />
               </th>
-              <th style={{ width: colWidths['total'], minWidth: colWidths['total'], maxWidth: colWidths['total'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-right whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+              <th style={{ width: colWidths['total'], minWidth: colWidths['total'], maxWidth: colWidths['total'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Tổng tiền <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'total' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'total')} />
+              </th>
+              <th style={{ width: colWidths['status'], minWidth: colWidths['status'], maxWidth: colWidths['status'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Trạng thái <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'status' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'status')} />
+              </th>
+              <th style={{ width: colWidths['trackingNo'], minWidth: colWidths['trackingNo'], maxWidth: colWidths['trackingNo'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Mã Vận Đơn <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'trackingNo' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'trackingNo')} />
+              </th>
+              <th style={{ width: colWidths['shipper'], minWidth: colWidths['shipper'], maxWidth: colWidths['shipper'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Shipper <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'shipper' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'shipper')} />
+              </th>
+              <th style={{ width: colWidths['phone'], minWidth: colWidths['phone'], maxWidth: colWidths['phone'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                SĐT Khách <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'phone' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'phone')} />
+              </th>
+              <th style={{ width: colWidths['address'], minWidth: colWidths['address'], maxWidth: colWidths['address'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Địa chỉ <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'address' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'address')} />
               </th>
               <th style={{ width: colWidths['actions'], minWidth: colWidths['actions'], maxWidth: colWidths['actions'] }} className="relative border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Thao tác
@@ -720,50 +720,6 @@ export function TiktokView() {
                               {order.shopName || "-"}
                             </div>
                           </td>
-                          <td className={`border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap ${
-                            order.status === "Đã giao" || order.status === "Đã hoàn thành" || order.status?.includes("đã được giao")
-                              ? "text-emerald-700 dark:text-emerald-400 font-medium"
-                              : order.status === "Đã hủy" || order.status?.includes("hủy")
-                                ? "text-rose-700 dark:text-rose-400 font-medium"
-                                : "text-amber-700 dark:text-amber-400 font-medium"
-                          }`}>
-                            {order.status ? order.status.split('. Người nhận:')[0] : "-"}
-                          </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap">
-                            <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center justify-between gap-1">
-                                <span>{order.trackingNo || "-"}</span>
-                                {order.trackingNo && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.trackingNo} /></div>}
-                              </div>
-                              {providerName && (
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded w-fit">
-                                  {providerName}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap">
-                            <div className="flex flex-col gap-0.5">
-                              {shipperName ? <span className="font-semibold">{shipperName}</span> : <span className="text-slate-400 italic">Chưa rõ</span>}
-                              {shipperPhone && (
-                                <div className="flex items-center gap-1">
-                                  <span className="text-xs text-blue-600 dark:text-blue-400">{shipperPhone}</span>
-                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={shipperPhone} /></div>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap">
-                            <div className="flex items-center justify-between gap-1">
-                              <span>{order.phone || "-"}</span>
-                              {order.phone && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.phone} /></div>}
-                            </div>
-                          </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px]" style={colWidths['address'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
-                            <div className={`transition-all cursor-default ${colWidths['address'] ? '' : 'line-clamp-2 hover:line-clamp-none'}`} title={order.address || ""}>
-                              {order.address || "-"}
-                            </div>
-                          </td>
                           <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px]" style={colWidths['products'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
                             <div className={`overflow-y-auto custom-scrollbar pr-1 ${colWidths['products'] ? '' : 'max-h-[80px]'}`}>
                               {order.products?.map((p: any, i: number) => (
@@ -773,8 +729,52 @@ export function TiktokView() {
                               ))}
                             </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-right font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                             {order.total || "-"}
+                          </td>
+                          <td className={`border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap ${
+                            order.status === "Đã giao" || order.status === "Đã hoàn thành" || order.status?.includes("đã được giao")
+                              ? "text-emerald-700 dark:text-emerald-400 font-medium"
+                              : order.status === "Đã hủy" || order.status?.includes("hủy")
+                                ? "text-rose-700 dark:text-rose-400 font-medium"
+                                : "text-amber-700 dark:text-amber-400 font-medium"
+                          }`}>
+                            {order.status ? order.status.split('. Người nhận:')[0] : "-"}
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap">
+                            <div className="flex flex-col gap-0.5">
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="mx-auto">{order.trackingNo || "-"}</span>
+                                {order.trackingNo && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.trackingNo} /></div>}
+                              </div>
+                              {providerName && (
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded w-fit mx-auto">
+                                  {providerName}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap">
+                            <div className="flex flex-col gap-0.5">
+                              {shipperName ? <span className="font-semibold">{shipperName}</span> : <span className="text-slate-400 italic">Chưa rõ</span>}
+                              {shipperPhone && (
+                                <div className="flex items-center justify-center gap-1">
+                                  <span className="text-xs text-blue-600 dark:text-blue-400">{shipperPhone}</span>
+                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={shipperPhone} /></div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="mx-auto">{order.phone || "-"}</span>
+                              {order.phone && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.phone} /></div>}
+                            </div>
+                          </td>
+                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px]" style={colWidths['address'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
+                            <div className={`transition-all cursor-default ${colWidths['address'] ? '' : 'line-clamp-2 hover:line-clamp-none'}`} title={order.address || ""}>
+                              {order.address || "-"}
+                            </div>
                           </td>
                         </>
                       ) : (
