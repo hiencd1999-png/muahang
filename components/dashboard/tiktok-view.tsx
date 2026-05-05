@@ -678,7 +678,7 @@ export function TiktokView() {
                               {session.isActive ? <span className="text-emerald-600 dark:text-emerald-400 font-bold">Hoạt động</span> : <span className="text-rose-600 dark:text-rose-400 font-bold">Lỗi</span>}
                             </div>
                           </td>
-                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-top max-w-[150px]">
+                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-top" style={colWidths['note'] ? { maxWidth: colWidths['note'] } : { maxWidth: '200px' }}>
                             {editingNoteId === session.id ? (
                               <div className="flex flex-col gap-1">
                                 <textarea
@@ -693,10 +693,11 @@ export function TiktokView() {
                               </div>
                             ) : (
                               <div 
-                                className="cursor-text min-h-[20px] text-xs text-[#333] dark:text-[#ccc]" 
+                                className="cursor-text min-h-[20px] text-xs text-[#333] dark:text-[#ccc] line-clamp-2 break-words" 
+                                title={session.note || "Trống"}
                                 onClick={() => { setEditingNoteId(session.id); setEditingNoteText(session.note || ""); }}
                               >
-                                {session.note || <span className="text-[#999] italic">Trống</span>}
+                                {session.note || <span className="text-[#999] italic break-normal">Trống</span>}
                               </div>
                             )}
                           </td>
