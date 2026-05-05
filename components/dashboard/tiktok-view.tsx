@@ -59,6 +59,10 @@ export function TiktokView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Auto Sync State
+  const [isAutoSync, setIsAutoSync] = useState(false);
+  const [autoSyncCountdown, setAutoSyncCountdown] = useState(300);
+
   // Column Resizing State
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
   const [resizingCol, setResizingCol] = useState<string | null>(null);
@@ -349,8 +353,45 @@ export function TiktokView() {
       await handleSyncSession(id, true);
     }
     setIsBulkSyncing(false);
-    addToast("success", `Đã hoàn tất cập nhật`);
   };
+
+  const handleAutoSync = async () => {
+    setIsBulkSyncing(true);
+    const activeSessions = sessions.filter(s => s.isActive);
+    if (activeSessions.length > 0) {
+      addToast("success", `Auto Sync: Đang cập nhật ${activeSessions.length} session...`);
+      for (const s of activeSessions) {
+        await handleSyncSession(s.id, true);
+      }
+      setIsBulkSyncing(false);
+      addToast("success", "Auto Sync: Hoàn tất cập nhật");
+    } else {
+      setIsBulkSyncing(false);
+    }
+  };
+
+  useEffect(() => {
+    let countdown: NodeJS.Timeout;
+
+    if (isAutoSync) {
+      countdown = setInterval(() => {
+        setAutoSyncCountdown((prev) => {
+          if (prev <= 1) {
+            handleAutoSync();
+            return 300;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      setAutoSyncCountdown(300);
+    }
+
+    return () => {
+      if (countdown) clearInterval(countdown);
+    };
+  }, [isAutoSync, sessions]);
+
 
   const handleBulkExport = async () => {
     if (selectedIds.length === 0) return;
@@ -501,6 +542,14 @@ export function TiktokView() {
               <option value={50}>50 dòng</option>
               <option value={100}>100 dòng</option>
             </select>
+            <button
+              onClick={() => setIsAutoSync(!isAutoSync)}
+              className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0 flex items-center gap-2 ${isAutoSync ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
+              title="Tự động đồng bộ các Session đang hoạt động mỗi 5 phút"
+            >
+              <RefreshCw className={`w-4 h-4 ${isAutoSync ? 'animate-spin' : ''}`} style={isAutoSync ? { animationDuration: '3s' } : {}} />
+              {isAutoSync ? `Auto Sync (${Math.floor(autoSyncCountdown / 60)}:${String(autoSyncCountdown % 60).padStart(2, '0')})` : 'Auto Sync (Tắt)'}
+            </button>
             {!isFullscreen && (
               <button
                 onClick={openFullscreenInNewTab}
