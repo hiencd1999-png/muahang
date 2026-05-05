@@ -727,7 +727,7 @@ export function TiktokView() {
                                 ? "text-rose-700 dark:text-rose-400 font-medium"
                                 : "text-amber-700 dark:text-amber-400 font-medium"
                           }`}>
-                            {order.status || "-"}
+                            {order.status ? order.status.split('. Người nhận:')[0] : "-"}
                           </td>
                           <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 whitespace-nowrap">
                             <div className="flex flex-col gap-0.5">
