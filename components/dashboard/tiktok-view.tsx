@@ -547,9 +547,9 @@ export function TiktokView() {
         )}
 
         {/* Tools & Filters */}
-        <div className={`flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] border border-slate-200 dark:border-slate-700/80 shadow-sm shrink-0 ${isFullscreen ? 'mb-4' : ''}`}>
-          <div className="flex-1 flex flex-col sm:flex-row gap-3 w-full">
-            <div className="relative flex-1">
+        <div className={`flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] border border-slate-200 dark:border-slate-700/80 shadow-sm shrink-0 overflow-hidden ${isFullscreen ? 'mb-4' : ''}`}>
+          <div className="flex-1 flex flex-wrap gap-3 w-full items-center">
+            <div className="relative flex-auto min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input 
                 type="text" 
@@ -579,14 +579,14 @@ export function TiktokView() {
             <select 
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors min-w-[180px]"
+              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors min-w-[150px] flex-auto sm:flex-none"
             >
               <option value="ALL">Tất cả trạng thái</option>
               {allStatuses.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
           
-          <div className="flex flex-wrap items-center justify-start xl:justify-end gap-2 w-full xl:w-auto mt-2 md:mt-0">
+          <div className="flex flex-wrap items-center justify-start xl:justify-end gap-2 w-full xl:w-auto">
             <button
               onClick={toggleSelectAllFiltered}
               className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
