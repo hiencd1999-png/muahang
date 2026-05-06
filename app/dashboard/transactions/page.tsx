@@ -83,36 +83,36 @@ export default async function TransactionsPage({
   return (
     <div className="space-y-6">
       {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Tổng nạp tiền
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="panel rounded-2xl p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm flex flex-col justify-center">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            Nạp tiền
           </p>
-          <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
+          <p className="mt-2 text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 break-words">
             +{formatCurrency(totalDeposit)}
           </p>
         </div>
-        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Tổng đã chi
+        <div className="panel rounded-2xl p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm flex flex-col justify-center">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            Đã chi
           </p>
-          <p className="mt-2 text-2xl font-black text-rose-600 dark:text-rose-400">
+          <p className="mt-2 text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 break-words">
             -{formatCurrency(totalSpent)}
           </p>
         </div>
-        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm col-span-2 sm:col-span-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Tổng hoàn tiền
+        <div className="panel rounded-2xl p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm flex flex-col justify-center">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            Hoàn tiền
           </p>
-          <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400">
+          <p className="mt-2 text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 break-words">
             +{formatCurrency(totalRefund)}
           </p>
         </div>
-        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm col-span-2 sm:col-span-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+        <div className="panel rounded-2xl p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm flex flex-col justify-center">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 whitespace-nowrap">
             Phí TikTok
           </p>
-          <p className="mt-2 text-2xl font-black text-pink-600 dark:text-pink-400">
+          <p className="mt-2 text-xl sm:text-2xl font-black text-pink-600 dark:text-pink-400 break-words">
             -{formatCurrency(totalTiktokFee)}
           </p>
         </div>

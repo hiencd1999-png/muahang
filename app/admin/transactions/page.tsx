@@ -176,30 +176,30 @@ export default async function AdminTransactionsPage({
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Nạp tiền</p>
-          <p className="mt-2 text-lg xl:text-xl font-semibold text-emerald-700 dark:text-emerald-400">+{formatCurrency(totalDeposit)}</p>
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5 flex flex-col justify-center">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.1em] sm:tracking-[0.15em] text-slate-500 whitespace-nowrap">Nạp tiền</p>
+          <p className="mt-2 text-base sm:text-lg font-semibold text-emerald-700 dark:text-emerald-400 break-words">+{formatCurrency(totalDeposit)}</p>
         </article>
-        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Thanh toán đơn</p>
-          <p className="mt-2 text-lg xl:text-xl font-semibold text-rose-700 dark:text-rose-400">-{formatCurrency(totalDebit)}</p>
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5 flex flex-col justify-center">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.1em] sm:tracking-[0.15em] text-slate-500 whitespace-nowrap">Thanh toán đơn</p>
+          <p className="mt-2 text-base sm:text-lg font-semibold text-rose-700 dark:text-rose-400 break-words">-{formatCurrency(totalDebit)}</p>
         </article>
-        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Phí TikTok</p>
-          <p className="mt-2 text-lg xl:text-xl font-semibold text-pink-700 dark:text-pink-400">-{formatCurrency(totalTiktokFee)}</p>
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5 flex flex-col justify-center">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.1em] sm:tracking-[0.15em] text-slate-500 whitespace-nowrap">Phí TikTok</p>
+          <p className="mt-2 text-base sm:text-lg font-semibold text-pink-700 dark:text-pink-400 break-words">-{formatCurrency(totalTiktokFee)}</p>
         </article>
-        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Hoàn tiền</p>
-          <p className="mt-2 text-lg xl:text-xl font-semibold text-amber-600 dark:text-amber-400">+{formatCurrency(totalRefund)}</p>
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5 flex flex-col justify-center">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.1em] sm:tracking-[0.15em] text-slate-500 whitespace-nowrap">Hoàn tiền</p>
+          <p className="mt-2 text-base sm:text-lg font-semibold text-amber-600 dark:text-amber-400 break-words">+{formatCurrency(totalRefund)}</p>
         </article>
-        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Rút tiền Crypto</p>
-          <p className="mt-2 text-lg xl:text-xl font-semibold text-purple-700 dark:text-purple-400">-{formatCurrency(totalWithdrawal)}</p>
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5 flex flex-col justify-center">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.1em] sm:tracking-[0.15em] text-slate-500 whitespace-nowrap">Rút Crypto</p>
+          <p className="mt-2 text-base sm:text-lg font-semibold text-purple-700 dark:text-purple-400 break-words">-{formatCurrency(totalWithdrawal)}</p>
         </article>
-        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Điều chỉnh tay</p>
-          <p className={`mt-2 text-lg xl:text-xl font-semibold ${totalAdjustment >= 0 ? "text-blue-700 dark:text-blue-400" : "text-rose-700 dark:text-rose-400"}`}>
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5 flex flex-col justify-center">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.1em] sm:tracking-[0.15em] text-slate-500 whitespace-nowrap">Điều chỉnh tay</p>
+          <p className={`mt-2 text-base sm:text-lg font-semibold break-words ${totalAdjustment >= 0 ? "text-blue-700 dark:text-blue-400" : "text-rose-700 dark:text-rose-400"}`}>
             {totalAdjustment >= 0 ? "+" : ""}
             {formatCurrency(totalAdjustment)}
           </p>
