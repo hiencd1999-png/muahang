@@ -58,6 +58,8 @@ export function TiktokView() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Auto Sync State
   const [isAutoSync, setIsAutoSync] = useState(() => {
@@ -281,6 +283,32 @@ export function TiktokView() {
 
     // Filter orders
     let filteredOrders = session.orders.filter(order => {
+      let orderTs: number | null = null;
+      let parsedDetails = order.details;
+      if (typeof parsedDetails === 'string') {
+        try { parsedDetails = JSON.parse(parsedDetails); } catch (e) {}
+      }
+      const ts = parsedDetails?.detail?.create_time || parsedDetails?.create_time;
+      if (ts) {
+        orderTs = typeof ts === 'number' ? (ts < 1e12 ? ts * 1000 : ts) : new Date(ts).getTime();
+      } else if (order.updatedAt) {
+        orderTs = new Date(order.updatedAt).getTime();
+      }
+
+      let matchDate = true;
+      if (orderTs) {
+        if (startDate) {
+          const startTs = new Date(startDate).getTime();
+          if (orderTs < startTs) matchDate = false;
+        }
+        if (endDate) {
+          const endTs = new Date(endDate).getTime();
+          if (orderTs > endTs) matchDate = false;
+        }
+      } else if (startDate || endDate) {
+        matchDate = false;
+      }
+
       const matchStatus = statusFilter === "ALL" || (order.status || "Chờ xử lý") === statusFilter;
       
       const matchOrderSearch = !q || 
@@ -291,8 +319,8 @@ export function TiktokView() {
         (order.address || "").toLowerCase().includes(q) ||
         ((order.products as any[]) || []).some(p => p.name.toLowerCase().includes(q));
       
-      // If the session itself matched the search query, we show the order (as long as it matches the status filter)
-      return matchStatus && (sessionMatchSearch || matchOrderSearch);
+      // If the session itself matched the search query, we show the order (as long as it matches the status filter and date)
+      return matchDate && matchStatus && (sessionMatchSearch || matchOrderSearch);
     });
 
     // Nếu 1 session có cả đơn hủy và không hủy thì chỉ hiển thị đơn không bị hủy
@@ -318,7 +346,7 @@ export function TiktokView() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter, itemsPerPage]);
+  }, [searchQuery, statusFilter, itemsPerPage, startDate, endDate]);
 
   // Bulk Actions
   const toggleSelectAllFiltered = () => {
@@ -529,6 +557,23 @@ export function TiktokView() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
+              />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              <input 
+                type="datetime-local" 
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors w-full sm:w-auto"
+                title="Từ ngày"
+              />
+              <span className="text-slate-400 hidden sm:inline">-</span>
+              <input 
+                type="datetime-local" 
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors w-full sm:w-auto"
+                title="Đến ngày"
               />
             </div>
             <select 
