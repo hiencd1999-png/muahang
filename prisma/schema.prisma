@@ -28,6 +28,7 @@ enum TransactionType {
   ADMIN_ADJUSTMENT
   ORDER_REFUND
   WITHDRAWAL
+  TIKTOK_SYNC_FEE
 }
 
 enum WithdrawalStatus {

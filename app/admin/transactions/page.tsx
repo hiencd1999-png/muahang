@@ -17,6 +17,7 @@ const TYPE_LABELS: Record<string, string> = {
   ADMIN_ADJUSTMENT: "Điều chỉnh thủ công",
   ORDER_REFUND: "Hoàn tiền đơn",
   WITHDRAWAL: "Rút tiền Crypto",
+  TIKTOK_SYNC_FEE: "Phí đồng bộ TikTok",
 };
 
 const TYPE_STYLES: Record<string, string> = {
@@ -25,6 +26,7 @@ const TYPE_STYLES: Record<string, string> = {
   ADMIN_ADJUSTMENT: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
   ORDER_REFUND: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
   WITHDRAWAL: "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300",
+  TIKTOK_SYNC_FEE: "bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300",
 };
 
 function typeLabel(type: string) {
@@ -101,6 +103,9 @@ export default async function AdminTransactionsPage({
   const totalDeposit = summary.find((item) => item.type === "DEPOSIT")?._sum.amount ?? 0;
   const totalDebit = Math.abs(summary.find((item) => item.type === "ORDER_DEBIT")?._sum.amount ?? 0);
   const totalAdjustment = summary.find((item) => item.type === "ADMIN_ADJUSTMENT")?._sum.amount ?? 0;
+  const totalRefund = summary.find((item) => item.type === "ORDER_REFUND")?._sum.amount ?? 0;
+  const totalWithdrawal = Math.abs(summary.find((item) => item.type === "WITHDRAWAL")?._sum.amount ?? 0);
+  const totalTiktokFee = Math.abs(summary.find((item) => item.type === "TIKTOK_SYNC_FEE")?._sum.amount ?? 0);
 
   return (
     <section className="space-y-6">
@@ -137,6 +142,7 @@ export default async function AdminTransactionsPage({
               <option value="ADMIN_ADJUSTMENT">Điều chỉnh thủ công</option>
               <option value="ORDER_REFUND">Hoàn tiền đơn</option>
               <option value="WITHDRAWAL">Rút tiền Crypto</option>
+              <option value="TIKTOK_SYNC_FEE">Phí đồng bộ TikTok</option>
             </select>
             <select
               name="pageSize"
@@ -170,18 +176,30 @@ export default async function AdminTransactionsPage({
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <article className="panel rounded-[1.75rem] p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tổng nạp tiền</p>
-          <p className="mt-2 text-2xl font-semibold text-emerald-700">+{formatCurrency(totalDeposit)}</p>
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Nạp tiền</p>
+          <p className="mt-2 text-lg xl:text-xl font-semibold text-emerald-700 dark:text-emerald-400">+{formatCurrency(totalDeposit)}</p>
         </article>
-        <article className="panel rounded-[1.75rem] p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tổng thanh toán đơn</p>
-          <p className="mt-2 text-2xl font-semibold text-rose-700">-{formatCurrency(totalDebit)}</p>
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Thanh toán đơn</p>
+          <p className="mt-2 text-lg xl:text-xl font-semibold text-rose-700 dark:text-rose-400">-{formatCurrency(totalDebit)}</p>
         </article>
-        <article className="panel rounded-[1.75rem] p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tổng điều chỉnh thủ công</p>
-          <p className={`mt-2 text-2xl font-semibold ${totalAdjustment >= 0 ? "text-blue-700" : "text-rose-700"}`}>
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Phí TikTok</p>
+          <p className="mt-2 text-lg xl:text-xl font-semibold text-pink-700 dark:text-pink-400">-{formatCurrency(totalTiktokFee)}</p>
+        </article>
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Hoàn tiền</p>
+          <p className="mt-2 text-lg xl:text-xl font-semibold text-amber-600 dark:text-amber-400">+{formatCurrency(totalRefund)}</p>
+        </article>
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Rút tiền Crypto</p>
+          <p className="mt-2 text-lg xl:text-xl font-semibold text-purple-700 dark:text-purple-400">-{formatCurrency(totalWithdrawal)}</p>
+        </article>
+        <article className="panel rounded-[1.75rem] p-4 sm:p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">Điều chỉnh tay</p>
+          <p className={`mt-2 text-lg xl:text-xl font-semibold ${totalAdjustment >= 0 ? "text-blue-700 dark:text-blue-400" : "text-rose-700 dark:text-rose-400"}`}>
             {totalAdjustment >= 0 ? "+" : ""}
             {formatCurrency(totalAdjustment)}
           </p>

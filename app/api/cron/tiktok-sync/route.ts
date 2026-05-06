@@ -60,7 +60,7 @@ export async function GET(request: Request) {
                 data: {
                   userId: session.userId,
                   amount: -500,
-                  type: "ORDER_DEBIT",
+                  type: "TIKTOK_SYNC_FEE",
                   note: `[Auto Cron] Phí tra cứu đơn hàng lần đầu session: ${session.session}`
                 }
               });

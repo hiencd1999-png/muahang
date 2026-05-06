@@ -16,6 +16,7 @@ const TYPE_LABELS: Record<string, string> = {
   ORDER_DEBIT: "Thanh toán đơn",
   ADMIN_ADJUSTMENT: "Điều chỉnh thủ công",
   ORDER_REFUND: "Hoàn tiền đơn",
+  TIKTOK_SYNC_FEE: "Phí đồng bộ TikTok",
 };
 
 function TypeBadge({ type }: { type: string }) {
@@ -24,6 +25,7 @@ function TypeBadge({ type }: { type: string }) {
     ORDER_DEBIT: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300",
     ADMIN_ADJUSTMENT: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
     ORDER_REFUND: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+    TIKTOK_SYNC_FEE: "bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300",
   };
   return (
     <span
@@ -73,6 +75,9 @@ export default async function TransactionsPage({
   const totalSpent = Math.abs(
     stats.find((s) => s.type === "ORDER_DEBIT")?._sum.amount ?? 0
   );
+  const totalTiktokFee = Math.abs(
+    stats.find((s) => s.type === "TIKTOK_SYNC_FEE")?._sum.amount ?? 0
+  );
   const totalRefund = stats.find((s) => s.type === "ORDER_REFUND")?._sum.amount ?? 0;
 
   return (
@@ -101,6 +106,14 @@ export default async function TransactionsPage({
           </p>
           <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400">
             +{formatCurrency(totalRefund)}
+          </p>
+        </div>
+        <div className="panel rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700/80 shadow-sm col-span-2 sm:col-span-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+            Phí TikTok
+          </p>
+          <p className="mt-2 text-2xl font-black text-pink-600 dark:text-pink-400">
+            -{formatCurrency(totalTiktokFee)}
           </p>
         </div>
       </div>

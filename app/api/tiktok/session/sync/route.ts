@@ -43,7 +43,7 @@ export async function POST(request: Request) {
             data: {
               userId: session.userId,
               amount: -500,
-              type: "ORDER_DEBIT",
+              type: "TIKTOK_SYNC_FEE",
               note: `[TikTok] Phí tra cứu đơn hàng lần đầu session: ${session.session}`
             }
           });

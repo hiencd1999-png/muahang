@@ -36,20 +36,20 @@ export async function fetchTikTokOrders() {
         if (listData.ok && listData.orders) {
           console.log(`[TikTokWorker] Lấy được ${listData.orders.length} đơn cho session ${session.id}`);
 
-          // Deduct 200 VND if first time success
+          // Deduct 500 VND if first time success
           if (!session.hasPaid) {
             await prisma.$transaction(async (tx) => {
               const user = await tx.user.findUnique({ where: { id: session.userId } });
-              if (user && user.balance >= 200) {
+              if (user && user.balance >= 500) {
                 await tx.user.update({
                   where: { id: session.userId },
-                  data: { balance: { decrement: 200 } }
+                  data: { balance: { decrement: 500 } }
                 });
                 await tx.transaction.create({
                   data: {
                     userId: session.userId,
-                    amount: -200,
-                    type: "ORDER_DEBIT",
+                    amount: -500,
+                    type: "TIKTOK_SYNC_FEE",
                     note: `[TikTok] Phí tra cứu đơn hàng lần đầu session: ${session.session}`
                   }
                 });
@@ -59,17 +59,17 @@ export async function fetchTikTokOrders() {
                 });
               } else if (user) {
                 // Not enough balance, maybe we should skip processing this session? 
-                // Or just process and let balance go negative or throw error. The requirement doesn't specify rejecting if balance < 200, but typically we would.
+                // Or just process and let balance go negative or throw error. The requirement doesn't specify rejecting if balance < 500, but typically we would.
                 // Assuming we deduct anyway or we can just proceed.
                 await tx.user.update({
                   where: { id: session.userId },
-                  data: { balance: { decrement: 200 } }
+                  data: { balance: { decrement: 500 } }
                 });
                 await tx.transaction.create({
                   data: {
                     userId: session.userId,
-                    amount: -200,
-                    type: "ORDER_DEBIT",
+                    amount: -500,
+                    type: "TIKTOK_SYNC_FEE",
                     note: `[TikTok] Phí tra cứu đơn hàng lần đầu session: ${session.session}`
                   }
                 });
