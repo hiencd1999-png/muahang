@@ -117,6 +117,12 @@ export async function GET(request: Request) {
                 statusTranslated = detailData.detail.logistics.message;
             }
 
+            let orderTs: Date | undefined;
+            const ts = detailData?.detail?.create_time || order?.create_time;
+            if (ts) {
+                orderTs = new Date(typeof ts === 'number' ? (ts < 1e12 ? ts * 1000 : ts) : ts);
+            }
+
             await prisma.tiktokOrder.upsert({
               where: { orderId: order.order_id },
               update: {
@@ -129,6 +135,7 @@ export async function GET(request: Request) {
                 address,
                 products: order.products,
                 details: detailData,
+                ...(orderTs ? { createdAt: orderTs } : {}),
               },
               create: {
                 sessionId: session.id,
@@ -142,6 +149,7 @@ export async function GET(request: Request) {
                 address,
                 products: order.products,
                 details: detailData,
+                ...(orderTs ? { createdAt: orderTs } : {}),
               }
             });
           }

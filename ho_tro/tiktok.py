@@ -7,13 +7,19 @@ import os
 import re
 import webbrowser
 import ctypes
+import shutil
 
 # Ẩn hoàn toàn cửa sổ đen CMD (Console) trên Windows khi mở file .py
 if os.name == 'nt':
     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
-PACKAGE_PATH = "/data/data/com.ss.android.ugc.trill/shared_prefs/aweme_user.xml"
-
+PACKAGE_PATHS = [
+    "/data/data/com.ss.android.ugc.trill/shared_prefs/aweme_user.xml",
+    "/data/data/com.zhiliaoapp.musically/shared_prefs/aweme_user.xml",
+    "/data/data/com.ss.android.ugc.aweme/shared_prefs/aweme_user.xml",
+    "/data/data/com.tiktok.tma/shared_prefs/aweme_user.xml",
+    "/data/data/com.ss.android.ugc.tiktok.lite/shared_prefs/aweme_user.xml"
+]
 def run_cmd(cmd):
     startupinfo = None
     if os.name == 'nt':
@@ -348,12 +354,15 @@ class App:
         self.update_cell(tree_iid, 4, "Đang trích xuất file cấu hình...")
         
         success = False
-        for _ in range(3):
-            res = run_cmd(f"adb -s {adb_id} pull {PACKAGE_PATH} {local_save}")
-            if res.returncode == 0 and os.path.exists(local_save) and os.path.getsize(local_save) > 50:
-                success = True
+        for pkg_path in PACKAGE_PATHS:
+            for _ in range(3):
+                res = run_cmd(f"adb -s {adb_id} pull {pkg_path} {local_save}")
+                if res.returncode == 0 and os.path.exists(local_save) and os.path.getsize(local_save) > 50:
+                    success = True
+                    break
+                time.sleep(1)
+            if success:
                 break
-            time.sleep(1)
 
         if not success:
             self.update_cell(tree_iid, 4, "Lỗi: Chưa mount được Data hoặc App chưa cài!")
@@ -379,5 +388,10 @@ class App:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = App(root)
-    root.mainloop()
+    if not shutil.which("adb"):
+        root.withdraw() # Ẩn cửa sổ chính
+        messagebox.showerror("Lỗi ADB", "Không tìm thấy công cụ ADB trên hệ thống!\n\nVui lòng cài đặt Android SDK Platform-Tools (ADB) và thêm vào biến môi trường PATH trước khi sử dụng phần mềm này.")
+        root.destroy()
+    else:
+        app = App(root)
+        root.mainloop()
