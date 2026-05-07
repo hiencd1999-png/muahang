@@ -35,10 +35,13 @@ export async function POST(request: Request) {
       // Deduct 500 VND if first time
       if (!session.hasPaid) {
         await prisma.$transaction(async (tx) => {
-          await tx.user.update({
-            where: { id: session.userId },
+          const userUpdateResult = await tx.user.updateMany({
+            where: { id: session.userId, balance: { gte: 500 } },
             data: { balance: { decrement: 500 } }
           });
+          if (userUpdateResult.count === 0) {
+            throw new Error("Số dư không đủ 500đ để đồng bộ TikTok.");
+          }
           await tx.transaction.create({
             data: {
               userId: session.userId,

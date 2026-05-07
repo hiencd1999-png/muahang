@@ -39,45 +39,27 @@ export async function fetchTikTokOrders() {
           // Deduct 500 VND if first time success
           if (!session.hasPaid) {
             await prisma.$transaction(async (tx) => {
-              const user = await tx.user.findUnique({ where: { id: session.userId } });
-              if (user && user.balance >= 500) {
-                await tx.user.update({
-                  where: { id: session.userId },
-                  data: { balance: { decrement: 500 } }
-                });
-                await tx.transaction.create({
-                  data: {
-                    userId: session.userId,
-                    amount: -500,
-                    type: "TIKTOK_SYNC_FEE",
-                    note: `[TikTok] Phí tra cứu đơn hàng lần đầu session: ${session.session}`
-                  }
-                });
-                await tx.tiktokSession.update({
-                  where: { id: session.id },
-                  data: { hasPaid: true }
-                });
-              } else if (user) {
-                // Not enough balance, maybe we should skip processing this session? 
-                // Or just process and let balance go negative or throw error. The requirement doesn't specify rejecting if balance < 500, but typically we would.
-                // Assuming we deduct anyway or we can just proceed.
-                await tx.user.update({
-                  where: { id: session.userId },
-                  data: { balance: { decrement: 500 } }
-                });
-                await tx.transaction.create({
-                  data: {
-                    userId: session.userId,
-                    amount: -500,
-                    type: "TIKTOK_SYNC_FEE",
-                    note: `[TikTok] Phí tra cứu đơn hàng lần đầu session: ${session.session}`
-                  }
-                });
-                await tx.tiktokSession.update({
-                  where: { id: session.id },
-                  data: { hasPaid: true }
-                });
+              const updateResult = await tx.user.updateMany({
+                where: { id: session.userId, balance: { gte: 500 } },
+                data: { balance: { decrement: 500 } }
+              });
+              
+              if (updateResult.count === 0) {
+                throw new Error(`Session ${session.id}: Số dư người dùng không đủ 500đ để đồng bộ TikTok.`);
               }
+              
+              await tx.transaction.create({
+                data: {
+                  userId: session.userId,
+                  amount: -500,
+                  type: "TIKTOK_SYNC_FEE",
+                  note: `[TikTok] Phí tra cứu đơn hàng lần đầu session: ${session.session}`
+                }
+              });
+              await tx.tiktokSession.update({
+                where: { id: session.id },
+                data: { hasPaid: true }
+              });
             });
             session.hasPaid = true; // Update local memory
           }
