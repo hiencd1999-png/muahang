@@ -35,6 +35,14 @@ export async function POST(request: Request) {
       // Deduct 500 VND if first time
       if (!session.hasPaid) {
         await prisma.$transaction(async (tx) => {
+          const sessionUpdateResult = await tx.tiktokSession.updateMany({
+            where: { id: session.id, hasPaid: false },
+            data: { hasPaid: true }
+          });
+          if (sessionUpdateResult.count === 0) {
+            return;
+          }
+          
           const userUpdateResult = await tx.user.updateMany({
             where: { id: session.userId, balance: { gte: 500 } },
             data: { balance: { decrement: 500 } }
@@ -49,10 +57,6 @@ export async function POST(request: Request) {
               type: "TIKTOK_SYNC_FEE",
               note: `[TikTok] Phí tra cứu đơn hàng lần đầu session: ${session.session}`
             }
-          });
-          await tx.tiktokSession.update({
-            where: { id: session.id },
-            data: { hasPaid: true }
           });
         });
       }
