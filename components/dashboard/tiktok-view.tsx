@@ -224,7 +224,7 @@ export function TiktokView() {
     }
   };
 
-  const handleSyncSession = async (id: number, silent = false) => {
+  const handleSyncSession = async (id: number, silent = false, skipFetch = false) => {
     setSyncingId(id);
     try {
       const res = await fetch("/api/tiktok/session/sync", {
@@ -237,9 +237,11 @@ export function TiktokView() {
         throw new Error(errorData.error || "Lỗi cập nhật");
       }
       if (!silent) addToast("success", "Đã cập nhật đơn hàng thành công");
-      await fetchSessions();
+      if (!skipFetch) await fetchSessions();
+      return true;
     } catch (err: any) {
       if (!silent) addToast("error", err.message);
+      return false;
     } finally {
       setSyncingId(null);
     }
@@ -392,11 +394,25 @@ export function TiktokView() {
   const handleBulkSync = async () => {
     if (selectedIds.length === 0) return;
     setIsBulkSyncing(true);
-    addToast("success", `Đang cập nhật ${selectedIds.length} session...`);
-    for (const id of selectedIds) {
-      await handleSyncSession(id, true);
-    }
+    addToast("success", `Đang cập nhật đồng thời ${selectedIds.length} session...`);
+    
+    const results = await Promise.all(selectedIds.map(id => handleSyncSession(id, true, true)));
+    
+    let successCount = 0;
+    let errorCount = 0;
+    results.forEach(success => {
+      if (success) successCount++;
+      else errorCount++;
+    });
+
+    await fetchSessions();
     setIsBulkSyncing(false);
+
+    if (errorCount > 0) {
+      addToast("error", `Cập nhật xong: ${successCount} thành công, ${errorCount} thất bại`);
+    } else {
+      addToast("success", `Hoàn tất cập nhật ${successCount} session`);
+    }
   };
 
   const handleAutoSync = async () => {
@@ -404,9 +420,8 @@ export function TiktokView() {
     const activeSessions = sessions.filter(s => s.isActive);
     if (activeSessions.length > 0) {
       addToast("success", `Auto Sync: Đang cập nhật ${activeSessions.length} session...`);
-      for (const s of activeSessions) {
-        await handleSyncSession(s.id, true);
-      }
+      await Promise.all(activeSessions.map(s => handleSyncSession(s.id, true, true)));
+      await fetchSessions();
       setIsBulkSyncing(false);
       addToast("success", "Auto Sync: Hoàn tất cập nhật");
     } else {
@@ -674,6 +689,9 @@ export function TiktokView() {
                 />
                 <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'cb' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'cb')} />
               </th>
+              <th style={{ width: colWidths['actions'], minWidth: colWidths['actions'], maxWidth: colWidths['actions'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Thao tác
+              </th>
               <th style={{ width: colWidths['session'], minWidth: colWidths['session'], maxWidth: colWidths['session'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Session <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'session' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'session')} />
               </th>
@@ -707,11 +725,8 @@ export function TiktokView() {
               <th style={{ width: colWidths['phone'], minWidth: colWidths['phone'], maxWidth: colWidths['phone'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 SĐT Khách <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'phone' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'phone')} />
               </th>
-              <th style={{ width: colWidths['address'], minWidth: colWidths['address'], maxWidth: colWidths['address'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+              <th style={{ width: colWidths['address'], minWidth: colWidths['address'], maxWidth: colWidths['address'] }} className="relative border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap min-w-[200px] bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Địa chỉ <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'address' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'address')} />
-              </th>
-              <th style={{ width: colWidths['actions'], minWidth: colWidths['actions'], maxWidth: colWidths['actions'] }} className="relative border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
-                Thao tác
               </th>
             </tr>
           </thead>
@@ -779,6 +794,25 @@ export function TiktokView() {
                               onChange={() => toggleSelect(session.id)}
                               className="accent-blue-600"
                             />
+                          </td>
+                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-middle text-center w-20">
+                            <div className="flex justify-center gap-2">
+                              <button 
+                                onClick={() => handleSyncSession(session.id)} 
+                                disabled={syncingId === session.id}
+                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50" 
+                                title="Cập nhật"
+                              >
+                                <RefreshCw className={`w-4 h-4 ${syncingId === session.id ? 'animate-spin' : ''}`} />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteSession(session.id)} 
+                                className="text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-300" 
+                                title="Xóa"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                           <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-middle text-center max-w-[120px]">
                             <div className="flex items-center justify-between gap-1">
@@ -882,37 +916,15 @@ export function TiktokView() {
                               {order.phone && <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyBtn text={order.phone} /></div>}
                             </div>
                           </td>
-                          <td className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px] align-middle text-center" style={colWidths['address'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
+                          <td className="border-b border-[#c0c0c0] dark:border-[#444] p-1.5 min-w-[200px] align-middle text-center" style={colWidths['address'] ? { whiteSpace: 'normal', wordBreak: 'break-word' } : {}}>
                             <div className={`transition-all cursor-default mx-auto ${colWidths['address'] ? '' : 'line-clamp-2 hover:line-clamp-none'}`} title={order.address || ""}>
                               {order.address || "-"}
                             </div>
                           </td>
                         </>
                       ) : (
-                        <td colSpan={10} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center text-[#999] italic">
+                        <td colSpan={10} className="border-b border-[#c0c0c0] dark:border-[#444] p-1.5 text-center text-[#999] italic">
                           Không có đơn hàng
-                        </td>
-                      )}
-
-                      {idx === 0 && (
-                        <td rowSpan={rowCount} className="border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-middle text-center w-20">
-                          <div className="flex justify-center gap-2">
-                            <button 
-                              onClick={() => handleSyncSession(session.id)} 
-                              disabled={syncingId === session.id}
-                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50" 
-                              title="Cập nhật"
-                            >
-                              <RefreshCw className={`w-4 h-4 ${syncingId === session.id ? 'animate-spin' : ''}`} />
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteSession(session.id)} 
-                              className="text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-300" 
-                              title="Xóa"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
                         </td>
                       )}
                     </tr>
