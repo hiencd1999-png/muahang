@@ -31,7 +31,7 @@ interface TiktokSession {
 }
 
 const TiktokUserInfo = ({ sessionStr }: { sessionStr: string }) => {
-  const [info, setInfo] = useState<{ nickname?: string, user_id?: string, error?: boolean } | null>(null);
+  const [info, setInfo] = useState<{ username?: string, user_id?: string, error?: boolean } | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -40,7 +40,7 @@ const TiktokUserInfo = ({ sessionStr }: { sessionStr: string }) => {
       .then(data => {
         if (mounted) {
           if (data.ok && data.summary) {
-            setInfo({ nickname: data.summary.nickname, user_id: data.summary.user_id });
+            setInfo({ username: data.summary.username, user_id: data.summary.user_id });
           } else {
             setInfo({ error: true });
           }
@@ -57,7 +57,7 @@ const TiktokUserInfo = ({ sessionStr }: { sessionStr: string }) => {
   
   return (
     <div className="flex flex-col items-center gap-1 text-xs whitespace-nowrap">
-      <span className="font-bold text-slate-800 dark:text-slate-200">{info.nickname}</span>
+      <span className="font-bold text-slate-800 dark:text-slate-200">{info.username}</span>
       <span className="text-slate-500 font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">{info.user_id}</span>
     </div>
   );
@@ -305,6 +305,62 @@ export function TiktokView() {
     });
   };
 
+  const handleCopyCard = (session: TiktokSession & { filteredOrders: any[] }) => {
+    const ordersText = session.filteredOrders.map(order => {
+      let parsedDetails = order.details;
+      if (typeof parsedDetails === 'string') {
+        try { parsedDetails = JSON.parse(parsedDetails); } catch (e) {}
+      }
+      const recipientName = parsedDetails?.detail?.recipient?.name || parsedDetails?.recipient?.name || "";
+      const recipientPhone = order.phone || parsedDetails?.detail?.recipient?.phone || parsedDetails?.recipient?.phone || "";
+      const address = order.address || parsedDetails?.detail?.recipient?.address || parsedDetails?.recipient?.address || "";
+      
+      const products = Array.isArray(order.products) ? order.products : [];
+      let productText = products.map((p: any) => `📦 ${p.name}  •  💰 ${p.price || ""}`).join("\n");
+      if (!productText) productText = "📦 Không rõ sản phẩm";
+      
+      const carrier = parsedDetails?.detail?.logistics?.carrier || parsedDetails?.logistics?.carrier || "";
+      const trackingNo = order.trackingNo || parsedDetails?.detail?.logistics?.tracking_no || parsedDetails?.logistics?.tracking_no || "";
+      let logisticsState = parsedDetails?.detail?.logistics?.state || parsedDetails?.logistics?.state || order.status || "";
+      if (parsedDetails?.detail?.logistics?.message) {
+        logisticsState += ` - ${parsedDetails.detail.logistics.message.split('\n')[0]}`;
+      }
+
+      const shipperName = parsedDetails?.detail?.shipper_name || parsedDetails?.shipper_name || "";
+      let rawShipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone || "";
+      const shipperPhone = rawShipperPhone ? rawShipperPhone.split(/Hotline/i)[0].trim() : "";
+      
+      const lines: string[] = [];
+      lines.push("ℹ️ THÔNG TIN");
+      if (recipientName) lines.push(`👤 Người nhận: ${recipientName}`);
+      if (recipientPhone) lines.push(`📞 SĐT nhận: ${recipientPhone}`);
+      if (address) lines.push(`🏠 Địa chỉ: ${address}`);
+      lines.push(productText);
+      
+      const logisticsLines: string[] = [];
+      if (carrier) logisticsLines.push(`🏢 ${carrier}`);
+      if (trackingNo) logisticsLines.push(`🆔 ${trackingNo}`);
+      if (logisticsState) logisticsLines.push(`📍 ${logisticsState}`);
+      if (shipperName) logisticsLines.push(`🛵 Shipper: ${shipperName}${shipperPhone ? ` - ${shipperPhone}` : ""}`);
+
+      if (logisticsLines.length > 0) {
+        lines.push("──────────────");
+        lines.push("🚚 VẬN CHUYỂN");
+        lines.push(...logisticsLines);
+      }
+      
+      return lines.join("\n");
+    }).join("\n\n====================\n\n");
+
+    if (!ordersText) {
+      addToast("error", "Không có đơn hàng nào để copy");
+      return;
+    }
+    
+    navigator.clipboard.writeText(ordersText);
+    addToast("success", "Đã copy thông tin thẻ");
+  };
+
   // Derived values for filters
   const allStatuses = Array.from(new Set(sessions.flatMap(s => s.orders.map(o => o.status || "Chờ xử lý")))).filter(Boolean).sort();
 
@@ -323,10 +379,26 @@ export function TiktokView() {
       if (typeof parsedDetails === 'string') {
         try { parsedDetails = JSON.parse(parsedDetails); } catch (e) {}
       }
+      const orderedAt = parsedDetails?.detail?.timeline?.ordered_at || parsedDetails?.timeline?.ordered_at;
       const ts = parsedDetails?.detail?.create_time || parsedDetails?.create_time;
-      if (ts) {
+      
+      if (orderedAt) {
+        try {
+          const match = orderedAt.match(/(\d{1,2}):(\d{2})\s*(SA|CH|AM|PM)?,\s*(\d{1,2})\s*(?:tháng|-|\/)\s*(\d{1,2})\s*(?:năm|-|\/)?\s*(\d{4})?/i);
+          if (match) {
+            let [_, h, m, ampm, D, M, Y] = match;
+            let hour = parseInt(h);
+            const min = parseInt(m);
+            if (ampm && (ampm.toUpperCase() === 'CH' || ampm.toUpperCase() === 'PM') && hour < 12) hour += 12;
+            if (ampm && (ampm.toUpperCase() === 'SA' || ampm.toUpperCase() === 'AM') && hour === 12) hour = 0;
+            orderTs = new Date(Y ? parseInt(Y) : new Date().getFullYear(), parseInt(M) - 1, parseInt(D), hour, min).getTime();
+          }
+        } catch (e) {}
+      }
+
+      if (!orderTs && ts) {
         orderTs = typeof ts === 'number' ? (ts < 1e12 ? ts * 1000 : ts) : new Date(ts).getTime();
-      } else if (order.updatedAt) {
+      } else if (!orderTs && order.updatedAt) {
         orderTs = new Date(order.updatedAt).getTime();
       }
 
@@ -808,8 +880,11 @@ export function TiktokView() {
                         shipperPhone = rawShipperPhone ? rawShipperPhone.split(/Hotline/i)[0].trim() : "";
                         providerName = parsedDetails?.detail?.logistics?.provider_name || parsedDetails?.detail?.logistics?.delivery_option_name || parsedDetails?.detail?.logistics?.shipping_provider || parsedDetails?.detail?.logistics?.logistics_name || "";
                         
+                        const orderedAt = parsedDetails?.detail?.timeline?.ordered_at || parsedDetails?.timeline?.ordered_at;
                         const ts = parsedDetails?.detail?.create_time || parsedDetails?.create_time;
-                        if (ts) {
+                        if (orderedAt) {
+                          orderTime = orderedAt;
+                        } else if (ts) {
                           if (typeof ts === 'number') {
                             orderTime = formatDate(new Date(ts < 1e12 ? ts * 1000 : ts));
                           } else {
@@ -832,8 +907,15 @@ export function TiktokView() {
                               className="accent-blue-600"
                             />
                           </td>
-                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-middle text-center w-20">
-                            <div className="flex justify-center gap-2">
+                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-middle text-center w-24">
+                            <div className="flex justify-center gap-2 flex-wrap">
+                              <button 
+                                onClick={() => handleCopyCard(session as any)} 
+                                className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300" 
+                                title="Copy thẻ"
+                              >
+                                <Copy className="w-4 h-4" />
+                              </button>
                               <button 
                                 onClick={() => handleSyncSession(session.id)} 
                                 disabled={syncingId === session.id}
@@ -1012,6 +1094,9 @@ export function TiktokView() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => handleCopyCard(session as any)} className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-xl transition">
+                      <Copy className="w-4 h-4" />
+                    </button>
                     <button onClick={() => handleSyncSession(session.id)} disabled={syncingId === session.id} className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition disabled:opacity-50">
                       <RefreshCw className={`w-4 h-4 ${syncingId === session.id ? 'animate-spin' : ''}`} />
                     </button>
