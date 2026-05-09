@@ -30,6 +30,39 @@ interface TiktokSession {
   createdAt: string;
 }
 
+const TiktokUserInfo = ({ sessionStr }: { sessionStr: string }) => {
+  const [info, setInfo] = useState<{ nickname?: string, user_id?: string, error?: boolean } | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch(`/api/tiktok/session/info?session=${encodeURIComponent(sessionStr)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (mounted) {
+          if (data.ok && data.summary) {
+            setInfo({ nickname: data.summary.nickname, user_id: data.summary.user_id });
+          } else {
+            setInfo({ error: true });
+          }
+        }
+      })
+      .catch(() => {
+        if (mounted) setInfo({ error: true });
+      });
+    return () => { mounted = false; };
+  }, [sessionStr]);
+
+  if (!info) return <Loader2 className="w-4 h-4 animate-spin mx-auto text-slate-400" />;
+  if (info.error) return <span className="text-xs text-rose-500 font-medium">Lỗi tải</span>;
+  
+  return (
+    <div className="flex flex-col items-center gap-1 text-xs whitespace-nowrap">
+      <span className="font-bold text-slate-800 dark:text-slate-200">{info.nickname}</span>
+      <span className="text-slate-500 font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">{info.user_id}</span>
+    </div>
+  );
+};
+
 export function TiktokView() {
   const [sessions, setSessions] = useState<TiktokSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -617,6 +650,7 @@ export function TiktokView() {
               <option value={20}>20 dòng</option>
               <option value={50}>50 dòng</option>
               <option value={100}>100 dòng</option>
+              <option value={1000}>1000 dòng</option>
             </select>
             <button
               onClick={toggleAutoSync}
@@ -676,7 +710,7 @@ export function TiktokView() {
           </div>
         )}
 
-        <div className={`overflow-x-auto bg-white dark:bg-[#1e1e1e] border border-[#c0c0c0] dark:border-[#444] shadow-sm custom-scrollbar ${isFullscreen ? 'flex-1 h-0' : ''}`} style={!isFullscreen ? { maxHeight: "calc(100vh - 200px)" } : {}}>
+        <div className={`overflow-x-auto bg-white dark:bg-[#1e1e1e] border border-[#c0c0c0] dark:border-[#444] shadow-sm custom-scrollbar hidden xl:block ${isFullscreen ? 'flex-1 h-0' : ''}`} style={!isFullscreen ? { maxHeight: "calc(100vh - 200px)" } : {}}>
         <table className={`w-full text-[13px] border-collapse ${resizingCol ? 'select-none cursor-col-resize' : ''}`} style={{ fontFamily: "Arial, sans-serif" }}>
           <thead className="bg-[#f8f9fa] dark:bg-[#2d2d2d] text-[#444] dark:text-[#ccc] sticky top-0 z-10 shadow-[0_1px_0_#c0c0c0] dark:shadow-[0_1px_0_#444]">
             <tr>
@@ -694,6 +728,9 @@ export function TiktokView() {
               </th>
               <th style={{ width: colWidths['session'], minWidth: colWidths['session'], maxWidth: colWidths['session'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Session <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'session' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'session')} />
+              </th>
+              <th style={{ width: colWidths['account'], minWidth: colWidths['account'], maxWidth: colWidths['account'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
+                Tài khoản <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'account' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'account')} />
               </th>
               <th style={{ width: colWidths['note'], minWidth: colWidths['note'], maxWidth: colWidths['note'] }} className="relative border-r border-b border-[#c0c0c0] dark:border-[#444] font-normal py-1.5 px-2 text-center whitespace-nowrap bg-[#f8f9fa] dark:bg-[#2d2d2d]">
                 Ghi chú <div className={`absolute right-0 top-0 w-1 h-full cursor-col-resize z-20 ${resizingCol === 'note' ? 'bg-blue-500' : 'hover:bg-blue-300'}`} onMouseDown={(e) => startResize(e, 'note')} />
@@ -733,7 +770,7 @@ export function TiktokView() {
             {loading ? (
               <tbody>
                 <tr>
-                  <td colSpan={14} className="text-center p-8 text-[#666] dark:text-[#aaa]">
+                  <td colSpan={15} className="text-center p-8 text-[#666] dark:text-[#aaa]">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500" />
                   </td>
                 </tr>
@@ -741,7 +778,7 @@ export function TiktokView() {
             ) : paginatedSessions.length === 0 ? (
               <tbody>
                 <tr>
-                  <td colSpan={14} className="text-center p-8 text-[#666] dark:text-[#aaa] italic">
+                  <td colSpan={15} className="text-center p-8 text-[#666] dark:text-[#aaa] italic">
                     Không có dữ liệu
                   </td>
                 </tr>
@@ -822,6 +859,9 @@ export function TiktokView() {
                             <div className="mt-1 text-[10px]">
                               {session.isActive ? <span className="text-emerald-600 dark:text-emerald-400 font-bold">Hoạt động</span> : <span className="text-rose-600 dark:text-rose-400 font-bold">Lỗi</span>}
                             </div>
+                          </td>
+                          <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-middle text-center">
+                            <TiktokUserInfo sessionStr={session.session} />
                           </td>
                           <td rowSpan={rowCount} className="border-r border-b border-[#c0c0c0] dark:border-[#444] p-1.5 align-middle text-center" style={colWidths['note'] ? { maxWidth: colWidths['note'] } : { maxWidth: '200px' }}>
                             {editingNoteId === session.id ? (
@@ -935,6 +975,184 @@ export function TiktokView() {
               })
             )}
         </table>
+      </div>
+
+      {/* Mobile/Tablet View */}
+      <div className={`xl:hidden flex flex-col gap-4 ${isFullscreen ? 'flex-1 overflow-y-auto' : ''}`}>
+        {loading ? (
+          <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>
+        ) : paginatedSessions.length === 0 ? (
+          <div className="text-center p-8 text-slate-500 italic bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">Không có dữ liệu</div>
+        ) : (
+          paginatedSessions.map(session => (
+            <div key={session.id} className={`bg-white dark:bg-slate-900 rounded-2xl border ${selectedIds.includes(session.id) ? 'border-blue-500 ring-1 ring-blue-500' : 'border-slate-200 dark:border-slate-700'} shadow-sm overflow-hidden`}>
+              {/* Card Header (Session Info) */}
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.includes(session.id)}
+                      onChange={() => toggleSelect(session.id)}
+                      className="mt-1 w-4 h-4 accent-blue-600 rounded shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">{session.session.substring(0, 15)}...</span>
+                        <CopyBtn text={session.session} />
+                        {session.isActive ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Hoạt động</span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">Lỗi</span>
+                        )}
+                      </div>
+                      <div className="flex items-center">
+                         <TiktokUserInfo sessionStr={session.session} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => handleSyncSession(session.id)} disabled={syncingId === session.id} className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition disabled:opacity-50">
+                      <RefreshCw className={`w-4 h-4 ${syncingId === session.id ? 'animate-spin' : ''}`} />
+                    </button>
+                    <button onClick={() => handleDeleteSession(session.id)} className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xl transition">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Note */}
+                <div className="text-xs">
+                  <div className="font-medium text-slate-500 mb-1 flex items-center gap-1"><Edit2 className="w-3 h-3" /> Ghi chú:</div>
+                  {editingNoteId === session.id ? (
+                    <textarea
+                      value={editingNoteText}
+                      onChange={(e) => setEditingNoteText(e.target.value)}
+                      className="w-full text-xs p-2 rounded-xl border border-blue-500 outline-none resize-none bg-white dark:bg-slate-800 focus:ring-2 focus:ring-blue-500/20"
+                      rows={2}
+                      autoFocus
+                      onBlur={() => handleUpdateNote(session.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUpdateNote(session.id); } if (e.key === 'Escape') setEditingNoteId(null); }}
+                    />
+                  ) : (
+                    <div 
+                      className="cursor-text p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[#333] dark:text-[#ccc]" 
+                      onClick={() => { setEditingNoteId(session.id); setEditingNoteText(session.note || ""); }}
+                    >
+                      {session.note || <span className="text-slate-400 italic">Trống (Chạm để thêm)</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Orders List */}
+              <div className="p-3 bg-slate-100/50 dark:bg-slate-900/50">
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-1">Đơn hàng ({session.filteredOrders.length})</div>
+                {session.filteredOrders.length === 0 ? (
+                  <div className="text-center p-4 text-xs text-slate-400 italic bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">Không có đơn hàng</div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {session.filteredOrders.map((order, oIdx) => {
+                      let parsedDetails = order.details;
+                      if (typeof parsedDetails === 'string') {
+                        try { parsedDetails = JSON.parse(parsedDetails); } catch(e){}
+                      }
+                      const shipperName = parsedDetails?.detail?.shipper_name || parsedDetails?.shipper_name || "";
+                      let rawShipperPhone = parsedDetails?.detail?.shipper_phone || parsedDetails?.shipper_phone || "";
+                      const shipperPhone = rawShipperPhone ? rawShipperPhone.split(/Hotline/i)[0].trim() : "";
+                      const providerName = parsedDetails?.detail?.logistics?.provider_name || parsedDetails?.detail?.logistics?.delivery_option_name || parsedDetails?.detail?.logistics?.shipping_provider || parsedDetails?.detail?.logistics?.logistics_name || "";
+                      
+                      let orderTime = "-";
+                      const ts = parsedDetails?.detail?.create_time || parsedDetails?.create_time;
+                      if (ts) {
+                        if (typeof ts === 'number') {
+                          orderTime = formatDate(new Date(ts < 1e12 ? ts * 1000 : ts));
+                        } else {
+                          orderTime = formatDate(ts);
+                        }
+                      } else if (order.updatedAt) {
+                        orderTime = formatDate(order.updatedAt);
+                      }
+
+                      const statusColor = order.status === "Đã giao" || order.status === "Đã hoàn thành" || order.status?.includes("đã được giao")
+                        ? "text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-900/20 dark:border-emerald-800/50"
+                        : order.status === "Đã hủy" || order.status?.includes("hủy")
+                          ? "text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-900/20 dark:border-rose-800/50"
+                          : "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-900/20 dark:border-amber-800/50";
+
+                      return (
+                        <div key={oIdx} className="bg-white dark:bg-slate-800 rounded-xl p-3 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col gap-2">
+                          {/* Order Header */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700 pb-2">
+                            <div className="flex items-center gap-1.5 font-mono text-sm font-bold text-slate-800 dark:text-slate-200">
+                              #{order.orderId} <CopyBtn text={order.orderId} />
+                            </div>
+                            <span className={`px-2 py-1 rounded text-[10px] font-bold border ${statusColor}`}>
+                              {order.status ? order.status.split(/Người nhận/i)[0].replace(/[.\s]+$/, '') : "Chờ xử lý"}
+                            </span>
+                          </div>
+                          
+                          {/* Details grid */}
+                          <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs mt-1">
+                            <div><span className="text-slate-500">Thời gian:</span> <span className="font-medium text-slate-800 dark:text-slate-200">{orderTime}</span></div>
+                            <div><span className="text-slate-500">Tổng tiền:</span> <span className="font-bold text-slate-800 dark:text-slate-200">{order.total || "-"}</span></div>
+                            <div className="col-span-2 flex flex-col">
+                              <span className="text-slate-500">Shop:</span>
+                              <span className="font-medium text-slate-800 dark:text-slate-200 line-clamp-1">{order.shopName || "-"}</span>
+                            </div>
+                          </div>
+
+                          {/* Tracking & Shipper */}
+                          <div className="mt-1 flex flex-col gap-1.5 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-1.5 text-xs">
+                              <Truck className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="font-medium text-slate-700 dark:text-slate-300">{order.trackingNo || "Chưa có MVĐ"}</span>
+                              {order.trackingNo && <CopyBtn text={order.trackingNo} />}
+                              {providerName && <span className="ml-auto text-[10px] bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 truncate max-w-[100px]">{providerName}</span>}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs">
+                              <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">🛵</span>
+                              <span className="font-medium text-slate-700 dark:text-slate-300">{shipperName || "Chưa rõ"}</span>
+                              {shipperPhone && <><span className="text-blue-600 dark:text-blue-400">{shipperPhone}</span><CopyBtn text={shipperPhone} /></>}
+                            </div>
+                          </div>
+
+                          {/* Products */}
+                          {order.products && order.products.length > 0 && (
+                            <div className="mt-1 border-t border-slate-100 dark:border-slate-700 pt-2">
+                              <div className="text-[10px] font-semibold text-slate-400 uppercase mb-1">Sản phẩm ({order.products.length})</div>
+                              <div className="flex flex-col gap-1 text-xs">
+                                {order.products.map((p: any, i: number) => (
+                                  <div key={i} className="flex justify-between gap-2">
+                                    <span className="text-slate-700 dark:text-slate-300 line-clamp-1 flex-1">• {p.name}</span>
+                                    <strong className="text-blue-600 dark:text-blue-400 shrink-0">x{p.qty}</strong>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Customer Info */}
+                          <div className="mt-1 border-t border-slate-100 dark:border-slate-700 pt-2 text-xs">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Phone className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="font-medium">{order.phone || "Ẩn"}</span>
+                              {order.phone && <CopyBtn text={order.phone} />}
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                              <span className="text-slate-600 dark:text-slate-400 line-clamp-2">{order.address || "-"}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Pagination Controls */}

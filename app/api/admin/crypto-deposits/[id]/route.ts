@@ -54,7 +54,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
              // 2. Chốt trạng thái
              const updateResult = await tx.cryptoDeposit.updateMany({
                  where: { id: deposit.id, status: "PENDING" },
-                 data: { status: "COMPLETED", txId: "SPADMIN_MANUAL_APPROVAL" }
+                 data: { status: "COMPLETED", txId: `SPADMIN_MANUAL_APPROVAL_${deposit.id}` }
              });
 
              if (updateResult.count === 0) {
