@@ -499,9 +499,12 @@ export function TiktokView() {
   const handleBulkSync = async () => {
     if (selectedIds.length === 0) return;
     setIsBulkSyncing(true);
-    addToast("success", `Đang cập nhật đồng thời ${selectedIds.length} session...`);
+    addToast("success", `Đang cập nhật lần lượt ${selectedIds.length} session...`);
     
-    const results = await Promise.all(selectedIds.map(id => handleSyncSession(id, true, true)));
+    const results = [];
+    for (const id of selectedIds) {
+      results.push(await handleSyncSession(id, true, true));
+    }
     
     let successCount = 0;
     let errorCount = 0;
@@ -524,8 +527,10 @@ export function TiktokView() {
     setIsBulkSyncing(true);
     const activeSessions = sessions.filter(s => s.isActive);
     if (activeSessions.length > 0) {
-      addToast("success", `Auto Sync: Đang cập nhật ${activeSessions.length} session...`);
-      await Promise.all(activeSessions.map(s => handleSyncSession(s.id, true, true)));
+      addToast("success", `Auto Sync: Đang cập nhật lần lượt ${activeSessions.length} session...`);
+      for (const s of activeSessions) {
+        await handleSyncSession(s.id, true, true);
+      }
       await fetchSessions();
       setIsBulkSyncing(false);
       addToast("success", "Auto Sync: Hoàn tất cập nhật");
@@ -668,8 +673,8 @@ export function TiktokView() {
 
         {/* Tools & Filters */}
         <div className={`flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] border border-slate-200 dark:border-slate-700/80 shadow-sm shrink-0 overflow-hidden ${isFullscreen ? 'mb-4' : ''}`}>
-          <div className="flex-1 flex flex-wrap gap-3 w-full items-center">
-            <div className="relative flex-auto min-w-[200px]">
+          <div className="flex-1 flex flex-col md:flex-row flex-wrap gap-3 w-full items-start md:items-center">
+            <div className="relative flex-auto w-full md:w-auto min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input 
                 type="text" 
@@ -679,44 +684,44 @@ export function TiktokView() {
                 className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
               />
             </div>
-            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-2 flex-col sm:flex-row w-full md:w-auto">
               <input 
                 type="datetime-local" 
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors w-full sm:w-auto"
+                className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors w-full sm:w-auto flex-1"
                 title="Từ ngày"
               />
-              <span className="text-slate-400 hidden sm:inline">-</span>
+              <span className="text-slate-400 hidden sm:inline shrink-0">-</span>
               <input 
                 type="datetime-local" 
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors w-full sm:w-auto"
+                className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors w-full sm:w-auto flex-1"
                 title="Đến ngày"
               />
             </div>
             <select 
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors min-w-[150px] flex-auto sm:flex-none"
+              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors w-full md:w-auto min-w-[150px] flex-auto sm:flex-none"
             >
               <option value="ALL">Tất cả trạng thái</option>
               {allStatuses.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
           
-          <div className="flex flex-wrap items-center justify-start xl:justify-end gap-2 w-full xl:w-auto">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-start xl:justify-end gap-2 w-full xl:w-auto">
             <button
               onClick={toggleSelectAllFiltered}
-              className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
+              className="w-full sm:w-auto px-3 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
             >
               Chọn tất cả
             </button>
             <select 
               value={itemsPerPage}
               onChange={e => setItemsPerPage(Number(e.target.value))}
-              className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
+              className="w-full sm:w-auto px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
             >
               <option value={10}>10 dòng</option>
               <option value={20}>20 dòng</option>
@@ -726,7 +731,7 @@ export function TiktokView() {
             </select>
             <button
               onClick={toggleAutoSync}
-              className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0 flex items-center gap-2 ${isAutoSync ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
+              className={`w-full sm:w-auto col-span-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0 flex items-center justify-center gap-2 ${isAutoSync ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
               title="Tự động đồng bộ các Session đang hoạt động mỗi 5 phút"
             >
               <RefreshCw className={`w-4 h-4 ${isAutoSync ? 'animate-spin' : ''}`} style={isAutoSync ? { animationDuration: '3s' } : {}} />
@@ -782,7 +787,7 @@ export function TiktokView() {
           </div>
         )}
 
-        <div className={`overflow-x-auto bg-white dark:bg-[#1e1e1e] border border-[#c0c0c0] dark:border-[#444] shadow-sm custom-scrollbar hidden xl:block ${isFullscreen ? 'flex-1 h-0' : ''}`} style={!isFullscreen ? { maxHeight: "calc(100vh - 200px)" } : {}}>
+        <div className={`overflow-x-auto bg-white dark:bg-[#1e1e1e] border border-[#c0c0c0] dark:border-[#444] shadow-sm custom-scrollbar ${isFullscreen ? 'flex-1 h-0 block' : 'hidden xl:block'}`} style={!isFullscreen ? { maxHeight: "calc(100vh - 200px)" } : {}}>
         <table className={`w-full text-[13px] border-collapse ${resizingCol ? 'select-none cursor-col-resize' : ''}`} style={{ fontFamily: "Arial, sans-serif" }}>
           <thead className="bg-[#f8f9fa] dark:bg-[#2d2d2d] text-[#444] dark:text-[#ccc] sticky top-0 z-10 shadow-[0_1px_0_#c0c0c0] dark:shadow-[0_1px_0_#444]">
             <tr>
@@ -1060,7 +1065,7 @@ export function TiktokView() {
       </div>
 
       {/* Mobile/Tablet View */}
-      <div className={`xl:hidden flex flex-col gap-4 ${isFullscreen ? 'flex-1 overflow-y-auto' : ''}`}>
+      <div className={`flex flex-col gap-4 ${isFullscreen ? 'hidden' : 'xl:hidden'}`}>
         {loading ? (
           <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>
         ) : paginatedSessions.length === 0 ? (
@@ -1071,7 +1076,7 @@ export function TiktokView() {
               {/* Card Header (Session Info) */}
               <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-start gap-3 min-w-0">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
                     <input 
                       type="checkbox" 
                       checked={selectedIds.includes(session.id)}
@@ -1093,7 +1098,7 @@ export function TiktokView() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0 ml-2">
                     <button onClick={() => handleCopyCard(session as any)} className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-xl transition">
                       <Copy className="w-4 h-4" />
                     </button>
@@ -1169,7 +1174,7 @@ export function TiktokView() {
                         <div key={oIdx} className="bg-white dark:bg-slate-800 rounded-xl p-3 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col gap-2">
                           {/* Order Header */}
                           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700 pb-2">
-                            <div className="flex items-center gap-1.5 font-mono text-sm font-bold text-slate-800 dark:text-slate-200">
+                            <div className="flex items-center gap-1.5 font-mono text-sm font-bold text-slate-800 dark:text-slate-200 break-all">
                               #{order.orderId} <CopyBtn text={order.orderId} />
                             </div>
                             <span className={`px-2 py-1 rounded text-[10px] font-bold border ${statusColor}`}>
