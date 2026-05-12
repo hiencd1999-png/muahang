@@ -631,7 +631,7 @@ export function TiktokView() {
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 text-blue-800 dark:text-blue-300 px-4 py-2.5 rounded-xl text-xs flex items-start gap-2 max-w-2xl leading-relaxed">
             <span className="text-blue-500 mt-0.5">💡</span>
             <span>
-              <strong>Cách lấy Session:</strong> Đăng nhập vào Seller Center trên máy tính, nhấn <strong>F12</strong> (hoặc chuột phải chọn Kiểm tra), chuyển sang tab <strong>Application</strong> {'>'} <strong>Cookies</strong> và copy giá trị của <code>session_ss</code>.
+              <strong>Cách lấy Session:</strong> Đăng nhập vào Tiktok trên máy, nhấn <strong>F12</strong> (hoặc chuột phải chọn Kiểm tra), chuyển sang tab <strong>Application</strong> {'>'} <strong>Cookies</strong> và copy giá trị của <code>session_ss</code>.
             </span>
           </div>
         </div>
