@@ -711,41 +711,46 @@ export function TiktokView() {
             </select>
           </div>
           
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-start xl:justify-end gap-2 w-full xl:w-auto">
-            <button
-              onClick={toggleSelectAllFiltered}
-              className="w-full sm:w-auto px-3 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
-            >
-              Chọn tất cả
-            </button>
-            <select 
-              value={itemsPerPage}
-              onChange={e => setItemsPerPage(Number(e.target.value))}
-              className="w-full sm:w-auto px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
-            >
-              <option value={10}>10 dòng</option>
-              <option value={20}>20 dòng</option>
-              <option value={50}>50 dòng</option>
-              <option value={100}>100 dòng</option>
-              <option value={1000}>1000 dòng</option>
-            </select>
-            <button
-              onClick={toggleAutoSync}
-              className={`w-full sm:w-auto col-span-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap shrink-0 flex items-center justify-center gap-2 ${isAutoSync ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
-              title="Tự động đồng bộ các Session đang hoạt động mỗi 5 phút"
-            >
-              <RefreshCw className={`w-4 h-4 ${isAutoSync ? 'animate-spin' : ''}`} style={isAutoSync ? { animationDuration: '3s' } : {}} />
-              {isAutoSync ? `Auto Sync (${Math.floor(autoSyncCountdown / 60)}:${String(autoSyncCountdown % 60).padStart(2, '0')})` : 'Auto Sync (Tắt)'}
-            </button>
-            {!isFullscreen && (
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-start xl:justify-end gap-2 w-full xl:w-auto mt-2 md:mt-0">
+            <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
               <button
-                onClick={openFullscreenInNewTab}
-                className="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-xl transition-colors shrink-0"
-                title="Mở toàn màn hình ở tab mới"
+                onClick={toggleSelectAllFiltered}
+                className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap"
               >
-                <Maximize className="w-5 h-5" />
+                Chọn tất cả
               </button>
-            )}
+              <select 
+                value={itemsPerPage}
+                onChange={e => setItemsPerPage(Number(e.target.value))}
+                className="px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-amber-500 transition-colors"
+              >
+                <option value={10}>10 dòng</option>
+                <option value={20}>20 dòng</option>
+                <option value={50}>50 dòng</option>
+                <option value={100}>100 dòng</option>
+                <option value={1000}>1000 dòng</option>
+              </select>
+            </div>
+            
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button
+                onClick={toggleAutoSync}
+                className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap flex items-center justify-center gap-2 ${isAutoSync ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
+                title="Tự động đồng bộ các Session đang hoạt động mỗi 5 phút"
+              >
+                <RefreshCw className={`w-4 h-4 ${isAutoSync ? 'animate-spin' : ''}`} style={isAutoSync ? { animationDuration: '3s' } : {}} />
+                {isAutoSync ? `Auto Sync (${Math.floor(autoSyncCountdown / 60)}:${String(autoSyncCountdown % 60).padStart(2, '0')})` : 'Auto Sync (Tắt)'}
+              </button>
+              {!isFullscreen && (
+                <button
+                  onClick={openFullscreenInNewTab}
+                  className="w-[42px] shrink-0 flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-xl transition-colors"
+                  title="Mở toàn màn hình ở tab mới"
+                >
+                  <Maximize className="w-5 h-5" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
