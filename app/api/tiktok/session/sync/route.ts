@@ -28,10 +28,24 @@ export async function POST(request: Request) {
     const proxyStr = `${proxy.host}:${proxy.port}:${proxy.username}:${proxy.password}`;
 
     const listUrl = `https://vubel-tiktok.vercel.app/api/order/list?session=${session.session}&proxy=${proxyStr}&limit=10`;
-    const listRes = await fetch(listUrl);
-    const listData = await listRes.json();
+    let listData: any = null;
+    let listSuccess = false;
 
-    if (listData.ok && listData.orders) {
+    for (let i = 0; i < 3; i++) {
+      try {
+        const listRes = await fetch(listUrl);
+        listData = await listRes.json();
+        if (listData && listData.ok && listData.orders) {
+          listSuccess = true;
+          break;
+        }
+      } catch (err) {
+        console.error("Lỗi fetch list, thử lại lần", i + 1);
+      }
+      if (i < 2) await new Promise(res => setTimeout(res, 2000));
+    }
+
+    if (listSuccess) {
       // Deduct 500 VND if first time
       if (!session.hasPaid) {
         await prisma.$transaction(async (tx) => {
@@ -81,11 +95,20 @@ export async function POST(request: Request) {
         }
 
         const detailUrl = `https://vubel-tiktok.vercel.app/api/order/detail?session=${session.session}&proxy=${proxyStr}&order_id=${order.order_id}`;
-        let detailData = null;
-        try {
-          const detailRes = await fetch(detailUrl);
-          detailData = await detailRes.json();
-        } catch (err) {}
+        let detailData: any = null;
+        for (let i = 0; i < 3; i++) {
+          try {
+            const detailRes = await fetch(detailUrl);
+            const rawData = await detailRes.json();
+            detailData = rawData;
+            if (rawData && rawData.detail) {
+              break;
+            }
+          } catch (err) {
+            console.error("Lỗi fetch detail, thử lại lần", i + 1);
+          }
+          if (i < 2) await new Promise(res => setTimeout(res, 1000));
+        }
 
         let trackingNo = "";
         let phone = "";
