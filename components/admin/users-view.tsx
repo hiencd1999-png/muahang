@@ -58,13 +58,13 @@ export function AdminUsersView({
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const q = formData.get("q") as string;
-    
+    const q = (formData.get("q") as string) || "";
+
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (sort) params.set("sort", sort);
     params.set("page", "1");
-    
+
     router.push(`/admin/users?${params.toString()}`);
   };
 
@@ -85,13 +85,13 @@ export function AdminUsersView({
             {totalCount} người dùng trong hệ thống
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <form onSubmit={handleSearch} className="flex gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between w-full">
+          <form onSubmit={handleSearch} className="flex gap-2 flex-1 min-w-0">
             <input
               name="q"
               defaultValue={query}
               placeholder="Tìm tên hoặc username..."
-              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm outline-none focus:border-amber-500 dark:text-white sm:w-64"
+              className="min-w-0 flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm outline-none focus:border-amber-500 dark:text-white"
             />
             <button
               type="submit"
@@ -102,7 +102,7 @@ export function AdminUsersView({
           </form>
           <div className="flex items-center gap-2">
             <label htmlFor="sort" className="text-sm text-slate-600 dark:text-slate-300 font-medium">
-              Sắp xếp:
+              Bộ lọc / Sắp xếp:
             </label>
             <select
               id="sort"

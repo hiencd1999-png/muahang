@@ -6,7 +6,7 @@ import { Loader2, Check, X } from "lucide-react";
 
 export function BankDepositsTable() {
     const { addToast } = useToast();
-    const [status, setStatus] = useState("TRANSFERRED");
+    const [status, setStatus] = useState("ALL");
     const [deposits, setDeposits] = useState<any[]>([]);
     const [isSpAdmin, setIsSpAdmin] = useState(false);
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
