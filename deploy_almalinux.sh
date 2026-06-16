@@ -50,15 +50,33 @@ systemctl enable --now docker
 echo "✅ Cài đặt Docker thành công!"
 
 echo "🔐 4/6. KHỞI TẠO MÔI TRƯỜNG BẢO MẬT & ĐÓNG GÓI DATABASE"
-# Sinh mã chống giả mạo tự động nếu file .env chưa từng tồn tại
-if [ ! -f .env ]; then
-    echo "📝 Đang gieo cấu hình .env tự động..."
-    cat <<EOF > .env
-DATABASE_URL="postgresql://datdon_admin:Hienhoi123%40@db:5432/datdon_db?schema=public"
-SESSION_SECRET="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
+# Sinh/xoay khóa mật khẩu và cấu hình .env mỗi lần chạy (randomized rotation)
+echo "📝 Đang tạo/xoay secrets trong .env (mật khẩu DB, SESSION_SECRET, API keys)..."
+# Tạo mật khẩu chỉ chứa ký tự an toàn để tránh cần URL-encoding
+POSTGRES_USER="datdon_admin"
+POSTGRES_DB="datdon_db"
+POSTGRES_PASSWORD=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)
+SESSION_SECRET=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 48)
+BINANCE_KEY=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)
+BINANCE_SECRET=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 48)
+COOKIE=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 80)
+
+cat > .env <<EOF
+POSTGRES_USER=${POSTGRES_USER}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+POSTGRES_DB=${POSTGRES_DB}
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+SESSION_SECRET=${SESSION_SECRET}
+BINANCE_KEY=${BINANCE_KEY}
+BINANCE_SECRET=${BINANCE_SECRET}
+COOKIE=${COOKIE}
+USDT_RATE=26500
+NEXT_TELEMETRY_DISABLED=1
+NODE_ENV=production
 EOF
-    echo "✅ Đã gieo cấu hình môi trường."
-fi
+
+chmod 600 .env
+echo "✅ Đã tạo/ghi .env (quyền 600). Mật khẩu Postgres và secrets đã được xoay ngẫu nhiên."
 
 echo "🐳 5/6. KHỞI CHẠY HỆ SINH THÁI CONTAINER (BUILD CODE)"
 # Kéo hạ CSDL Postgres và Build App (Quá trình này tốn khoảng 2-5 Phút)

@@ -5,10 +5,8 @@ services:
     image: postgres:16-alpine
     container_name: datdon_db
     restart: always
-    environment:
-      POSTGRES_USER: datdon_admin
-      POSTGRES_PASSWORD: Hienhoi123@
-      POSTGRES_DB: datdon_db
+    env_file:
+      - .env
     volumes:
       - datdon_db_data:/var/lib/postgresql/data
     ports:
@@ -24,9 +22,9 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgresql://datdon_admin:Hienhoi123%40@db:5432/datdon_db?schema=public
-      - SESSION_SECRET=DATDON_SECRET_KEY_SUPER_SECURE_REPLACEME
       - NEXT_TELEMETRY_DISABLED=1
       - NODE_ENV=production
     depends_on:
