@@ -6,7 +6,7 @@ import { getLockedAdminCommission } from "@/lib/admin-balance";
 
 const batchBalanceSchema = z.object({
   userIds: z.array(z.number().int().positive()).min(1),
-  amountChange: z.number().int().nonzero(),
+  amountChange: z.number().int().refine((n) => n !== 0, { message: "amountChange must be non-zero" }),
 });
 
 export async function POST(request: NextRequest) {
