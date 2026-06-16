@@ -53,7 +53,8 @@ export function BankDepositsTable() {
 
     return (
         <div className="space-y-4">
-            <div className="flex gap-2 text-sm border-b border-slate-200 dark:border-slate-800 pb-2">
+            <div className="flex flex-wrap gap-2 text-sm border-b border-slate-200 dark:border-slate-800 pb-2">
+                <button onClick={() => setStatus("ALL")} className={`px-4 py-2 rounded-full font-semibold ${status === "ALL" ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white" : "text-slate-500"}`}>Tất cả</button>
                 <button onClick={() => setStatus("PENDING")} className={`px-4 py-2 rounded-full font-semibold ${status === "PENDING" ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white" : "text-slate-500"}`}>Đang chờ CK</button>
                 <button onClick={() => setStatus("TRANSFERRED")} className={`px-4 py-2 rounded-full font-semibold ${status === "TRANSFERRED" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" : "text-slate-500"}`}>Đã CK (Cần duyệt)</button>
                 <button onClick={() => setStatus("COMPLAINED")} className={`px-4 py-2 rounded-full font-semibold ${status === "COMPLAINED" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" : "text-slate-500"}`}>Khiếu nại</button>

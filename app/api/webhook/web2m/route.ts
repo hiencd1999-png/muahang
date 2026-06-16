@@ -63,7 +63,8 @@ export async function POST(req: NextRequest) {
                                 adminId: adminConfig.adminId,
                                 amount: txAmount, // Số tiền gửi đến phải khớp số tiền tạo lệnh để tránh fake
                                 status: { in: ["PENDING", "TRANSFERRED", "COMPLAINED"] },
-                                transferCode: { not: null }
+                                transferCode: { not: null },
+                                expiresAt: { gte: new Date() }
                             }
                         });
 
@@ -77,7 +78,8 @@ export async function POST(req: NextRequest) {
                                         const updateResult = await dbTx.bankDeposit.updateMany({
                                             where: { 
                                                 id: deposit.id, 
-                                                status: deposit.status
+                                                status: deposit.status,
+                                                expiresAt: { gte: new Date() }
                                             },
                                             data: { status: "COMPLETED", complaintImage: null, updatedAt: new Date() }
                                         });

@@ -9,18 +9,25 @@ export async function GET(req: Request, props: { params: Promise<{ orderId: stri
 
     const params = await props.params;
 
-    const deposit = await prisma.cryptoDeposit.findUnique({
+    let deposit = await prisma.cryptoDeposit.findUnique({
         where: { id: params.orderId, userId: result.user.id }
     });
 
     if (!deposit) return NextResponse.json({ error: "Không tìm thấy lệnh nạp" }, { status: 404 });
 
-    if (deposit.status === "PENDING" && deposit.expiresAt < new Date()) {
-        await prisma.cryptoDeposit.update({
-            where: { id: deposit.id },
+    const now = new Date();
+    if (deposit.status === "PENDING" && deposit.expiresAt < now) {
+        const updateResult = await prisma.cryptoDeposit.updateMany({
+            where: { id: deposit.id, status: "PENDING", expiresAt: { lt: now } },
             data: { status: "EXPIRED" }
         });
-        deposit.status = "EXPIRED";
+
+        if (updateResult.count > 0) {
+            deposit.status = "EXPIRED";
+        } else {
+            const refreshed = await prisma.cryptoDeposit.findUnique({ where: { id: deposit.id } });
+            if (refreshed) deposit = refreshed;
+        }
     }
 
     return NextResponse.json({

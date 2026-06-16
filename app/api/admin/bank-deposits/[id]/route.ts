@@ -48,6 +48,10 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
              return NextResponse.json({ error: "Lệnh này đã được xử lý hoặc hết hạn." }, { status: 400 });
         }
 
+        if (deposit.expiresAt < new Date()) {
+             return NextResponse.json({ error: "Lệnh này đã hết hạn. Vui lòng đợi hệ thống hoàn cọc hoặc hủy lệnh." }, { status: 400 });
+        }
+
         const isTargetAdminSpAdmin = isSpAdminRole(deposit.admin.role);
 
         if (action === "REJECT") {
@@ -89,7 +93,8 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
              const updateResult = await tx.bankDeposit.updateMany({
                  where: { 
                      id: deposit.id, 
-                     status: { notIn: ["COMPLETED", "REJECTED", "EXPIRED"] } 
+                     status: { notIn: ["COMPLETED", "REJECTED", "EXPIRED"] },
+                     expiresAt: { gte: new Date() }
                  },
                  data: { status: "COMPLETED", complaintImage: null }
              });

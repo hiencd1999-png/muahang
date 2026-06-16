@@ -16,7 +16,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status") || "TRANSFERRED";
 
-    let whereClause: any = { status };
+    let whereClause: any = {};
+    if (status !== "ALL") {
+        whereClause.status = status;
+    }
 
     // spadmin can see all, admin can only see theirs
     if (!isSpAdminRole(result.user.role)) {

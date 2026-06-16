@@ -9,43 +9,53 @@ export async function GET(req: Request, props: { params: Promise<{ orderId: stri
 
     const params = await props.params;
 
-    const deposit = await prisma.bankDeposit.findUnique({
+    let deposit = await prisma.bankDeposit.findUnique({
         where: { id: params.orderId, userId: result.user.id },
         include: { admin: { select: { bankConfig: true, role: true } } }
     });
 
     if (!deposit) return NextResponse.json({ error: "Không tìm thấy lệnh nạp" }, { status: 404 });
 
-    if ((deposit.status === "PENDING" || deposit.status === "TRANSFERRED") && deposit.expiresAt < new Date()) {
+    const now = new Date();
+    if ((deposit.status === "PENDING" || deposit.status === "TRANSFERRED") && deposit.expiresAt < now) {
         const isSpAdminRole = (role: string) => role === "SPADMIN";
         if (deposit.admin && deposit.admin.role) {
             const isTargetAdminSpAdmin = isSpAdminRole(deposit.admin.role);
 
-            await prisma.$transaction(async (tx) => {
-                const updateResult = await tx.bankDeposit.updateMany({
-                    where: { id: deposit.id, status: { in: ["PENDING", "TRANSFERRED"] } },
+            const updateResult = await prisma.$transaction(async (tx) => {
+                const count = await tx.bankDeposit.updateMany({
+                    where: { id: deposit.id, status: { in: ["PENDING", "TRANSFERRED"] }, expiresAt: { lt: now } },
                     data: { status: "EXPIRED" }
                 });
 
-                if (updateResult.count > 0) {
-                    if (!isTargetAdminSpAdmin) {
-                        await tx.user.update({
-                            where: { id: deposit.adminId },
-                            data: { balance: { increment: deposit.amount } }
-                        });
-                        await tx.transaction.create({
-                            data: {
-                                userId: deposit.adminId,
-                                amount: deposit.amount,
-                                type: "ADMIN_ADJUSTMENT",
-                                note: `[Hoàn Escrow] Lệnh chờ nạp Bank từ User ${result.user.id} quá hạn`
-                            }
-                        });
-                    }
+                if (count.count > 0 && !isTargetAdminSpAdmin) {
+                    await tx.user.update({
+                        where: { id: deposit.adminId },
+                        data: { balance: { increment: deposit.amount } }
+                    });
+                    await tx.transaction.create({
+                        data: {
+                            userId: deposit.adminId,
+                            amount: deposit.amount,
+                            type: "ADMIN_ADJUSTMENT",
+                            note: `[Hoàn Escrow] Lệnh chờ nạp Bank từ User ${result.user.id} quá hạn`
+                        }
+                    });
                 }
+
+                return count.count;
             });
+
+            if (updateResult > 0) {
+                deposit.status = "EXPIRED";
+            } else {
+                const refreshed = await prisma.bankDeposit.findUnique({
+                    where: { id: deposit.id },
+                    include: { admin: { select: { bankConfig: true, role: true } } }
+                });
+                if (refreshed) deposit = refreshed;
+            }
         }
-        deposit.status = "EXPIRED";
     }
 
     return NextResponse.json({

@@ -27,6 +27,7 @@ export function AdminUsersView({
   currentAdminId,
   operatorIsSpAdmin,
   query,
+  sort,
 }: {
   users: User[];
   totalCount: number;
@@ -35,6 +36,7 @@ export function AdminUsersView({
   currentAdminId: number;
   operatorIsSpAdmin: boolean;
   query: string;
+  sort: string;
 }) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -60,8 +62,17 @@ export function AdminUsersView({
     
     const params = new URLSearchParams();
     if (q) params.set("q", q);
+    if (sort) params.set("sort", sort);
     params.set("page", "1");
     
+    router.push(`/admin/users?${params.toString()}`);
+  };
+
+  const handleSortChange = (newSort: string) => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (newSort) params.set("sort", newSort);
+    params.set("page", "1");
     router.push(`/admin/users?${params.toString()}`);
   };
 
@@ -74,7 +85,37 @@ export function AdminUsersView({
             {totalCount} người dùng trong hệ thống
           </p>
         </div>
-        <form onSubmit={handleSearch} className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <input
+              name="q"
+              defaultValue={query}
+              placeholder="Tìm tên hoặc username..."
+              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm outline-none focus:border-amber-500 dark:text-white sm:w-64"
+            />
+            <button
+              type="submit"
+              className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 transition"
+            >
+              Tìm
+            </button>
+          </form>
+          <div className="flex items-center gap-2">
+            <label htmlFor="sort" className="text-sm text-slate-600 dark:text-slate-300 font-medium">
+              Sắp xếp:
+            </label>
+            <select
+              id="sort"
+              value={sort}
+              onChange={(e) => handleSortChange(e.target.value)}
+              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm outline-none text-slate-900 dark:text-white"
+            >
+              <option value="">Mặc định</option>
+              <option value="balance_desc">Số dư giảm dần</option>
+              <option value="balance_asc">Số dư tăng dần</option>
+            </select>
+          </div>
+        </div>
           <input
             name="q"
             defaultValue={query}

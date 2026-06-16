@@ -15,12 +15,13 @@ export async function POST(req: Request, props: { params: Promise<{ orderId: str
     if (!deposit) return NextResponse.json({ error: "Không tìm thấy lệnh!" }, { status: 404 });
     if (deposit.status !== "PENDING") return NextResponse.json({ error: "Lệnh không ở trạng thái cần chuyển khoản." }, { status: 400 });
 
-    if (deposit.expiresAt < new Date()) {
+    const now = new Date();
+    if (deposit.expiresAt < now) {
         return NextResponse.json({ error: "Lệnh đã hết hạn. Hãy đợi hệ thống tự động hủy và hoàn cọc." }, { status: 400 });
     }
 
     const updateResult = await prisma.bankDeposit.updateMany({
-        where: { id: deposit.id, status: "PENDING" },
+        where: { id: deposit.id, status: "PENDING", expiresAt: { gte: now } },
         data: { status: "TRANSFERRED" }
     });
     

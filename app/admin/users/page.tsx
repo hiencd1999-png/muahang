@@ -8,7 +8,7 @@ const ITEMS_PER_PAGE = 20;
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; sort?: string }>;
 }) {
   const currentAdmin = await requireUser("ADMIN");
   const operatorIsSpAdmin = isSpAdminRole(currentAdmin.role);
@@ -16,6 +16,7 @@ export default async function AdminUsersPage({
   const params = await searchParams;
   const query = params.q || "";
   const page = Math.max(1, parseInt(params.page || "1"));
+  const sort = params.sort || "";
 
   const queryIsNumeric = query.length > 0 && /^\d+$/.test(query);
 
@@ -42,10 +43,17 @@ export default async function AdminUsersPage({
     ? { AND: [baseWhereClause, queryWhereClause] }
     : baseWhereClause;
 
+  const orderBy =
+    sort === "balance_asc"
+      ? { balance: "asc" }
+      : sort === "balance_desc"
+      ? { balance: "desc" }
+      : { createdAt: "desc" };
+
   const [users, totalCount] = await Promise.all([
     prisma.user.findMany({
       where: whereClause,
-      orderBy: { createdAt: "desc" },
+      orderBy,
       skip: (page - 1) * ITEMS_PER_PAGE,
       take: ITEMS_PER_PAGE,
     }),
@@ -65,6 +73,7 @@ export default async function AdminUsersPage({
       currentAdminId={currentAdmin.id}
       operatorIsSpAdmin={operatorIsSpAdmin}
       query={query}
+      sort={sort}
     />
   );
 }
