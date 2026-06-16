@@ -110,8 +110,8 @@ export function CreateOrderForm({
   }, [nonEmptyItems]);
 
   const total = useMemo(
-    () => selectedVoucher?.unitPrice ?? 0,
-    [selectedVoucher]
+    () => selectedVoucher ? calculateVoucherOrderTotal(selectedVoucher.unitPrice, totalQuantity) : 0,
+    [selectedVoucher, totalQuantity]
   );
 
   const estimatedCOD = useMemo(() => {

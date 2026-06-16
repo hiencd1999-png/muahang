@@ -215,8 +215,11 @@ export async function POST(request: Request) {
     const totalQuantity = preparedItems.reduce((sum, item) => sum + item.quantity, 0);
     
     // Tính số tiền phí dịch vụ tạo đơn (Trừ vào ví Datdon)
-    // Backend cũ chỉ tính giá của 1 đơn, không nhân số lượng
-    const total = selectedVoucher.unitPrice;
+    const total = calculateVoucherOrderTotal(selectedVoucher.unitPrice, totalQuantity);
+
+    if (total <= 0) {
+      return NextResponse.json({ error: "Tổng phí đơn không hợp lệ." }, { status: 400 });
+    }
 
     if (result.user.balance < total) {
       return NextResponse.json({ error: "Số dư không đủ để tạo đơn." }, { status: 400 });

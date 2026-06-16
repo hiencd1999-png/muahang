@@ -1,12 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
+import { requireApiUser } from "@/lib/session";
 import { getLockedAdminCommission } from "@/lib/admin-balance";
 
-export async function POST(request: NextRequest) {
-  const admin = await requireUser("ADMIN");
+const batchBalanceSchema = z.object({
+  userIds: z.array(z.number().int().positive()).min(1),
+  amountChange: z.number().int().nonzero(),
+});
 
-  const { userIds, amountChange } = await request.json();
+export async function POST(request: NextRequest) {
+  const result = await requireApiUser("ADMIN");
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  const admin = result.user;
+
+  const body = await request.json();
+  const parsed = batchBalanceSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Payload điều chỉnh số dư không hợp lệ." }, { status: 400 });
+  }
+
+  const { userIds, amountChange } = parsed.data;
 
   if (!Array.isArray(userIds) || userIds.length === 0) {
     return NextResponse.json({ error: "userIds is required" }, { status: 400 });

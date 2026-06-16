@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
+import { requireApiUser } from "@/lib/session";
 import { isSpAdminRole } from "@/lib/roles";
 
 export async function GET(request: NextRequest) {
-  const currentAdmin = await requireUser("ADMIN");
+  const result = await requireApiUser("ADMIN");
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  const currentAdmin = result.user;
   const canViewAllLogs = isSpAdminRole(currentAdmin.role);
 
   const searchParams = request.nextUrl.searchParams;
