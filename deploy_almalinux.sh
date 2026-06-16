@@ -50,22 +50,27 @@ systemctl enable --now docker
 echo "✅ Cài đặt Docker thành công!"
 
 echo "🔐 4/6. KHỞI TẠO MÔI TRƯỜNG BẢO MẬT & ĐÓNG GÓI DATABASE"
-# Sinh/xoay khóa mật khẩu và cấu hình .env mỗi lần chạy (randomized rotation)
-echo "📝 Đang tạo/xoay secrets trong .env (mật khẩu DB, SESSION_SECRET, API keys)..."
+# Sinh/xoay khóa mật khẩu (tạo trong bộ nhớ trước khi ghi .env)
+echo "📝 Sinh/xoay secrets (mật khẩu DB, SESSION_SECRET, API keys)..."
 # Tạo mật khẩu chỉ chứa ký tự an toàn để tránh cần URL-encoding
 POSTGRES_USER="datdon_admin"
 POSTGRES_DB="datdon_db"
-POSTGRES_PASSWORD=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)
+# Use fixed DB password as requested (contains % so will be URL-escaped when writing .env)
+POSTGRES_PASSWORD="Hien123%40321%40"
 SESSION_SECRET=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 48)
 BINANCE_KEY=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)
 BINANCE_SECRET=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 48)
 COOKIE=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 80)
 
-cat > .env <<EOF
+write_env_file() {
+  # Percent-escape '%' in password for DATABASE_URL
+  POSTGRES_PASSWORD_URL=$(printf '%s' "${POSTGRES_PASSWORD}" | sed 's/%/%25/g')
+
+  cat > .env <<EOF
 POSTGRES_USER=${POSTGRES_USER}
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 POSTGRES_DB=${POSTGRES_DB}
-DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD_URL}@db:5432/${POSTGRES_DB}?schema=public
 SESSION_SECRET=${SESSION_SECRET}
 BINANCE_KEY=${BINANCE_KEY}
 BINANCE_SECRET=${BINANCE_SECRET}
@@ -75,8 +80,10 @@ NEXT_TELEMETRY_DISABLED=1
 NODE_ENV=production
 EOF
 
-chmod 600 .env
-echo "✅ Đã tạo/ghi .env (quyền 600). Mật khẩu Postgres và secrets đã được xoay ngẫu nhiên."
+  chmod 600 .env
+}
+
+echo "✅ Secrets đã được sinh (chưa ghi .env). Tiếp tục khởi động DB và áp mật khẩu vào Postgres..."
 
 echo "🐳 5/6. KHỞI CHẠY HỆ SINH THÁI CONTAINER (BUILD CODE)"
 # Kéo lên dịch vụ CSDL trước, áp mật khẩu mới vào user nếu DB đã tồn tại, rồi khởi động app
@@ -97,12 +104,52 @@ fi
 echo "🔒 Khởi tạo/cập nhật user DB '${POSTGRES_USER}' với mật khẩu mới..."
 # Sử dụng postgres OS user để tạo/update role (không cần credentials postgres DB user)
 # Nếu user chưa tồn tại, tạo mới; nếu đã tồn tại, cập nhật password
-docker compose exec -T db sh -c "su - postgres -c \"psql -c \\\"CREATE ROLE ${POSTGRES_USER} WITH LOGIN CREATEDB PASSWORD '${POSTGRES_PASSWORD}' NOSUPERUSER;\\\" 2>&1 || psql -c \\\"ALTER ROLE ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';\\\"\""
+# Thử nhiều cách an toàn để tạo/đổi password cho role trong container Postgres
+echo "🔒 Áp mật khẩu mới cho DB user '${POSTGRES_USER}'..."
+
+apply_db_password() {
+  # First try: su - postgres inside container (works with official images)
+  docker compose exec -T db sh -c "su - postgres -c \"psql -c \\\"CREATE ROLE ${POSTGRES_USER} WITH LOGIN CREATEDB PASSWORD '${POSTGRES_PASSWORD}' NOSUPERUSER;\\\" 2>&1 || psql -c \\\"ALTER ROLE ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';\\\"\"" >/tmp/_db_role_out 2>&1 || true
+  RC=$?
+  if [ $RC -eq 0 ]; then
+    echo "✅ Áp mật khẩu bằng 'su - postgres' thành công."
+    return 0
+  fi
+
+  # Second try: direct psql -U postgres (may work if trust or no password required)
+  docker compose exec -T db psql -U postgres -c "CREATE ROLE ${POSTGRES_USER} WITH LOGIN CREATEDB PASSWORD '${POSTGRES_PASSWORD}' NOSUPERUSER;" >/tmp/_db_role_out 2>&1 || true
+  RC2=$?
+  if [ $RC2 -eq 0 ]; then
+    echo "✅ Áp mật khẩu bằng 'psql -U postgres' thành công."
+    return 0
+  fi
+
+  # If both methods failed, capture logs and exit with helpful message
+  echo "⚠️ Không thể áp mật khẩu tự động cho Postgres. Kiểm tra /tmp/_db_role_out trong container 'db' hoặc Xem logs:" 
+  docker compose logs --no-color --tail 50 db || true
+  echo "Output thử tạo role (nội bộ):"
+  docker compose exec -T db sh -c 'cat /tmp/_db_role_out 2>/dev/null || true' || true
+  return 1
+}
+
+if ! apply_db_password; then
+  echo "❌ Áp mật khẩu DB thất bại. Script dừng để tránh ghi .env không đồng bộ với DB." >&2
+  exit 1
+fi
 
 echo "✅ Đã khởi tạo/cập nhật user ${POSTGRES_USER} trong Postgres."
 
 echo "🐳 Bắt đầu build & khởi động app..."
-docker compose up -d --build app
+
+# Ghi .env bây giờ (chỉ khi db password đã được áp thành công)
+if [ -f .env ]; then
+  cp .env .env.bak.$(date +%s) || true
+fi
+write_env_file
+echo "✅ Đã ghi .env (an toàn) và tạo backup .env.bak.* nếu có." 
+
+# Khởi động app, ép recreate container để pick up .env mới
+docker compose up -d --build --force-recreate app
 
 echo "⏳ Đang đợi App và DB ổn định..."
 sleep 5

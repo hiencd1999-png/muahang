@@ -3,6 +3,7 @@ import { ShopeeTrackingChecker } from "@/lib/shopee-tracking";
 import { OrderStatus } from "@prisma/client";
 import { runBinanceUSDTTracker } from "@/lib/binance-worker";
 import { fetchTikTokOrders } from "@/cron/tiktok-orders";
+import { runBalanceMonitor } from "@/cron/balance-monitor";
 
 const RUN_INTERVAL_MS = 5 * 60 * 1000;
 const GROUP_SIZE = 100;
@@ -281,5 +282,10 @@ export function bootWorker() {
         setTimeout(runBackgroundCron, 10000); 
         setTimeout(runBinanceUSDTTracker, 15000); // Khởi chạy sau 15s
         setTimeout(fetchTikTokOrders, 20000);
+
+        // Balance monitor: every 30 minutes
+        setInterval(runBalanceMonitor, 30 * 60 * 1000);
+        // Run once shortly after boot
+        setTimeout(runBalanceMonitor, 30 * 1000);
     }
 }

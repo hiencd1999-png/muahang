@@ -187,7 +187,8 @@ export async function runBinanceUSDTTracker() {
                     if (deposit.address.toLowerCase() !== txAddress) continue;
 
                     // Khớp -> Duyệt lệnh
-                    const vndAmount = deposit.amount * USDT_RATE;
+                    // Sử dụng `expectedAmount` (số thực có phần thập phân) để tính VND chính xác
+                    const vndAmount = Math.round(deposit.expectedAmount * USDT_RATE);
 
                     try {
                         await prisma.$transaction(async (db) => {
