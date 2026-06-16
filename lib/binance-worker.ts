@@ -198,13 +198,18 @@ export async function runBinanceUSDTTracker() {
 
                             if (existedTx) throw new Error("DUPLICATE_TX");
 
-                            await db.cryptoDeposit.update({
-                                where: { id: deposit.id },
+                            const now = new Date();
+                            const completeResult = await db.cryptoDeposit.updateMany({
+                                where: { id: deposit.id, status: "PENDING", expiresAt: { gt: now } },
                                 data: {
                                     status: "COMPLETED",
                                     txId: txId
                                 }
                             });
+
+                            if (completeResult.count === 0) {
+                                throw new Error("Lệnh nạp này đã được xử lý hoặc hết hạn.");
+                            }
 
                             await db.user.update({
                                 where: { id: deposit.userId },

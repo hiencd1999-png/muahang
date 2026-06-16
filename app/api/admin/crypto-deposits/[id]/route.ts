@@ -22,8 +22,15 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
 
         if (!deposit) return NextResponse.json({ error: "Không tìm thấy lệnh USDT!" }, { status: 404 });
 
+        const now = new Date();
+        const isExpired = deposit.expiresAt < now;
+
         if (deposit.status !== "PENDING") {
              return NextResponse.json({ error: "Lệnh nạp này đã được xử lý hoặc hết hạn." }, { status: 400 });
+        }
+
+        if (action === "APPROVE" && isExpired) {
+            return NextResponse.json({ error: "Lệnh nạp này đã quá hạn và không thể duyệt." }, { status: 400 });
         }
 
         if (action === "REJECT") {
