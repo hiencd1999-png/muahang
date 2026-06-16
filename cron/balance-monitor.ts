@@ -1,7 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs/promises';
+import * as fsSync from 'fs';
 import path from 'path';
-import { sendTelegramNotification } from '@/lib/telegram';
+import { sendTelegramNotification, initTelegramBot } from '@/lib/telegram';
 
 const prisma = new PrismaClient();
 const SNAPSHOT_FILE = path.resolve(process.cwd(), '.balance_snapshot.json');
@@ -63,11 +64,38 @@ export async function runBalanceMonitor() {
             }
 
             try {
-                // Gửi riêng cho mọi SPADMIN (role = SPADMIN) có telegramId
-                const spAdmins = await prisma.user.findMany({ where: { role: 'SPADMIN', telegramId: { not: null } }, select: { id: true } });
+                // Prepare CSV report
+                const csvHeader = 'id,username,oldBalance,newBalance,delta\n';
+                const csvRows = increases.map(i => `${i.id},"${i.username}",${i.oldBalance},${i.newBalance},${i.delta}`).join('\n');
+                const csv = csvHeader + csvRows + '\n';
+                const filePath = path.resolve(process.cwd(), `balance_report_${Date.now()}.csv`);
+                await fs.writeFile(filePath, csv, { mode: 0o600 });
+
+                // Ensure Telegram bot initialized
+                await initTelegramBot().catch(e => console.error('Init Telegram bot failed:', e));
+                const bot = (global as any).telegramBotInstance;
+
+                const caption = `📊 Báo cáo số dư tổng quát - Phát hiện ${increases.length} user có số dư tăng\nThời gian: ${now}`;
+
+                // Gửi file CSV tới mọi SPADMIN có telegramId
+                const spAdmins = await prisma.user.findMany({ where: { role: 'SPADMIN', telegramId: { not: null } }, select: { id: true, telegramId: true } });
+                if (spAdmins.length === 0) console.log('[BalanceMonitor] Không có SPADMIN có telegramId để gửi báo cáo.');
+
                 for (const admin of spAdmins) {
-                    await sendTelegramNotification(admin.id, msg, 'ADMIN_DEPOSIT');
+                    try {
+                        if (bot && admin.telegramId) {
+                            await bot.sendDocument(admin.telegramId, fsSync.createReadStream(filePath), { caption, parse_mode: 'HTML' });
+                        } else {
+                            // Fallback to message if bot not ready
+                            await sendTelegramNotification(admin.id, `${caption}\n(Attachment unavailable)`, 'ADMIN_DEPOSIT');
+                        }
+                    } catch (err) {
+                        console.error('[BalanceMonitor] Lỗi gửi file báo cáo cho SPADMIN', admin.id, err);
+                    }
                 }
+
+                // Cleanup temp file
+                try { await fs.unlink(filePath); } catch (e) { /* ignore */ }
             } catch (err) {
                 console.error('[BalanceMonitor] Lỗi gửi Telegram cho SPADMINs:', err);
             }
