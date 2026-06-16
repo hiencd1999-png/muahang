@@ -116,19 +116,6 @@ export function AdminUsersView({
             </select>
           </div>
         </div>
-          <input
-            name="q"
-            defaultValue={query}
-            placeholder="Tìm tên hoặc username..."
-            className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm outline-none focus:border-amber-500 dark:text-white sm:w-64"
-          />
-          <button
-            type="submit"
-            className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 transition"
-          >
-            Tìm
-          </button>
-        </form>
       </div>
 
       <div className="mt-5 pb-20">
@@ -148,7 +135,21 @@ export function AdminUsersView({
                 <th className="px-4 py-3 font-bold uppercase tracking-wider text-xs">ID</th>
                 <th className="px-4 py-3 font-bold uppercase tracking-wider text-xs">Người dùng</th>
                 <th className="px-4 py-3 font-bold uppercase tracking-wider text-xs text-center">Role</th>
-                <th className="px-4 py-3 font-bold uppercase tracking-wider text-xs">Số dư</th>
+                <th className="px-4 py-3 font-bold uppercase tracking-wider text-xs">
+                  <div className="flex items-center gap-2">
+                    Số dư
+                    <button
+                      type="button"
+                      onClick={() => handleSortChange(sort === "balance_desc" ? "balance_asc" : sort === "balance_asc" ? "" : "balance_desc")}
+                      className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-900"
+                    >
+                      {sort === "balance_desc" ? "↓" : sort === "balance_asc" ? "↑" : "↕"}
+                      <span>
+                        {sort === "balance_desc" ? "Giảm" : sort === "balance_asc" ? "Tăng" : "Sắp xếp"}
+                      </span>
+                    </button>
+                  </div>
+                </th>
                 <th className="px-4 py-3 font-bold uppercase tracking-wider text-xs text-center">Hành động</th>
               </tr>
             </thead>
