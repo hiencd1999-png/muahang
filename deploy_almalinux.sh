@@ -95,14 +95,9 @@ if [ $RETRIES -ge 30 ]; then
 fi
 
 echo "🔒 Khởi tạo/cập nhật user DB '${POSTGRES_USER}' với mật khẩu mới..."
-# Thực hiện CREATE USER IF NOT EXISTS hoặc ALTER ROLE để đảm bảo mật khẩu được đồng bộ
-# Postgres chỉ dùng POSTGRES_PASSWORD env var khi khởi tạo lần đầu; nếu volume tồn tại, env var bị bỏ qua
-# Nên phải chạy SQL để tạo/cập nhật user
-docker compose exec -T db psql -U postgres -c "
-  CREATE ROLE ${POSTGRES_USER} WITH LOGIN CREATEDB PASSWORD '${POSTGRES_PASSWORD}' NOSUPERUSER;
-" 2>&1 | grep -v "already exists" || true
-
-docker compose exec -T db psql -U postgres -c "ALTER ROLE ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';" >/dev/null 2>&1 || true
+# Sử dụng postgres OS user để tạo/update role (không cần credentials postgres DB user)
+# Nếu user chưa tồn tại, tạo mới; nếu đã tồn tại, cập nhật password
+docker compose exec -T db sh -c "su - postgres -c \"psql -c \\\"CREATE ROLE ${POSTGRES_USER} WITH LOGIN CREATEDB PASSWORD '${POSTGRES_PASSWORD}' NOSUPERUSER;\\\" 2>&1 || psql -c \\\"ALTER ROLE ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';\\\"\""
 
 echo "✅ Đã khởi tạo/cập nhật user ${POSTGRES_USER} trong Postgres."
 
