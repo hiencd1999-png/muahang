@@ -79,11 +79,33 @@ chmod 600 .env
 echo "✅ Đã tạo/ghi .env (quyền 600). Mật khẩu Postgres và secrets đã được xoay ngẫu nhiên."
 
 echo "🐳 5/6. KHỞI CHẠY HỆ SINH THÁI CONTAINER (BUILD CODE)"
-# Kéo hạ CSDL Postgres và Build App (Quá trình này tốn khoảng 2-5 Phút)
-docker compose up -d --build
+# Kéo lên dịch vụ CSDL trước, áp mật khẩu mới vào user nếu DB đã tồn tại, rồi khởi động app
+echo "📦 Khởi động service 'db' trước..."
+docker compose up -d db
 
-# Chờ 5 giây cho Database thiết lập đường truyền nội bộ cứng cáp
-echo "⏳ Đang đợi Cơ sở dữ liệu khởi động..."
+echo "⏳ Đang đợi Postgres sẵn sàng (pg_isready)..."
+RETRIES=0
+until docker compose exec -T db pg_isready -U postgres >/dev/null 2>&1 || [ $RETRIES -ge 30 ]; do
+  sleep 1
+  RETRIES=$((RETRIES+1))
+done
+
+if [ $RETRIES -ge 30 ]; then
+  echo "⚠️ Postgres không phản hồi sau 30s, tiếp tục và sẽ cố gắng thay đổi password sau khi container sẵn sàng."
+fi
+
+echo "🔒 Thử cập nhật mật khẩu DB user '${POSTGRES_USER}' sang giá trị mới (nếu user tồn tại)..."
+# Thực hiện ALTER ROLE bên trong container db. Nếu lệnh thất bại (ví dụ DB mới), chỉ in cảnh báo.
+if docker compose exec -T db psql -U postgres -c "ALTER ROLE ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';" >/dev/null 2>&1; then
+  echo "✅ Mật khẩu user ${POSTGRES_USER} đã được cập nhật trong Postgres (nếu user tồn tại)."
+else
+  echo "⚠️ Không thể cập nhật mật khẩu bằng ALTER ROLE (có thể DB vừa được khởi tạo mới hoặc lệnh không khả dụng)." 
+fi
+
+echo "🐳 Bắt đầu build & khởi động app..."
+docker compose up -d --build app
+
+echo "⏳ Đang đợi App và DB ổn định..."
 sleep 5
 
 echo "🌱 Thực thi Cài đặt Database và nạp Data gốc..."
